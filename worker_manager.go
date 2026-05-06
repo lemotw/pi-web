@@ -94,6 +94,7 @@ func (m *WorkerManager) workerFor(sessionID, sessionPath string) (ChatWorker, er
 
 type piRPCWorker struct {
 	mu          sync.Mutex
+	writeMu     sync.Mutex
 	sessionPath string
 	cmd         *exec.Cmd
 	stdin       io.WriteCloser
@@ -185,7 +186,10 @@ func (w *piRPCWorker) sendAndAwait(ctx context.Context, cmd map[string]any) erro
 	w.pending[id] = ch
 	w.mu.Unlock()
 
-	if err := writeRPCCommand(w.stdin, cmd); err != nil {
+	w.writeMu.Lock()
+	err := writeRPCCommand(w.stdin, cmd)
+	w.writeMu.Unlock()
+	if err != nil {
 		w.removePending(id)
 		return err
 	}

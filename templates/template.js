@@ -1754,20 +1754,6 @@
         }
       });
 
-      // Initial render
-      // If URL has targetId, scroll to that specific message; otherwise stay at top
-      if (leafId) {
-        if (urlTargetId && byId.has(urlTargetId)) {
-          // Deep link: navigate to leaf and scroll to target message
-          navigateTo(leafId, 'target', urlTargetId);
-        } else {
-          navigateTo(leafId, 'none');
-        }
-      } else if (entries.length > 0) {
-        // Fallback: use last entry if no leafId
-        navigateTo(entries[entries.length - 1].id, 'none');
-
-
       function setupPiChatComposer() {
         const form = document.getElementById('pi-chat-composer');
         if (!form) return;
@@ -1849,5 +1835,19 @@
 
       setupPiChatComposer();
 
+
+      // Initial render
+      // If URL has targetId, scroll to that specific message; otherwise stay at top
+      if (leafId) {
+        if (urlTargetId && byId.has(urlTargetId)) {
+          // Deep link: navigate to leaf and scroll to target message
+          navigateTo(leafId, 'target', urlTargetId);
+        } else {
+          navigateTo(leafId, 'none');
+        }
+      } else if (entries.length > 0) {
+        // Fallback: use last entry if no leafId
+        navigateTo(entries[entries.length - 1].id, 'none');
       }
+
     })();
