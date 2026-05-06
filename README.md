@@ -1,115 +1,120 @@
-# pi-sessions-viewer
+# pi-web
 
 A local web viewer for [pi](https://pi.dev) coding agent sessions.
 
-Browse, search, and share all your pi sessions from a browser. Renders sessions using the same HTML/CSS as pi's `/export` command, with live incremental updates as you chat.
+It renders sessions in the browser using pi's export UI, adds live updates, and lets you continue sessions from the web.
 
 ## Features
 
-- **Session browser** - Grid view of all sessions, grouped by project
-- **Tree navigation** - Full session tree with filters (same UI as `/export`)
-- **Live updates** - New messages append without page refresh
-- **Follow mode** - Auto-scrolls to latest message; pauses when you scroll up to read history
-- **Share** - Create secret GitHub Gists directly from the browser
-- **`/view` command** - Type `/view` inside pi to open the current session
+- Browse sessions across projects
+- Full session tree with filters, search, and branch navigation
+- Live incremental updates while pi is still running
+- Follow mode for tailing active sessions
+- Continue a session from the browser with text or image attachments
+- Per-session worker status and in-browser model switching
+- Deep links to individual messages
+- Download a session as JSONL
+- Share static snapshots as secret GitHub Gists
+- `/view` pi extension to open the current session in the browser
+
+## Requirements
+
+- [Go](https://go.dev) 1.25+
+- `pi` on your `PATH` for browser chat/model switching
+- Optional: `gh` for sharing
 
 ## Install
 
-Requires [Go](https://go.dev) 1.21+.
-
 ```bash
-git clone https://github.com/ygncode/pi-sessions-viewer.git
-cd pi-sessions-viewer
-go build -o pi-sessions-viewer .
+git clone https://github.com/setkyar/pi-web.git
+cd pi-web
+go build -o pi-web .
 
-# Put on PATH
-sudo cp pi-sessions-viewer /usr/local/bin/
+# optional: put it on PATH
+cp pi-web ~/.pi/agent/bin/
 # or
-cp pi-sessions-viewer ~/.pi/agent/bin/
+sudo cp pi-web /usr/local/bin/
 ```
 
 ## Usage
 
 ```bash
-# Start server (default port 27183)
-pi-sessions-viewer
+# Start on the default port (31483)
+pi-web
 
-# Start and open browser
-pi-sessions-viewer -o
+# Start and open a browser
+pi-web -o
 
 # Custom port
-pi-sessions-viewer -p 8080
+pi-web -p 8080
 
-# Bind manually
-pi-sessions-viewer --host 127.0.0.1
-pi-sessions-viewer --host 100.x.y.z
+# Override bind host
+pi-web --host 127.0.0.1
+pi-web --host 100.x.y.z
 ```
 
-By default, the viewer tries to bind to your Tailscale IP. If Tailscale is not available, it falls back to `127.0.0.1`.
+By default, pi-web binds to your Tailscale IP when available, otherwise `127.0.0.1`.
 
-Warning: v1 has no authentication. Anyone who can reach the bound address can view sessions and send instructions to pi.
-
-Then open the URL printed at startup.
-
-## Auto-start on login (macOS)
-
-```bash
-cp com.pi-sessions-viewer.plist ~/Library/LaunchAgents/
-launchctl load ~/Library/LaunchAgents/com.pi-sessions-viewer.plist
-```
-
-The viewer starts automatically on boot and runs in the background.
+> Warning: there is no authentication yet. Anyone who can reach the bound address can view sessions and send instructions to pi.
 
 ## Browser chat
 
-Session pages include a compact composer at the bottom. Type instructions and press Enter to continue the same pi session from the browser. Use Shift+Enter for a newline.
+Open a session page and use the composer at the bottom to continue that exact session.
 
-The image icon attaches images. v1 supports image attachments only; arbitrary files are not uploaded.
-
-Each active session gets its own headless `pi --mode rpc` worker. Multiple sessions can run in parallel, including sessions from different projects. Be careful: parallel agents may edit files concurrently.
+- `Enter` sends
+- `Shift+Enter` inserts a newline
+- Image uploads are supported
+- Each active session gets its own headless `pi --mode rpc` worker
+- Multiple sessions can run in parallel, so concurrent edits are possible
 
 ## Pi integration
 
 ### `/view` command
 
-Install the extension to add a `/view` command inside pi:
-
 ```bash
+mkdir -p ~/.pi/agent/extensions
 cp view-sessions.ts ~/.pi/agent/extensions/
 ```
 
-Restart pi (or run `/reload`). Then type `/view` while in a session to open it in your browser.
+Restart pi (or run `/reload`), then use `/view` inside a session.
 
 ### Skill
 
-Install the skill so pi suggests the viewer when relevant:
-
 ```bash
-cp -r skill ~/.pi/agent/skills/pi-sessions-viewer
+mkdir -p ~/.pi/agent/skills
+cp -r skill ~/.pi/agent/skills/pi-web
 ```
 
 ## Sharing sessions
 
-On any session page, click **Share** in the top-right to create a secret GitHub Gist.
+Click **Share** on a session page to create a secret GitHub Gist.
 
 Requirements:
-- `gh` CLI installed (`brew install gh`)
-- Logged in (`gh auth login`)
+- `gh` installed
+- `gh auth login` completed
 
-The share produces:
-- A secret gist URL
-- A preview URL at `https://pi.dev/session/#<gistId>`
+Sharing returns:
+- the secret gist URL
+- a preview URL at `https://pi.dev/session/#<gistId>`
 
-Shared gists are static snapshots and do not auto-update.
+Shared gists are snapshots and do not live-update.
+
+## Auto-start on login (macOS)
+
+```bash
+cp com.pi-web.plist ~/Library/LaunchAgents/
+launchctl load ~/Library/LaunchAgents/com.pi-web.plist
+```
 
 ## How it works
 
-Sessions are read from `~/.pi/agent/sessions/` as JSONL files. The server:
+pi-web reads session JSONL files from `~/.pi/agent/sessions/`, renders them with embedded pi export templates, watches for file changes, and pushes updates to the browser over SSE.
 
-1. Parses each `.jsonl` session file
-2. Generates HTML using pi's export templates (embedded in the binary)
-3. Watches files for changes and pushes SSE events to the browser
-4. The browser fetches new entries via `/api/session` and appends them incrementally
+## Development
+
+```bash
+go test ./...
+```
 
 ## License
 

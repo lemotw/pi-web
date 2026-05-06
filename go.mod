@@ -1,3 +1,3 @@
-module pi-sessions-viewer
+module pi-web
 
 go 1.25.5

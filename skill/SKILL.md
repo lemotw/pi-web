@@ -1,4 +1,4 @@
-# Pi Sessions Viewer
+# Pi Web
 
 Use this skill when the user wants to view, browse, or inspect their pi coding agent sessions in a web browser.
 
@@ -9,14 +9,14 @@ Use this skill when the user wants to view, browse, or inspect their pi coding a
 
 ## How to use
 
-Run the `pi-sessions-viewer` command:
+Run the `pi-web` command:
 
 ```bash
 # Start the viewer and auto-open browser
-pi-sessions-viewer -o
+pi-web -o
 
-# Or start on a specific port (default is 27183)
-pi-sessions-viewer -p 27183 -o
+# Or start on a specific port (default is 31483)
+pi-web -p 31483 -o
 ```
 
 ## What it does
@@ -30,7 +30,7 @@ pi-sessions-viewer -p 27183 -o
 
 | Flag | Description |
 |------|-------------|
-| `-p <port>` | Port to listen on (default: **27183**) |
+| `-p <port>` | Port to listen on (default: **31483**) |
 | `-o` | Auto-open browser |
 
-The binary is installed at `~/.pi/agent/bin/pi-sessions-viewer`.
+The binary is installed at `~/.pi/agent/bin/pi-web`.

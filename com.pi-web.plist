@@ -3,13 +3,13 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.pi-sessions-viewer</string>
+    <string>com.pi-web</string>
 
     <key>ProgramArguments</key>
     <array>
-        <string>/Users/setkyar/.pi/agent/bin/pi-sessions-viewer</string>
+        <string>/Users/setkyar/.pi/agent/bin/pi-web</string>
         <string>-p</string>
-        <string>27183</string>
+        <string>31483</string>
     </array>
 
     <key>RunAtLoad</key>
@@ -19,10 +19,10 @@
     <true/>
 
     <key>StandardOutPath</key>
-    <string>/tmp/pi-sessions-viewer.log</string>
+    <string>/tmp/pi-web.log</string>
 
     <key>StandardErrorPath</key>
-    <string>/tmp/pi-sessions-viewer.error.log</string>
+    <string>/tmp/pi-web.error.log</string>
 
     <key>WorkingDirectory</key>
     <string>/tmp</string>

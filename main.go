@@ -22,7 +22,7 @@ import (
 	_ "embed"
 )
 
-const defaultPort = "27183"
+const defaultPort = "31483"
 
 //go:embed templates/template.html
 var templateHtml string

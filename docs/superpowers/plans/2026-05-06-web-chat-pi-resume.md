@@ -1926,7 +1926,7 @@ Run:
 
 ```bash
 go build -o pi-sessions-viewer .
-./pi-sessions-viewer -p 27183
+./pi-sessions-viewer -p 31483
 ```
 
 Expected startup prints either a Tailscale URL or localhost fallback. Open a session page and verify:

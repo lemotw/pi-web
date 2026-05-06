@@ -25,7 +25,7 @@ Add direct chat controls to the existing pi sessions viewer so a user can open a
 On a session page such as:
 
 ```text
-http://<tailscale-ip>:27183/session?id=2026-05-05T15-28-44-256Z_019df8c1-80da-74b6-8633-447313aaa942.jsonl
+http://<tailscale-ip>:31483/session?id=2026-05-05T15-28-44-256Z_019df8c1-80da-74b6-8633-447313aaa942.jsonl
 ```
 
 The page shows the existing session export UI unchanged, plus a compact bottom composer:
@@ -83,14 +83,14 @@ Add a manual host override flag:
 The existing `-p <port>` flag remains. Startup output should clearly print the listening URL, for example:
 
 ```text
-Pi Sessions Viewer -> http://100.x.y.z:27183
+Pi Sessions Viewer -> http://100.x.y.z:31483
 Serving from: /Users/me/.pi/agent/sessions
 ```
 
 or, when Tailscale is unavailable:
 
 ```text
-Pi Sessions Viewer -> http://127.0.0.1:27183
+Pi Sessions Viewer -> http://127.0.0.1:31483
 Tailscale IP not detected; using localhost.
 Serving from: /Users/me/.pi/agent/sessions
 ```

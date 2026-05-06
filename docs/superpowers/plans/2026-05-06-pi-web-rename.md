@@ -94,8 +94,8 @@ Apply these exact replacements:
 -pi-sessions-viewer -o
 +pi-web -o
 @@
--pi-sessions-viewer -p 27183 -o
-+pi-web -p 27183 -o
+-pi-sessions-viewer -p 31483 -o
++pi-web -p 31483 -o
 @@
 -The binary is installed at `~/.pi/agent/bin/pi-sessions-viewer`.
 +The binary is installed at `~/.pi/agent/bin/pi-web`.
