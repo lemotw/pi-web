@@ -18,19 +18,20 @@ func TestMobileSidebarClosesWhenNavigatingTree(t *testing.T) {
 	}
 }
 
-func TestMobileSessionActionsDoNotCoverOpenSidebar(t *testing.T) {
-	if !strings.Contains(templateHtml, `class="session-actions"`) && !strings.Contains(templateCss, "body.sidebar-open .session-actions") {
-		// templateHtml is static; local session action markup is generated in Go.
-	}
+func TestMobileSessionActionsStayAtTopAndHideBehindSidebar(t *testing.T) {
 	checks := []string{
 		`class="session-actions"`,
 		"body.sidebar-open .session-actions",
 		"@media (max-width: 900px)",
+		"top: calc(10px + env(safe-area-inset-top));",
 	}
 	combined := templateCss + templateHtml + liveReloadJs + templateJs + chatComposerHtml("s.jsonl") + generateExportHtml(Session{ID: "s.jsonl"}, true)
 	for _, check := range checks {
 		if !strings.Contains(combined, check) {
 			t.Fatalf("mobile action UI missing %q", check)
 		}
+	}
+	if strings.Contains(templateCss, "bottom: calc(12px + env(safe-area-inset-bottom));") {
+		t.Fatalf("mobile session actions should stay at top, not overlap the bottom chat composer")
 	}
 }
