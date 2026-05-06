@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -1204,6 +1205,102 @@ func cleanProjectName(dirName string) string {
 	s = strings.TrimSuffix(s, "--")
 	s = strings.ReplaceAll(s, "--", "/")
 	return s
+}
+
+func encodeProjectName(path string) string {
+	s := strings.TrimSpace(path)
+	s = strings.Trim(s, "/")
+	s = strings.ReplaceAll(s, "/", "-")
+	return "--" + s + "--"
+}
+
+func decodeProjectName(dirName string) string {
+	s := strings.TrimPrefix(dirName, "--")
+	s = strings.TrimSuffix(s, "--")
+	s = strings.ReplaceAll(s, "-", "/")
+	if s != "" && !strings.HasPrefix(s, "/") {
+		s = "/" + s
+	}
+	return s
+}
+
+func listRecentLocations(sessionsDir string) ([]string, error) {
+	entries, err := os.ReadDir(sessionsDir)
+	if err != nil {
+		return nil, err
+	}
+	var locations []string
+	seen := make(map[string]bool)
+	for _, e := range entries {
+		if !e.IsDir() {
+			continue
+		}
+		loc := decodeProjectName(e.Name())
+		if loc != "" && !seen[loc] {
+			seen[loc] = true
+			locations = append(locations, loc)
+		}
+	}
+	return locations, nil
+}
+
+func createSessionFile(sessionsDir, path string) (string, error) {
+	path = strings.TrimSpace(path)
+	if path == "" {
+		return "", errors.New("path is required")
+	}
+	if strings.HasPrefix(path, "~/") {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return "", err
+		}
+		path = filepath.Join(home, path[2:])
+	}
+	path = filepath.Clean(path)
+	if strings.Contains(path, "..") {
+		return "", errors.New("invalid path")
+	}
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		if err := os.MkdirAll(path, 0755); err != nil {
+			return "", err
+		}
+	}
+
+	projectDir := filepath.Join(sessionsDir, encodeProjectName(path))
+	if err := os.MkdirAll(projectDir, 0755); err != nil {
+		return "", err
+	}
+
+	id := randomUUID()
+	timestamp := time.Now().UTC().Format("2006-01-02T15-04-05.000Z")
+	filename := timestamp + "_" + id + ".jsonl"
+	filePath := filepath.Join(projectDir, filename)
+
+	header := map[string]any{
+		"type":      "session",
+		"version":   3,
+		"id":        id,
+		"timestamp": time.Now().UTC().Format(time.RFC3339Nano),
+		"cwd":       path,
+	}
+	data, err := json.Marshal(header)
+	if err != nil {
+		return "", err
+	}
+	if err := os.WriteFile(filePath, append(data, '\n'), 0644); err != nil {
+		return "", err
+	}
+	return filename, nil
+}
+
+func randomUUID() string {
+	b := make([]byte, 16)
+	if _, err := rand.Read(b); err != nil {
+		panic(err)
+	}
+	b[6] = (b[6] & 0x0f) | 0x40
+	b[8] = (b[8] & 0x3f) | 0x80
+	return fmt.Sprintf("%x-%x-%x-%x-%x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:16])
 }
 
 // ── HTML Export Generation (replicates pi's /export exactly) ───────────────
