@@ -938,7 +938,8 @@ func handleAvailableModels(w http.ResponseWriter, r *http.Request) {
 		writeJSONError(w, http.StatusServiceUnavailable, "pi executable not found")
 		return
 	}
-	cmd := exec.Command("pi", "--mode", "rpc", "--no-session")
+
+	cmd := exec.Command("pi", "--mode", "rpc")
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		writeJSONError(w, http.StatusInternalServerError, err.Error())
@@ -949,6 +950,9 @@ func handleAvailableModels(w http.ResponseWriter, r *http.Request) {
 		writeJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+	var stderrBuf strings.Builder
+	cmd.Stderr = &stderrBuf
+
 	if err := cmd.Start(); err != nil {
 		writeJSONError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -959,16 +963,10 @@ func handleAvailableModels(w http.ResponseWriter, r *http.Request) {
 		_ = cmd.Wait()
 	}()
 
-	reqID := fmt.Sprintf("models-%d", time.Now().UnixNano())
-	if _, err := fmt.Fprintf(stdin, `{"id":"%s","type":"get_available_models"}`+"\n", reqID); err != nil {
-		writeJSONError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-	_ = stdin.Close()
-
 	type response struct {
 		Type    string `json:"type"`
 		ID      string `json:"id"`
+		Command string `json:"command"`
 		Success bool   `json:"success"`
 		Data    struct {
 			Models []map[string]any `json:"models"`
@@ -981,6 +979,7 @@ func handleAvailableModels(w http.ResponseWriter, r *http.Request) {
 		err    error
 	}
 
+	reqID := fmt.Sprintf("models-%d", time.Now().UnixNano())
 	resultCh := make(chan scanResult, 1)
 	go func() {
 		defer close(resultCh)
@@ -995,7 +994,7 @@ func handleAvailableModels(w http.ResponseWriter, r *http.Request) {
 			if err := json.Unmarshal([]byte(line), &res); err != nil {
 				continue
 			}
-			if res.Type == "response" && res.ID == reqID {
+			if res.Type == "response" && res.ID == reqID && res.Command == "get_available_models" {
 				if !res.Success {
 					resultCh <- scanResult{err: errors.New(res.Error)}
 					return
@@ -1007,9 +1006,14 @@ func handleAvailableModels(w http.ResponseWriter, r *http.Request) {
 		if err := scanner.Err(); err != nil {
 			resultCh <- scanResult{err: err}
 		} else {
-			resultCh <- scanResult{err: fmt.Errorf("pi closed stdout without response")}
+			resultCh <- scanResult{err: fmt.Errorf("pi closed stdout without response (stderr: %q)", stderrBuf.String())}
 		}
 	}()
+
+	if _, err := fmt.Fprintf(stdin, `{"id":"%s","type":"get_available_models"}`+"\n", reqID); err != nil {
+		writeJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
 
 	select {
 	case res := <-resultCh:
@@ -1020,7 +1024,7 @@ func handleAvailableModels(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]any{"models": res.models})
 	case <-time.After(10 * time.Second):
-		writeJSONError(w, http.StatusGatewayTimeout, "timed out waiting for model list")
+		writeJSONError(w, http.StatusGatewayTimeout, fmt.Sprintf("timed out waiting for model list (stderr: %q)", stderrBuf.String()))
 	}
 }
 
