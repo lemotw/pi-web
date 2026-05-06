@@ -38,18 +38,31 @@ func TestHandleSetModelRejectsMissingSession(t *testing.T) {
 }
 
 func TestModelSelectorMarkupExists(t *testing.T) {
-	checks := []string{
-		"model-selector",
+	jsChecks := []string{
+		"model-dropdown",
 		"/api/models",
 		"/api/set-model?id=",
 		"loadModelSelector",
+		"model-search",
+		"model-scope-badge",
+		"isScoped",
+		"modelChanges",
 	}
-	for _, check := range checks {
+	for _, check := range jsChecks {
 		if !strings.Contains(templateJs, check) {
 			t.Fatalf("missing %q in template.js", check)
 		}
 	}
-	if !strings.Contains(templateCss, "model-selector") {
-		t.Fatal("missing .model-selector in template.css")
+	cssChecks := []string{
+		"model-dropdown",
+		"model-dropdown-menu",
+		"model-search",
+		"model-item",
+		"model-scope-badge",
+	}
+	for _, check := range cssChecks {
+		if !strings.Contains(templateCss, check) {
+			t.Fatalf("missing %q in template.css", check)
+		}
 	}
 }

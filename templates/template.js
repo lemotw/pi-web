@@ -1372,9 +1372,13 @@
             <div class="help-bar">
               <span class="help-hint">T toggle thinking · O toggle tools</span>
               <div class="help-actions">
-                <select class="model-selector" id="model-selector" title="Switch model">
-                  <option value="">Model…</option>
-                </select>
+                <div class="model-dropdown" id="model-dropdown">
+                  <button type="button" class="model-dropdown-toggle" id="model-dropdown-toggle" title="Switch model">Model…</button>
+                  <div class="model-dropdown-menu" id="model-dropdown-menu" style="display:none">
+                    <input type="text" class="model-search" id="model-search" placeholder="Search models…" autocomplete="off">
+                    <div class="model-list" id="model-list"></div>
+                  </div>
+                </div>
                 <button type="button" class="header-toggle-btn" data-action="toggle-thinking" title="Toggle thinking (T)">Toggle thinking</button>
                 <button type="button" class="header-toggle-btn" data-action="toggle-tools" title="Toggle tools (O)">Toggle tools</button>
                 <button type="button" class="download-json-btn" onclick="downloadSessionJson()" title="Download session as JSONL">↓ JSONL</button>
@@ -1962,30 +1966,117 @@
           const res = await fetch('/api/models');
           const data = await res.json();
           if (!res.ok || !data.models) return;
-          const select = document.getElementById('model-selector');
-          if (!select) return;
-          // Group by provider
-          const byProvider = {};
-          for (const m of data.models) {
-            const p = m.provider || 'unknown';
-            if (!byProvider[p]) byProvider[p] = [];
-            byProvider[p].push(m);
+
+          const toggle = document.getElementById('model-dropdown-toggle');
+          const menu = document.getElementById('model-dropdown-menu');
+          const search = document.getElementById('model-search');
+          const list = document.getElementById('model-list');
+          if (!toggle || !menu || !search || !list) return;
+
+          let allModels = data.models;
+          let selectedModel = null;
+          let activeIndex = -1;
+
+          function isScoped(m) {
+            return !!(m.isScoped || m.scoped || m.scope);
           }
-          let html = '<option value="">Model…</option>';
-          for (const provider of Object.keys(byProvider).sort()) {
-            html += `<optgroup label="${escapeHtml(provider)}">`;
-            for (const m of byProvider[provider]) {
-              const id = m.id || m.modelId || '';
-              const name = m.name || id;
-              html += `<option value="${escapeHtml(provider)}|${escapeHtml(id)}">${escapeHtml(name)}</option>`;
+
+          function renderList(filter) {
+            const term = (filter || '').toLowerCase().trim();
+            const byProvider = {};
+            for (const m of allModels) {
+              const name = (m.name || m.id || m.modelId || '').toLowerCase();
+              const provider = (m.provider || 'unknown').toLowerCase();
+              if (term && !name.includes(term) && !provider.includes(term)) continue;
+              const p = m.provider || 'unknown';
+              if (!byProvider[p]) byProvider[p] = [];
+              byProvider[p].push(m);
             }
-            html += '</optgroup>';
+            let html = '';
+            const providers = Object.keys(byProvider).sort();
+            if (providers.length === 0) {
+              html = '<div class="model-empty">No models match</div>';
+            } else {
+              for (const provider of providers) {
+                html += `<div class="model-provider">${escapeHtml(provider)}</div>`;
+                for (const m of byProvider[provider]) {
+                  const id = m.id || m.modelId || '';
+                  const name = m.name || id;
+                  const scoped = isScoped(m) ? '<span class="model-scope-badge">scoped</span>' : '';
+                  const active = selectedModel && selectedModel.provider === provider && (selectedModel.id === id || selectedModel.modelId === id) ? ' selected' : '';
+                  html += `<button type="button" class="model-item${active}" data-provider="${escapeHtml(provider)}" data-model-id="${escapeHtml(id)}">${escapeHtml(name)}${scoped}</button>`;
+                }
+              }
+            }
+            list.innerHTML = html;
+            activeIndex = -1;
           }
-          select.innerHTML = html;
-          select.addEventListener('change', async function() {
-            if (!select.value) return;
-            const [provider, modelId] = select.value.split('|');
-            select.disabled = true;
+
+          function setSelected(m) {
+            selectedModel = m;
+            toggle.textContent = m ? (m.name || m.id || m.modelId || 'Model') : 'Model…';
+            toggle.title = m ? `Current: ${m.provider || '?'}/${m.id || m.modelId || '?'}` : 'Switch model';
+            menu.style.display = 'none';
+            renderList(search.value);
+          }
+
+          function openMenu() {
+            menu.style.display = 'block';
+            search.value = '';
+            renderList('');
+            search.focus();
+          }
+
+          toggle.addEventListener('click', function() {
+            if (menu.style.display === 'block') {
+              menu.style.display = 'none';
+            } else {
+              openMenu();
+            }
+          });
+
+          search.addEventListener('input', function() {
+            renderList(search.value);
+          });
+
+          search.addEventListener('keydown', function(e) {
+            const items = list.querySelectorAll('.model-item');
+            if (e.key === 'ArrowDown') {
+              e.preventDefault();
+              activeIndex = Math.min(activeIndex + 1, items.length - 1);
+              updateActive(items);
+            } else if (e.key === 'ArrowUp') {
+              e.preventDefault();
+              activeIndex = Math.max(activeIndex - 1, 0);
+              updateActive(items);
+            } else if (e.key === 'Enter') {
+              e.preventDefault();
+              if (activeIndex >= 0 && items[activeIndex]) {
+                items[activeIndex].click();
+              }
+            } else if (e.key === 'Escape') {
+              menu.style.display = 'none';
+              toggle.focus();
+            }
+          });
+
+          function updateActive(items) {
+            items.forEach(function(el, i) {
+              el.classList.toggle('active', i === activeIndex);
+            });
+            if (activeIndex >= 0 && items[activeIndex]) {
+              items[activeIndex].scrollIntoView({ block: 'nearest' });
+            }
+          }
+
+          list.addEventListener('click', async function(e) {
+            const item = e.target.closest('.model-item');
+            if (!item) return;
+            const provider = item.dataset.provider;
+            const modelId = item.dataset.modelId;
+            if (!provider || !modelId) return;
+
+            toggle.disabled = true;
             try {
               const res = await fetch('/api/set-model?id=' + encodeURIComponent(sessionId), {
                 method: 'POST',
@@ -1994,13 +2085,32 @@
               });
               const data = await res.json();
               if (!res.ok) throw new Error(data.error || 'set model failed');
+              const m = allModels.find(function(x) { return (x.provider || '') === provider && (x.id === modelId || x.modelId === modelId); });
+              setSelected(m || { provider, id: modelId, name: modelId });
               setStatus('switched to ' + provider + '/' + modelId, 'ok');
             } catch (err) {
               setStatus(err.message || String(err), 'error');
             } finally {
-              select.disabled = false;
+              toggle.disabled = false;
             }
           });
+
+          document.addEventListener('click', function(e) {
+            if (!document.getElementById('model-dropdown').contains(e.target)) {
+              menu.style.display = 'none';
+            }
+          });
+
+          // Try to detect current model from latest model_change entry
+          const modelChanges = entries.filter(function(e) { return e.type === 'model_change'; });
+          if (modelChanges.length > 0) {
+            const latest = modelChanges[modelChanges.length - 1];
+            const m = allModels.find(function(x) {
+              return (x.provider || '') === (latest.provider || '') && ((x.id || '') === (latest.modelId || '') || (x.modelId || '') === (latest.modelId || ''));
+            });
+            if (m) setSelected(m);
+          }
+
         } catch (e) {
           // silently ignore if pi is not available
         }

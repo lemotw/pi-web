@@ -296,9 +296,14 @@
       border-color: var(--borderAccent);
     }
 
-    .model-selector {
+    .model-dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .model-dropdown-toggle {
       font-size: 10px;
-      padding: 2px 6px;
+      padding: 2px 8px;
       background: var(--container-bg);
       border: 1px solid var(--border);
       border-radius: 3px;
@@ -306,16 +311,110 @@
       cursor: pointer;
       font-family: inherit;
       max-width: 180px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    .model-selector:hover {
+    .model-dropdown-toggle:hover {
       background: var(--hover);
       border-color: var(--borderAccent);
     }
 
-    .model-selector option {
+    .model-dropdown-toggle:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .model-dropdown-menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      margin-top: 4px;
+      min-width: 260px;
+      max-width: 320px;
+      max-height: 360px;
+      overflow-y: auto;
       background: var(--container-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      z-index: 1000;
+      padding: 6px 0;
+    }
+
+    .model-search {
+      display: block;
+      width: calc(100% - 16px);
+      margin: 0 8px 6px;
+      padding: 4px 8px;
+      font-size: 11px;
+      font-family: inherit;
+      background: var(--body-bg);
+      border: 1px solid var(--border);
+      border-radius: 3px;
       color: var(--text);
+      outline: none;
+    }
+
+    .model-search:focus {
+      border-color: var(--accent);
+    }
+
+    .model-provider {
+      padding: 4px 12px 2px;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--dim);
+      border-top: 1px solid var(--border);
+      margin-top: 4px;
+    }
+
+    .model-provider:first-child {
+      border-top: none;
+      margin-top: 0;
+    }
+
+    .model-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 5px 12px;
+      font-size: 11px;
+      font-family: inherit;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .model-item:hover,
+    .model-item.active {
+      background: var(--hover);
+    }
+
+    .model-item.selected {
+      color: var(--accent);
+    }
+
+    .model-scope-badge {
+      font-size: 9px;
+      padding: 1px 5px;
+      background: var(--accent);
+      color: var(--body-bg);
+      border-radius: 3px;
+      margin-left: 8px;
+      flex-shrink: 0;
+    }
+
+    .model-empty {
+      padding: 12px;
+      font-size: 11px;
+      color: var(--dim);
+      text-align: center;
     }
 
     .session-actions {
