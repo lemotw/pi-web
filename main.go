@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"html/template"
+	"net"
 	"net/http"
 	"os"
 	"os/exec"
@@ -543,6 +544,7 @@ const liveReloadJs = `
 
 func main() {
 	port := flag.String("p", defaultPort, "port to listen on")
+	hostOverride := flag.String("host", "", "host/IP to bind; defaults to Tailscale IP when available, otherwise 127.0.0.1")
 	open := flag.Bool("o", false, "auto-open browser")
 	flag.Parse()
 
@@ -552,21 +554,28 @@ func main() {
 		os.Exit(1)
 	}
 
+	bindHost, usedTailscale := chooseBindHost(*hostOverride, detectTailscaleIP)
 	srv := newServer(sessionsDir)
 	http.HandleFunc("/", srv.handleIndex)
 	http.HandleFunc("/session", srv.handleSession)
 	http.HandleFunc("/api/session", srv.handleApiSession)
+	http.HandleFunc("/api/chat", srv.handleChat)
+	http.HandleFunc("/api/worker-status", srv.handleWorkerStatus)
 	http.HandleFunc("/share", srv.handleShare)
 	http.HandleFunc("/events", srv.handleEvents)
 
-	addr := ":" + *port
-	fmt.Printf("🥧 Pi Sessions Viewer → http://localhost%s\n", addr)
-	fmt.Printf("   Serving from: %s\n", sessionsDir)
+	addr := net.JoinHostPort(bindHost, *port)
+	url := "http://" + addr
+	fmt.Printf("Pi Sessions Viewer -> %s\n", url)
+	if !usedTailscale && *hostOverride == "" {
+		fmt.Println("Tailscale IP not detected; using localhost.")
+	}
+	fmt.Printf("Serving from: %s\n", sessionsDir)
 
 	if *open {
 		go func() {
 			time.Sleep(300 * time.Millisecond)
-			openBrowser("http://localhost" + addr)
+			openBrowser(url)
 		}()
 	}
 
@@ -606,6 +615,7 @@ type server struct {
 	clientsMu   sync.RWMutex
 	fileMod     map[string]time.Time
 	fileModMu   sync.RWMutex
+	chatSender  ChatSender
 }
 
 func newServer(sessionsDir string) *server {
@@ -613,18 +623,18 @@ func newServer(sessionsDir string) *server {
 		sessionsDir: sessionsDir,
 		clients:     make([]*sseClient, 0),
 		fileMod:     make(map[string]time.Time),
+		chatSender:  NewWorkerManager(newPiRPCWorker),
 	}
 	go s.watchFiles()
 	return s
 }
 
-func (s *server) addClient(sessID string) chan string {
-	ch := make(chan string, 4)
-	c := &sseClient{ch: ch, sessID: sessID}
+func (s *server) addClient(sessID string) *sseClient {
+	c := &sseClient{ch: make(chan string, 4), sessID: sessID}
 	s.clientsMu.Lock()
 	s.clients = append(s.clients, c)
 	s.clientsMu.Unlock()
-	return ch
+	return c
 }
 
 func (s *server) removeClient(target *sseClient) {
@@ -887,8 +897,7 @@ func (s *server) handleEvents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ch := s.addClient(sessID)
-	client := &sseClient{ch: ch, sessID: sessID}
+	client := s.addClient(sessID)
 	defer s.removeClient(client)
 
 	fmt.Fprintf(w, ":ok\n\n")
@@ -896,7 +905,7 @@ func (s *server) handleEvents(w http.ResponseWriter, r *http.Request) {
 
 	for {
 		select {
-		case msg, open := <-ch:
+		case msg, open := <-client.ch:
 			if !open {
 				return
 			}
@@ -1036,7 +1045,9 @@ func cleanProjectName(dirName string) string {
 func generateExportHtml(session Session, showButtons bool) string {
 	leafID := ""
 	if len(session.Entries) > 0 {
-		leafID = session.Entries[len(session.Entries)-1]["id"].(string)
+		if id, ok := session.Entries[len(session.Entries)-1]["id"].(string); ok {
+			leafID = id
+		}
 	}
 
 	sessionData := map[string]any{
@@ -1075,10 +1086,26 @@ func generateExportHtml(session Session, showButtons bool) string {
 <button id="share-btn" title="Share session as GitHub Gist" style="padding:4px 10px;font-size:11px;font-family:inherit;background:var(--container-bg);color:var(--muted);border:1px solid var(--dim);border-radius:3px;cursor:pointer;">↗ Share</button>
 </div>`
 		html = strings.Replace(html, "<body>", "<body>"+btns, 1)
+		html = strings.Replace(html, "{{CHAT_COMPOSER}}", chatComposerHtml(session.ID), 1)
 		html = strings.Replace(html, "</body>", liveReloadJs+"</body>", 1)
+	} else {
+		html = strings.Replace(html, "{{CHAT_COMPOSER}}", "", 1)
 	}
 
 	return html
+}
+
+func chatComposerHtml(sessionID string) string {
+	return `<form id="pi-chat-composer" class="pi-chat-composer" data-session-id="` + template.HTMLEscapeString(sessionID) + `">
+  <input id="pi-chat-images" name="images" type="file" accept="image/*" multiple hidden>
+  <button type="button" id="pi-chat-attach" class="pi-chat-icon-button" title="Attach images">◉</button>
+  <div class="pi-chat-main">
+    <textarea id="pi-chat-message" name="message" rows="2" placeholder="Continue this pi session…"></textarea>
+    <div id="pi-chat-attachments" class="pi-chat-attachments"></div>
+    <div id="pi-chat-status" class="pi-chat-status">idle</div>
+  </div>
+  <button type="submit" id="pi-chat-send" class="pi-chat-send">Send</button>
+</form>`
 }
 
 func generateThemeVars() string {
@@ -1147,7 +1174,7 @@ func sessionName(s Session) string {
 		if e["type"] == "message" {
 			msg, ok := e["message"].(map[string]any)
 			if ok {
-				if role, _ := msg["role"].(string);				role == "user" {
+				if role, _ := msg["role"].(string); role == "user" {
 					content := msg["content"]
 					var text string
 					switch v := content.(type) {

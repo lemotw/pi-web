@@ -39,9 +39,17 @@ pi-sessions-viewer -o
 
 # Custom port
 pi-sessions-viewer -p 8080
+
+# Bind manually
+pi-sessions-viewer --host 127.0.0.1
+pi-sessions-viewer --host 100.x.y.z
 ```
 
-Then open http://localhost:27183.
+By default, the viewer tries to bind to your Tailscale IP. If Tailscale is not available, it falls back to `127.0.0.1`.
+
+Warning: v1 has no authentication. Anyone who can reach the bound address can view sessions and send instructions to pi.
+
+Then open the URL printed at startup.
 
 ## Auto-start on login (macOS)
 
@@ -51,6 +59,14 @@ launchctl load ~/Library/LaunchAgents/com.pi-sessions-viewer.plist
 ```
 
 The viewer starts automatically on boot and runs in the background.
+
+## Browser chat
+
+Session pages include a compact composer at the bottom. Type instructions and press Enter to continue the same pi session from the browser. Use Shift+Enter for a newline.
+
+The image icon attaches images. v1 supports image attachments only; arbitrary files are not uploaded.
+
+Each active session gets its own headless `pi --mode rpc` worker. Multiple sessions can run in parallel, including sessions from different projects. Be careful: parallel agents may edit files concurrently.
 
 ## Pi integration
 
