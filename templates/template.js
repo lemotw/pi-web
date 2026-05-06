@@ -893,10 +893,13 @@
               const label = typeof option?.label === 'string' ? option.label : String(option || '');
               const description = typeof option?.description === 'string' ? option.description : '';
               const selected = answer === label || (typeof answer === 'string' && answer.split(', ').includes(label));
-              html += `<div class="ask-question-option${selected ? ' selected' : ''}">`;
+              const tag = !result ? 'button' : 'div';
+              const actionClass = !result ? ' ask-question-option-action' : '';
+              const dataAttrs = !result ? ` type="button" data-question="${escapeHtml(questionText)}" data-answer="${escapeHtml(label)}"` : '';
+              html += `<${tag} class="ask-question-option${selected ? ' selected' : ''}${actionClass}"${dataAttrs}>`;
               html += `<div class="ask-question-option-label">${selected ? '✓ ' : ''}${escapeHtml(label)}</div>`;
               if (description) html += `<div class="ask-question-option-desc">${escapeHtml(description)}</div>`;
-              html += '</div>';
+              html += `</${tag}>`;
             });
             html += '</div>';
           }
@@ -1873,32 +1876,52 @@
           }
         });
 
-        form.addEventListener('submit', async (event) => {
-          event.preventDefault();
-          const message = textarea.value.trim();
-          if (!message && selectedChatFiles.length === 0) {
+        async function sendChatMessage(message, files = selectedChatFiles) {
+          if (!message && files.length === 0) {
             setStatus('message or image required', 'error');
-            return;
+            return false;
           }
           const body = new FormData();
           body.set('message', message);
-          for (const file of selectedChatFiles) body.append('images', file);
+          for (const file of files) body.append('images', file);
           sendButton.disabled = true;
           setStatus('sending', 'running');
           try {
             const response = await fetch('/api/chat?id=' + encodeURIComponent(sessionId), { method: 'POST', body });
             const data = await response.json();
             if (!response.ok) throw new Error(data.error || 'chat request failed');
+            setStatus('accepted', 'running');
+            return true;
+          } catch (error) {
+            setStatus(error.message || String(error), 'error');
+            return false;
+          } finally {
+            sendButton.disabled = false;
+          }
+        }
+
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          const message = textarea.value.trim();
+          const sent = await sendChatMessage(message);
+          if (sent) {
             textarea.value = '';
             selectedChatFiles = [];
             fileInput.value = '';
             renderAttachments();
-            setStatus('accepted', 'running');
-          } catch (error) {
-            setStatus(error.message || String(error), 'error');
-          } finally {
-            sendButton.disabled = false;
           }
+        });
+
+        document.addEventListener('click', async (event) => {
+          const option = event.target.closest?.('.ask-question-option-action');
+          if (!option) return;
+          event.preventDefault();
+          const question = option.dataset.question || 'Question';
+          const answer = option.dataset.answer || option.textContent.trim();
+          const message = `"${question}" = "${answer}"`;
+          option.disabled = true;
+          const sent = await sendChatMessage(message, []);
+          if (!sent) option.disabled = false;
         });
 
         async function refreshWorkerStatus() {

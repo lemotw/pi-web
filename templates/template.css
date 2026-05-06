@@ -629,10 +629,28 @@
     }
 
     .ask-question-option {
+      display: block;
+      width: 100%;
       padding: 7px 9px;
       border: 1px solid var(--dim);
       border-radius: 4px;
       background: var(--body-bg);
+      text-align: left;
+      font: inherit;
+    }
+
+    .ask-question-option-action {
+      cursor: pointer;
+    }
+
+    .ask-question-option-action:hover {
+      border-color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 10%, var(--body-bg));
+    }
+
+    .ask-question-option-action:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
 
     .ask-question-option.selected {

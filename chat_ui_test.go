@@ -9,7 +9,7 @@ func TestChatComposerScriptAccumulatesRepeatedImageSelections(t *testing.T) {
 	checks := []string{
 		"let selectedChatFiles = [];",
 		"selectedChatFiles.push(file);",
-		"for (const file of selectedChatFiles) body.append('images', file);",
+		"for (const file of files) body.append('images', file);",
 		"selectedChatFiles = [];",
 	}
 	for _, check := range checks {
