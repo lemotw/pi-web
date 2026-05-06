@@ -1015,3 +1015,83 @@
       body { background: white; color: black; }
       #content { max-width: none; }
     }
+
+    .pi-chat-composer {
+      position: sticky;
+      bottom: 0;
+      z-index: 80;
+      display: flex;
+      align-items: flex-end;
+      gap: 6px;
+      padding: 8px 10px;
+      background: var(--container-bg);
+      border-top: 1px solid var(--dim);
+    }
+
+    .pi-chat-main { flex: 1; min-width: 0; }
+
+    #pi-chat-message {
+      width: 100%;
+      min-height: 42px;
+      max-height: 132px;
+      resize: vertical;
+      font-family: inherit;
+      font-size: 12px;
+      line-height: var(--line-height);
+      background: var(--body-bg);
+      color: var(--text);
+      border: 1px solid var(--dim);
+      border-radius: 3px;
+      padding: 6px 8px;
+      outline: none;
+    }
+
+    #pi-chat-message:focus { border-color: var(--border); }
+
+    .pi-chat-icon-button, .pi-chat-send {
+      height: 30px;
+      font-family: inherit;
+      font-size: 11px;
+      background: var(--container-bg);
+      color: var(--muted);
+      border: 1px solid var(--dim);
+      border-radius: 3px;
+      cursor: pointer;
+    }
+
+    .pi-chat-icon-button { width: 30px; padding: 0; }
+    .pi-chat-send { padding: 4px 10px; }
+
+    .pi-chat-icon-button:hover, .pi-chat-send:hover {
+      color: var(--text);
+      border-color: var(--borderMuted);
+    }
+
+    .pi-chat-icon-button:disabled, .pi-chat-send:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .pi-chat-attachments {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 4px;
+    }
+
+    .pi-chat-attachment {
+      color: var(--muted);
+      border: 1px solid var(--dim);
+      border-radius: 3px;
+      padding: 1px 5px;
+      font-size: 11px;
+    }
+
+    .pi-chat-status {
+      margin-top: 4px;
+      color: var(--dim);
+      font-size: 11px;
+    }
+
+    .pi-chat-status.error { color: var(--error); }
+    .pi-chat-status.running { color: var(--success); }

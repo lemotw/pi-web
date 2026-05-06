@@ -1754,6 +1754,91 @@
         }
       });
 
+      function setupPiChatComposer() {
+        const form = document.getElementById('pi-chat-composer');
+        if (!form) return;
+        const sessionId = form.dataset.sessionId;
+        const textarea = document.getElementById('pi-chat-message');
+        const fileInput = document.getElementById('pi-chat-images');
+        const attachButton = document.getElementById('pi-chat-attach');
+        const attachmentList = document.getElementById('pi-chat-attachments');
+        const status = document.getElementById('pi-chat-status');
+        const sendButton = document.getElementById('pi-chat-send');
+
+        function setStatus(text, cls) {
+          status.textContent = text;
+          status.className = 'pi-chat-status' + (cls ? ' ' + cls : '');
+        }
+
+        function renderAttachments() {
+          attachmentList.innerHTML = '';
+          for (const file of fileInput.files) {
+            const item = document.createElement('span');
+            item.className = 'pi-chat-attachment';
+            item.textContent = '◉ ' + file.name;
+            attachmentList.appendChild(item);
+          }
+        }
+
+        attachButton.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', renderAttachments);
+        textarea.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            form.requestSubmit();
+          }
+        });
+
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          const message = textarea.value.trim();
+          if (!message && fileInput.files.length === 0) {
+            setStatus('message or image required', 'error');
+            return;
+          }
+          const body = new FormData();
+          body.set('message', message);
+          for (const file of fileInput.files) body.append('images', file);
+          sendButton.disabled = true;
+          setStatus('sending', 'running');
+          try {
+            const response = await fetch('/api/chat?id=' + encodeURIComponent(sessionId), { method: 'POST', body });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'chat request failed');
+            textarea.value = '';
+            fileInput.value = '';
+            renderAttachments();
+            setStatus('accepted', 'running');
+          } catch (error) {
+            setStatus(error.message || String(error), 'error');
+          } finally {
+            sendButton.disabled = false;
+          }
+        });
+
+        async function refreshWorkerStatus() {
+          try {
+            const response = await fetch('/api/worker-status?id=' + encodeURIComponent(sessionId));
+            if (!response.ok) return;
+            const data = await response.json();
+            if (data.state === 'running') setStatus('running', 'running');
+            if (data.state === 'idle') setStatus('idle', '');
+            if (data.state === 'error') setStatus(data.error || 'worker error', 'error');
+          } catch {
+            setStatus('status unavailable', 'error');
+          }
+        }
+
+        setInterval(refreshWorkerStatus, 3000);
+        refreshWorkerStatus();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setupPiChatComposer);
+      } else {
+        setupPiChatComposer();
+      }
+
       // Initial render
       // If URL has targetId, scroll to that specific message; otherwise stay at top
       if (leafId) {
@@ -1767,4 +1852,5 @@
         // Fallback: use last entry if no leafId
         navigateTo(entries[entries.length - 1].id, 'none');
       }
+
     })();
