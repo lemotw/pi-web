@@ -1829,6 +1829,13 @@
 
       let onWorkerModelUpdate = null;
 
+      function setChatStatus(text, cls) {
+        const status = document.getElementById('pi-chat-status');
+        if (!status) return;
+        status.textContent = text;
+        status.className = 'pi-chat-status' + (cls ? ' ' + cls : '');
+      }
+
       function setupPiChatComposer() {
         const form = document.getElementById('pi-chat-composer');
         if (!form) return;
@@ -1842,8 +1849,7 @@
         let selectedChatFiles = [];
 
         function setStatus(text, cls) {
-          status.textContent = text;
-          status.className = 'pi-chat-status' + (cls ? ' ' + cls : '');
+          setChatStatus(text, cls);
         }
 
         function fileKey(file) {
@@ -2108,9 +2114,9 @@
               if (!res.ok) throw new Error(data.error || 'set model failed');
               const m = allModels.find(function(x) { return (x.provider || '') === provider && (x.id === modelId || x.modelId === modelId); });
               setSelected(m || { provider, id: modelId, name: modelId });
-              setStatus('switched to ' + provider + '/' + modelId, 'ok');
+              setChatStatus('switched to ' + provider + '/' + modelId, 'ok');
             } catch (err) {
-              setStatus(err.message || String(err), 'error');
+              setChatStatus(err.message || String(err), 'error');
             } finally {
               toggle.disabled = false;
             }
