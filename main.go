@@ -16,6 +16,7 @@ import (
 	"sync"
 	"time"
 
+	"pi-web/internal/auth"
 	"pi-web/internal/render"
 )
 
@@ -45,22 +46,22 @@ func main() {
 	}
 
 	bindHost, usedTailscale := chooseBindHost(*hostOverride, detectTailscaleIP)
-	auth := newAuth(os.Getenv(tokenEnvVar))
-	srv := newServer(sessionsDir, auth)
+	authMiddleware := auth.New(os.Getenv(tokenEnvVar))
+	srv := newServer(sessionsDir, authMiddleware)
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", auth.wrap(srv.handleIndex))
-	mux.HandleFunc("/session", auth.wrap(srv.handleSession))
-	mux.HandleFunc("/api/session", auth.wrap(srv.handleApiSession))
-	mux.HandleFunc("/api/chat", auth.wrap(srv.handleChat))
-	mux.HandleFunc("/api/set-model", auth.wrap(srv.handleSetModel))
-	mux.HandleFunc("/api/set-thinking-level", auth.wrap(srv.handleSetThinkingLevel))
-	mux.HandleFunc("/api/models", auth.wrap(handleAvailableModels))
-	mux.HandleFunc("/api/worker-status", auth.wrap(srv.handleWorkerStatus))
-	mux.HandleFunc("/share", auth.wrap(srv.handleShare))
-	mux.HandleFunc("/events", auth.wrap(srv.handleEvents))
-	mux.HandleFunc("/api/new-session", auth.wrap(srv.handleNewSession))
-	mux.HandleFunc("/api/recent-locations", auth.wrap(srv.handleRecentLocations))
+	mux.HandleFunc("/", authMiddleware.Wrap(srv.handleIndex))
+	mux.HandleFunc("/session", authMiddleware.Wrap(srv.handleSession))
+	mux.HandleFunc("/api/session", authMiddleware.Wrap(srv.handleApiSession))
+	mux.HandleFunc("/api/chat", authMiddleware.Wrap(srv.handleChat))
+	mux.HandleFunc("/api/set-model", authMiddleware.Wrap(srv.handleSetModel))
+	mux.HandleFunc("/api/set-thinking-level", authMiddleware.Wrap(srv.handleSetThinkingLevel))
+	mux.HandleFunc("/api/models", authMiddleware.Wrap(handleAvailableModels))
+	mux.HandleFunc("/api/worker-status", authMiddleware.Wrap(srv.handleWorkerStatus))
+	mux.HandleFunc("/share", authMiddleware.Wrap(srv.handleShare))
+	mux.HandleFunc("/events", authMiddleware.Wrap(srv.handleEvents))
+	mux.HandleFunc("/api/new-session", authMiddleware.Wrap(srv.handleNewSession))
+	mux.HandleFunc("/api/recent-locations", authMiddleware.Wrap(srv.handleRecentLocations))
 	mux.HandleFunc("/static/alpine.js", serveStaticJS(alpineJs))
 	if scriptPath, js, err := loadIndexScript("web/dist"); err == nil {
 		indexScriptPath = scriptPath
@@ -76,7 +77,7 @@ func main() {
 		fmt.Println("Tailscale IP not detected; using localhost.")
 	}
 	fmt.Printf("Serving from: %s\n", sessionsDir)
-	if auth.enabled() {
+	if authMiddleware.Enabled() {
 		fmt.Println("Auth: enabled (set PI_WEB_TOKEN to require token)")
 	} else {
 		fmt.Printf("Auth: disabled — set %s to require a token for access.\n", tokenEnvVar)
@@ -174,11 +175,11 @@ type server struct {
 	fileModMu   sync.RWMutex
 	chatSender  ChatSender
 	cache       *sessionCache
-	auth        *authMiddleware
+	auth        *auth.Middleware
 	shareRunner shareCmdRunner
 }
 
-func newServer(sessionsDir string, auth *authMiddleware) *server {
+func newServer(sessionsDir string, auth *auth.Middleware) *server {
 	s := &server{
 		sessionsDir: sessionsDir,
 		clients:     make([]*sseClient, 0),

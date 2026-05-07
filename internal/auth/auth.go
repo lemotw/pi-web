@@ -1,4 +1,4 @@
-package main
+package auth
 
 import (
 	"crypto/subtle"
@@ -6,36 +6,36 @@ import (
 	"strings"
 )
 
-const tokenCookieName = "pi_token"
+const TokenCookieName = "pi_token"
 
-type authMiddleware struct {
+type Middleware struct {
 	token string
 }
 
-func newAuth(token string) *authMiddleware {
-	return &authMiddleware{token: strings.TrimSpace(token)}
+func New(token string) *Middleware {
+	return &Middleware{token: strings.TrimSpace(token)}
 }
 
-func (a *authMiddleware) enabled() bool {
+func (a *Middleware) Enabled() bool {
 	return a.token != ""
 }
 
-// wrap returns a handler that enforces the token check when auth is enabled.
+// Wrap returns a handler that enforces the token check when auth is enabled.
 // When the token is supplied via the `token` query parameter, a cookie is set
 // so subsequent requests from the same browser succeed without the parameter.
-func (a *authMiddleware) wrap(h http.HandlerFunc) http.HandlerFunc {
-	if !a.enabled() {
+func (a *Middleware) Wrap(h http.HandlerFunc) http.HandlerFunc {
+	if !a.Enabled() {
 		return h
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
-		got, fromQuery := extractToken(r)
+		got, fromQuery := ExtractToken(r)
 		if subtle.ConstantTimeCompare([]byte(got), []byte(a.token)) != 1 {
 			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return
 		}
 		if fromQuery {
 			http.SetCookie(w, &http.Cookie{
-				Name:     tokenCookieName,
+				Name:     TokenCookieName,
 				Value:    got,
 				Path:     "/",
 				HttpOnly: true,
@@ -46,9 +46,9 @@ func (a *authMiddleware) wrap(h http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-// extractToken returns the candidate token and whether it came from the query
+// ExtractToken returns the candidate token and whether it came from the query
 // string (in which case a cookie should be set).
-func extractToken(r *http.Request) (string, bool) {
+func ExtractToken(r *http.Request) (string, bool) {
 	if t := r.URL.Query().Get("token"); t != "" {
 		return t, true
 	}
@@ -58,7 +58,7 @@ func extractToken(r *http.Request) (string, bool) {
 	if h := r.Header.Get("X-Pi-Token"); h != "" {
 		return h, false
 	}
-	if c, err := r.Cookie(tokenCookieName); err == nil {
+	if c, err := r.Cookie(TokenCookieName); err == nil {
 		return c.Value, false
 	}
 	return "", false

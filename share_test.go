@@ -6,6 +6,8 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"pi-web/internal/auth"
 )
 
 type fakeShareRunner struct {
@@ -128,8 +130,8 @@ func TestHandleShareReportsCreateFailure(t *testing.T) {
 func TestShareEndpointEnforcesAuth(t *testing.T) {
 	runner := &fakeShareRunner{createOut: "https://gist.github.com/u/x\n"}
 	s, _ := newShareTestServer(t, runner)
-	auth := newAuth("secret")
-	handler := auth.wrap(s.handleShare)
+	authMiddleware := auth.New("secret")
+	handler := authMiddleware.Wrap(s.handleShare)
 
 	// Missing token → 401
 	req := httptest.NewRequest(http.MethodPost, "/share?id=session.jsonl", nil)
