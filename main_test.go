@@ -107,3 +107,25 @@ func TestBroadcastStatusChangeIgnoresOtherSessions(t *testing.T) {
 		// success
 	}
 }
+
+func TestFileChangeBroadcastsStatusChange(t *testing.T) {
+	root := t.TempDir()
+	sessionsDir := filepath.Join(root, "sessions")
+	srv := newServer(sessionsDir, nil)
+
+	client := srv.addStatusClient("session.jsonl")
+	defer srv.removeStatusClient(client)
+
+	// First call establishes baseline
+	srv.recordModTime("session.jsonl", time.Now().Add(-time.Second))
+
+	// Second call with newer time triggers broadcast
+	srv.recordModTime("session.jsonl", time.Now())
+
+	select {
+	case <-client.ch:
+		// success
+	case <-time.After(2 * time.Second):
+		t.Fatal("expected status broadcast after file change")
+	}
+}
