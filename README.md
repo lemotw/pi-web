@@ -36,6 +36,7 @@ pi-web is a local Go server that renders pi sessions in the browser using pi's o
 ```bash
 git clone https://github.com/setkyar/pi-web.git
 cd pi-web
+cd web && npm install && npm run build && cd ..
 go build -o pi-web .
 
 # optional: put it on PATH
@@ -139,8 +140,16 @@ A single binary, no database, no daemon — just a Go HTTP server reading the sa
 
 ## Development
 
+The sessions index uses a Vite-built browser bundle. Rebuild it after frontend changes before running the Go server from source:
+
 ```bash
+cd web
+npm install
+npm run test
+npm run build
+cd ..
 go test ./...
+go build -o pi-web .
 ```
 
 ## License
