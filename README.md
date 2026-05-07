@@ -104,9 +104,9 @@ Restart pi (or run `/reload`), then use `/view` inside a session.
 
 **Project-local** (auto-discovered when you run `pi` inside this repo):
 
+Already included at `.pi/extensions/`. Just install deps:
+
 ```bash
-mkdir -p .pi/extensions
-cp extensions/pi-web.ts .pi/extensions/
 cd .pi/extensions && npm install && cd ../..
 ```
 
@@ -114,7 +114,7 @@ cd .pi/extensions && npm install && cd ../..
 
 ```bash
 mkdir -p ~/.pi/agent/extensions/pi-web
-cp extensions/pi-web.ts ~/.pi/agent/extensions/pi-web/
+cp .pi/extensions/pi-web.ts ~/.pi/agent/extensions/pi-web/
 cat > ~/.pi/agent/extensions/pi-web/package.json <<'EOF'
 {
   "name": "pi-web-extension",
@@ -130,7 +130,7 @@ cd ~/.pi/agent/extensions/pi-web && npm install
 Restart pi (or run `/reload`), then:
 
 - `/web` — open the current session in your default browser
-- `/mobile` — show a QR code for mobile access over Tailscale (requires `qrcode` npm package)
+- `/mobile` — show a QR code for mobile access over Tailscale (auto-installs `qrcode` on first use)
 - `/refresh` — pull new messages written from mobile back into the terminal session
 
 The extension automatically installs `qrcode` into `.pi/extensions/node_modules/` — no global npm packages needed.
