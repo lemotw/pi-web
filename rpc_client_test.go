@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"testing"
+
+	"pi-web/internal/chat"
 )
 
 func TestSplitJSONLLinesHandlesCRLF(t *testing.T) {
@@ -18,14 +20,14 @@ func TestSplitJSONLLinesHandlesCRLF(t *testing.T) {
 }
 
 func TestBuildPromptCommandUsesSteerWhenStreaming(t *testing.T) {
-	cmd := buildPromptCommand("req-1", ChatRequest{Message: "hello"}, true)
+	cmd := buildPromptCommand("req-1", chat.Request{Message: "hello"}, true)
 	if cmd["id"] != "req-1" || cmd["type"] != "prompt" || cmd["streamingBehavior"] != "steer" {
 		t.Fatalf("cmd = %#v", cmd)
 	}
 }
 
 func TestBuildPromptCommandOmitsSteerWhenIdle(t *testing.T) {
-	cmd := buildPromptCommand("req-1", ChatRequest{Message: "hello"}, false)
+	cmd := buildPromptCommand("req-1", chat.Request{Message: "hello"}, false)
 	if _, ok := cmd["streamingBehavior"]; ok {
 		t.Fatalf("streamingBehavior present for idle command")
 	}

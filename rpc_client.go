@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"io"
 	"strings"
+
+	"pi-web/internal/chat"
 )
 
 type rpcResponse struct {
@@ -51,7 +53,7 @@ func buildSwitchSessionCommand(id, sessionPath string) map[string]any {
 	return map[string]any{"id": id, "type": "switch_session", "sessionPath": sessionPath}
 }
 
-func buildPromptCommand(id string, chat ChatRequest, streaming bool) map[string]any {
+func buildPromptCommand(id string, chat chat.Request, streaming bool) map[string]any {
 	cmd := map[string]any{"id": id, "type": "prompt", "message": chat.Message}
 	if len(chat.Images) > 0 {
 		cmd["images"] = chat.Images

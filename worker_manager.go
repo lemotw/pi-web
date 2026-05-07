@@ -12,6 +12,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"pi-web/internal/chat"
 )
 
 type WorkerState string
@@ -32,7 +34,7 @@ type WorkerStatus struct {
 }
 
 type ChatWorker interface {
-	Prompt(ctx context.Context, chat ChatRequest) error
+	Prompt(ctx context.Context, chat chat.Request) error
 	SetModel(ctx context.Context, provider, modelID string) error
 	SetThinkingLevel(ctx context.Context, level string) error
 	GetState(ctx context.Context) (WorkerStatus, error)
@@ -123,7 +125,7 @@ func (m *WorkerManager) reapOnce(now time.Time) {
 	}
 }
 
-func (m *WorkerManager) Send(ctx context.Context, sessionID, sessionPath string, chat ChatRequest) error {
+func (m *WorkerManager) Send(ctx context.Context, sessionID, sessionPath string, chat chat.Request) error {
 	worker, err := m.workerFor(sessionID, sessionPath)
 	if err != nil {
 		return err
@@ -299,7 +301,7 @@ func newPiRPCWorker(sessionPath string) (ChatWorker, error) {
 	return worker, nil
 }
 
-func (w *piRPCWorker) Prompt(ctx context.Context, chat ChatRequest) error {
+func (w *piRPCWorker) Prompt(ctx context.Context, chat chat.Request) error {
 	w.touch()
 	w.mu.Lock()
 	streaming := w.status.State == WorkerStateRunning

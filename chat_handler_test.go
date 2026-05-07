@@ -8,15 +8,17 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"pi-web/internal/chat"
 )
 
 type fakeSender struct {
 	sessionID   string
 	sessionPath string
-	chat        ChatRequest
+	chat        chat.Request
 }
 
-func (f *fakeSender) Send(ctx context.Context, sessionID, sessionPath string, chat ChatRequest) error {
+func (f *fakeSender) Send(ctx context.Context, sessionID, sessionPath string, chat chat.Request) error {
 	f.sessionID = sessionID
 	f.sessionPath = sessionPath
 	f.chat = chat

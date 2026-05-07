@@ -1,4 +1,4 @@
-package main
+package chat
 
 import (
 	"bytes"
@@ -38,9 +38,9 @@ func multipartRequest(t *testing.T, message string, files map[string]testUpload)
 }
 
 func TestParseChatRequestAcceptsTextOnly(t *testing.T) {
-	chat, err := parseChatRequest(multipartRequest(t, "hello", nil), 1024, 4096)
+	chat, err := ParseRequest(multipartRequest(t, "hello", nil), 1024, 4096)
 	if err != nil {
-		t.Fatalf("parseChatRequest error: %v", err)
+		t.Fatalf("ParseRequest error: %v", err)
 	}
 	if chat.Message != "hello" || len(chat.Images) != 0 {
 		t.Fatalf("chat = %#v", chat)
@@ -48,9 +48,9 @@ func TestParseChatRequestAcceptsTextOnly(t *testing.T) {
 }
 
 func TestParseChatRequestAcceptsImage(t *testing.T) {
-	chat, err := parseChatRequest(multipartRequest(t, "describe", map[string]testUpload{"images": {"a.png", "\x89PNG\r\n\x1a\nimage"}}), 1024, 4096)
+	chat, err := ParseRequest(multipartRequest(t, "describe", map[string]testUpload{"images": {"a.png", "\x89PNG\r\n\x1a\nimage"}}), 1024, 4096)
 	if err != nil {
-		t.Fatalf("parseChatRequest error: %v", err)
+		t.Fatalf("ParseRequest error: %v", err)
 	}
 	if len(chat.Images) != 1 || chat.Images[0].MimeType != "image/png" {
 		t.Fatalf("images = %#v", chat.Images)
@@ -58,22 +58,22 @@ func TestParseChatRequestAcceptsImage(t *testing.T) {
 }
 
 func TestParseChatRequestRejectsEmpty(t *testing.T) {
-	_, err := parseChatRequest(multipartRequest(t, "", nil), 1024, 4096)
-	if err != errEmptyChatRequest {
-		t.Fatalf("err = %v, want errEmptyChatRequest", err)
+	_, err := ParseRequest(multipartRequest(t, "", nil), 1024, 4096)
+	if err != ErrEmptyRequest {
+		t.Fatalf("err = %v, want ErrEmptyRequest", err)
 	}
 }
 
 func TestParseChatRequestRejectsNonImage(t *testing.T) {
-	_, err := parseChatRequest(multipartRequest(t, "see file", map[string]testUpload{"images": {"a.txt", "plain text"}}), 1024, 4096)
-	if err != errUnsupportedImageType {
-		t.Fatalf("err = %v, want errUnsupportedImageType", err)
+	_, err := ParseRequest(multipartRequest(t, "see file", map[string]testUpload{"images": {"a.txt", "plain text"}}), 1024, 4096)
+	if err != ErrUnsupportedImageType {
+		t.Fatalf("err = %v, want ErrUnsupportedImageType", err)
 	}
 }
 
 func TestParseChatRequestRejectsOversizedImage(t *testing.T) {
-	_, err := parseChatRequest(multipartRequest(t, "big", map[string]testUpload{"images": {"a.png", "\x89PNG\r\n\x1a\n" + strings.Repeat("x", 20)}}), 8, 4096)
-	if err != errImageTooLarge {
-		t.Fatalf("err = %v, want errImageTooLarge", err)
+	_, err := ParseRequest(multipartRequest(t, "big", map[string]testUpload{"images": {"a.png", "\x89PNG\r\n\x1a\n" + strings.Repeat("x", 20)}}), 8, 4096)
+	if err != ErrImageTooLarge {
+		t.Fatalf("err = %v, want ErrImageTooLarge", err)
 	}
 }

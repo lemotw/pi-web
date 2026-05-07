@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+
+	"pi-web/internal/chat"
 )
 
 type ChatSender interface {
-	Send(ctx context.Context, sessionID, sessionPath string, chat ChatRequest) error
+	Send(ctx context.Context, sessionID, sessionPath string, chat chat.Request) error
 	SetModel(ctx context.Context, sessionID, sessionPath, provider, modelID string) error
 	SetThinkingLevel(ctx context.Context, sessionID, sessionPath, level string) error
 	GetState(ctx context.Context, sessionID string) (WorkerStatus, error)
@@ -33,14 +35,14 @@ func (s *server) handleChat(w http.ResponseWriter, r *http.Request) {
 		writeJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	chat, err := parseChatRequest(r, defaultMaxImageBytes, defaultMaxChatRequestBytes)
+	chatReq, err := chat.ParseRequest(r, chat.DefaultMaxImageBytes, chat.DefaultMaxRequestBytes)
 	if err != nil {
 		switch {
-		case errors.Is(err, errEmptyChatRequest):
+		case errors.Is(err, chat.ErrEmptyRequest):
 			writeJSONError(w, http.StatusBadRequest, err.Error())
-		case errors.Is(err, errImageTooLarge):
+		case errors.Is(err, chat.ErrImageTooLarge):
 			writeJSONError(w, http.StatusRequestEntityTooLarge, err.Error())
-		case errors.Is(err, errUnsupportedImageType):
+		case errors.Is(err, chat.ErrUnsupportedImageType):
 			writeJSONError(w, http.StatusUnsupportedMediaType, err.Error())
 		case errors.As(err, new(*http.MaxBytesError)):
 			writeJSONError(w, http.StatusRequestEntityTooLarge, err.Error())
@@ -49,7 +51,7 @@ func (s *server) handleChat(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	if err := s.chatSender.Send(r.Context(), resolved.Session.ID, resolved.Path, chat); err != nil {
+	if err := s.chatSender.Send(r.Context(), resolved.Session.ID, resolved.Path, chatReq); err != nil {
 		writeJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}

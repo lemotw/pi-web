@@ -5,6 +5,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"pi-web/internal/chat"
 )
 
 type fakeChatWorker struct {
@@ -13,7 +15,7 @@ type fakeChatWorker struct {
 	prompts   []map[string]any
 }
 
-func (f *fakeChatWorker) Prompt(ctx context.Context, chat ChatRequest) error {
+func (f *fakeChatWorker) Prompt(ctx context.Context, chat chat.Request) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	cmd := buildPromptCommand("test", chat, f.streaming)
@@ -48,13 +50,13 @@ func TestWorkerManagerCreatesOneWorkerPerSession(t *testing.T) {
 		return &fakeChatWorker{}, nil
 	})
 	ctx := context.Background()
-	if err := manager.Send(ctx, "a.jsonl", "/tmp/a.jsonl", ChatRequest{Message: "a"}); err != nil {
+	if err := manager.Send(ctx, "a.jsonl", "/tmp/a.jsonl", chat.Request{Message: "a"}); err != nil {
 		t.Fatal(err)
 	}
-	if err := manager.Send(ctx, "b.jsonl", "/tmp/b.jsonl", ChatRequest{Message: "b"}); err != nil {
+	if err := manager.Send(ctx, "b.jsonl", "/tmp/b.jsonl", chat.Request{Message: "b"}); err != nil {
 		t.Fatal(err)
 	}
-	if err := manager.Send(ctx, "a.jsonl", "/tmp/a.jsonl", ChatRequest{Message: "again"}); err != nil {
+	if err := manager.Send(ctx, "a.jsonl", "/tmp/a.jsonl", chat.Request{Message: "again"}); err != nil {
 		t.Fatal(err)
 	}
 	if created != 2 {
@@ -78,7 +80,7 @@ func TestWorkerManagerEvictsErroredWorker(t *testing.T) {
 	}
 	manager := NewWorkerManager(factory)
 	ctx := context.Background()
-	if err := manager.Send(ctx, "a.jsonl", "/tmp/a.jsonl", ChatRequest{Message: "a"}); err != nil {
+	if err := manager.Send(ctx, "a.jsonl", "/tmp/a.jsonl", chat.Request{Message: "a"}); err != nil {
 		t.Fatal(err)
 	}
 	// Force the existing worker into an error state.
@@ -93,7 +95,7 @@ func TestWorkerManagerEvictsErroredWorker(t *testing.T) {
 	manager.workers["a.jsonl"] = erroredWorker{}
 	manager.mu.Unlock()
 
-	if err := manager.Send(ctx, "a.jsonl", "/tmp/a.jsonl", ChatRequest{Message: "retry"}); err != nil {
+	if err := manager.Send(ctx, "a.jsonl", "/tmp/a.jsonl", chat.Request{Message: "retry"}); err != nil {
 		t.Fatal(err)
 	}
 	if created != 2 {
@@ -108,7 +110,7 @@ type reapableWorker struct {
 	closed  bool
 }
 
-func (r *reapableWorker) Prompt(ctx context.Context, chat ChatRequest) error             { return nil }
+func (r *reapableWorker) Prompt(ctx context.Context, chat chat.Request) error             { return nil }
 func (r *reapableWorker) SetModel(ctx context.Context, provider, modelID string) error   { return nil }
 func (r *reapableWorker) SetThinkingLevel(ctx context.Context, level string) error       { return nil }
 func (r *reapableWorker) GetState(ctx context.Context) (WorkerStatus, error)             { return r.Status(), nil }
@@ -120,7 +122,7 @@ func TestWorkerManagerReapsIdleWorkersBeyondTTL(t *testing.T) {
 	w := &reapableWorker{idleFor: time.Hour}
 	manager := NewWorkerManagerWithTTL(func(string) (ChatWorker, error) { return w, nil }, time.Minute)
 	defer manager.Close()
-	if err := manager.Send(context.Background(), "a.jsonl", "/tmp/a.jsonl", ChatRequest{Message: "hi"}); err != nil {
+	if err := manager.Send(context.Background(), "a.jsonl", "/tmp/a.jsonl", chat.Request{Message: "hi"}); err != nil {
 		t.Fatal(err)
 	}
 	manager.reapOnce(time.Now())
@@ -139,7 +141,7 @@ func TestWorkerManagerKeepsFreshWorker(t *testing.T) {
 	w := &reapableWorker{idleFor: time.Second}
 	manager := NewWorkerManagerWithTTL(func(string) (ChatWorker, error) { return w, nil }, time.Minute)
 	defer manager.Close()
-	if err := manager.Send(context.Background(), "a.jsonl", "/tmp/a.jsonl", ChatRequest{Message: "hi"}); err != nil {
+	if err := manager.Send(context.Background(), "a.jsonl", "/tmp/a.jsonl", chat.Request{Message: "hi"}); err != nil {
 		t.Fatal(err)
 	}
 	manager.reapOnce(time.Now())
@@ -156,7 +158,7 @@ func TestWorkerManagerDoesNotReapRunningWorker(t *testing.T) {
 	w := &runningReapable{}
 	manager := NewWorkerManagerWithTTL(func(string) (ChatWorker, error) { return w, nil }, time.Minute)
 	defer manager.Close()
-	if err := manager.Send(context.Background(), "a.jsonl", "/tmp/a.jsonl", ChatRequest{Message: "hi"}); err != nil {
+	if err := manager.Send(context.Background(), "a.jsonl", "/tmp/a.jsonl", chat.Request{Message: "hi"}); err != nil {
 		t.Fatal(err)
 	}
 	manager.reapOnce(time.Now())
@@ -170,7 +172,7 @@ func TestWorkerManagerDoesNotReapRunningWorker(t *testing.T) {
 
 type runningReapable struct{}
 
-func (runningReapable) Prompt(ctx context.Context, chat ChatRequest) error             { return nil }
+func (runningReapable) Prompt(ctx context.Context, chat chat.Request) error             { return nil }
 func (runningReapable) SetModel(ctx context.Context, provider, modelID string) error   { return nil }
 func (runningReapable) SetThinkingLevel(ctx context.Context, level string) error       { return nil }
 func (runningReapable) GetState(ctx context.Context) (WorkerStatus, error)             { return WorkerStatus{State: WorkerStateRunning}, nil }
@@ -180,7 +182,7 @@ func (runningReapable) IdleSince(now time.Time) time.Duration                   
 
 type erroredWorker struct{}
 
-func (erroredWorker) Prompt(ctx context.Context, chat ChatRequest) error               { return nil }
+func (erroredWorker) Prompt(ctx context.Context, chat chat.Request) error               { return nil }
 func (erroredWorker) SetModel(ctx context.Context, provider, modelID string) error     { return nil }
 func (erroredWorker) SetThinkingLevel(ctx context.Context, level string) error         { return nil }
 func (erroredWorker) GetState(ctx context.Context) (WorkerStatus, error)               { return WorkerStatus{State: WorkerStateError}, nil }
@@ -190,7 +192,7 @@ func (erroredWorker) Close() error                                              
 func TestBusyWorkerUsesSteeringCommand(t *testing.T) {
 	worker := &fakeChatWorker{streaming: true}
 	manager := NewWorkerManager(func(sessionPath string) (ChatWorker, error) { return worker, nil })
-	if err := manager.Send(context.Background(), "a.jsonl", "/tmp/a.jsonl", ChatRequest{Message: "steer"}); err != nil {
+	if err := manager.Send(context.Background(), "a.jsonl", "/tmp/a.jsonl", chat.Request{Message: "steer"}); err != nil {
 		t.Fatal(err)
 	}
 	worker.mu.Lock()
