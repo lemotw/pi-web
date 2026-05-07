@@ -380,9 +380,11 @@ func (s *server) handleApiSession(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) handleEvents(w http.ResponseWriter, r *http.Request) {
-	sessID := r.URL.Query().Get("id")
-	if sessID == "" {
-		http.Error(w, "missing id", 400)
+	singleID := r.URL.Query().Get("id")
+	multiIDs := r.URL.Query().Get("ids")
+
+	if singleID == "" && multiIDs == "" {
+		http.Error(w, "missing id or ids", 400)
 		return
 	}
 
@@ -397,24 +399,93 @@ func (s *server) handleEvents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client := s.addClient(sessID)
-	defer s.removeClient(client)
+	// Single-session mode (existing)
+	if singleID != "" {
+		client := s.addClient(singleID)
+		defer s.removeClient(client)
 
-	fmt.Fprintf(w, ":ok\n\n")
-	flusher.Flush()
+		fmt.Fprintf(w, ":ok\n\n")
+		flusher.Flush()
+
+		for {
+			select {
+			case msg, open := <-client.ch:
+				if !open {
+					return
+				}
+				fmt.Fprintf(w, "data: %s\n\n", msg)
+				flusher.Flush()
+			case <-r.Context().Done():
+				return
+			}
+		}
+	}
+
+	// Multi-session mode (batch status)
+	ids := strings.Split(multiIDs, ",")
+	if len(ids) == 0 {
+		return
+	}
+
+	clients := make([]*statusClient, len(ids))
+	for i, id := range ids {
+		clients[i] = s.addStatusClient(id)
+	}
+	defer func() {
+		for _, c := range clients {
+			s.removeStatusClient(c)
+		}
+	}()
+
+	lastSent := make(map[string]string, len(ids))
+	s.sendStatusMapIfChanged(w, flusher, r.Context(), ids, lastSent)
+
+	ticker := time.NewTicker(15 * time.Second)
+	defer ticker.Stop()
 
 	for {
 		select {
-		case msg, open := <-client.ch:
-			if !open {
-				return
-			}
-			fmt.Fprintf(w, "data: %s\n\n", msg)
-			flusher.Flush()
 		case <-r.Context().Done():
 			return
+		case <-ticker.C:
+			fmt.Fprintf(w, ":hb\n\n")
+			flusher.Flush()
+		default:
+			changed := false
+			for _, c := range clients {
+				select {
+				case <-c.ch:
+					changed = true
+				default:
+				}
+			}
+			if changed {
+				s.sendStatusMapIfChanged(w, flusher, r.Context(), ids, lastSent)
+			} else {
+				time.Sleep(50 * time.Millisecond)
+			}
 		}
 	}
+}
+
+func (s *server) sendStatusMapIfChanged(w http.ResponseWriter, flusher http.Flusher, ctx context.Context, ids []string, lastSent map[string]string) {
+	result := make(map[string]*workers.WorkerStatus, len(ids))
+	changed := false
+	for _, id := range ids {
+		status := s.computeWorkerStatus(ctx, id)
+		result[id] = status
+		stateStr := string(status.State)
+		if lastSent[id] != stateStr {
+			lastSent[id] = stateStr
+			changed = true
+		}
+	}
+	if !changed {
+		return
+	}
+	data, _ := json.Marshal(result)
+	fmt.Fprintf(w, "data: %s\n\n", string(data))
+	flusher.Flush()
 }
 
 func (s *server) handleNewSession(w http.ResponseWriter, r *http.Request) {

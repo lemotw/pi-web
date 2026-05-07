@@ -1,8 +1,12 @@
 package main
 
 import (
+	"context"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -127,5 +131,27 @@ func TestFileChangeBroadcastsStatusChange(t *testing.T) {
 		// success
 	case <-time.After(2 * time.Second):
 		t.Fatal("expected status broadcast after file change")
+	}
+}
+
+func TestHandleEventsWithIdsSendsInitialStatusMap(t *testing.T) {
+	root := t.TempDir()
+	sessionsDir := filepath.Join(root, "sessions")
+	srv := newServer(sessionsDir, nil)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
+	defer cancel()
+
+	req := httptest.NewRequest(http.MethodGet, "/events?ids=s1.jsonl,s2.jsonl", nil).WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	srv.handleEvents(w, req)
+
+	body := w.Body.String()
+	if !strings.Contains(body, "data:") {
+		t.Fatalf("expected SSE data event, got: %s", body)
+	}
+	if !strings.Contains(body, `"s1.jsonl"`) || !strings.Contains(body, `"s2.jsonl"`) {
+		t.Fatalf("expected both session IDs in response, got: %s", body)
 	}
 }
