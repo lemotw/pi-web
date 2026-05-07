@@ -102,6 +102,15 @@ Restart pi (or run `/reload`), then use `/view` inside a session.
 
 ### `/web`, `/mobile`, `/refresh` commands
 
+**Project-local** (auto-discovered when you run `pi` inside this repo):
+
+```bash
+mkdir -p .pi/extensions
+cp extensions/pi-web.ts .pi/extensions/
+```
+
+**Global** (available in all projects):
+
 ```bash
 mkdir -p ~/.pi/agent/extensions
 cp extensions/pi-web.ts ~/.pi/agent/extensions/
