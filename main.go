@@ -627,6 +627,7 @@ func main() {
 	http.HandleFunc("/api/session", srv.handleApiSession)
 	http.HandleFunc("/api/chat", srv.handleChat)
 	http.HandleFunc("/api/set-model", srv.handleSetModel)
+	http.HandleFunc("/api/set-thinking-level", srv.handleSetThinkingLevel)
 	http.HandleFunc("/api/models", handleAvailableModels)
 	http.HandleFunc("/api/worker-status", srv.handleWorkerStatus)
 	http.HandleFunc("/share", srv.handleShare)
@@ -1406,10 +1407,14 @@ func chatComposerHtml(sessionID string) string {
       <input type="text" id="pi-chat-model-search" class="pi-chat-model-search" placeholder="Search models…" autocomplete="off">
       <div id="pi-chat-model-list" class="pi-chat-model-list"></div>
     </div>
+    <div id="pi-chat-thinking-popup" class="pi-chat-thinking-popup" style="display:none">
+      <div id="pi-chat-thinking-list" class="pi-chat-thinking-list"></div>
+    </div>
     <div class="pi-chat-toolbar">
       <button type="button" id="pi-chat-attach" class="pi-chat-icon-button" title="Attach images" aria-label="Attach images">◉</button>
       <span id="pi-chat-status" class="pi-chat-status">idle</span>
       <button type="button" id="pi-chat-model-label" class="pi-chat-model-label" style="display:none" title="Switch model"></button>
+      <button type="button" id="pi-chat-thinking-label" class="pi-chat-thinking-label" style="display:none" title="Switch thinking level"></button>
       <button type="submit" id="pi-chat-send" class="pi-chat-send">Send</button>
     </div>
   </div>
@@ -1628,11 +1633,13 @@ body {
   margin-bottom: var(--line-height);
   padding-bottom: 4px;
   border-bottom: 1px solid var(--dim);
+  overflow-wrap: anywhere;
 }
 .session-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: var(--line-height);
+  min-width: 0;
 }
 .session-card {
   background: var(--container-bg);
@@ -1641,6 +1648,7 @@ body {
   padding: var(--line-height);
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
+  min-width: 0;
 }
 .session-card:hover {
   border-color: var(--accent);
@@ -1656,6 +1664,7 @@ body {
   margin-bottom: 4px;
   line-height: var(--line-height);
   overflow: hidden;
+  overflow-wrap: anywhere;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -1852,85 +1861,87 @@ cards.forEach(card => {
   });
 });
 
-const modalOverlay = document.getElementById('modalOverlay');
-const newSessionBtn = document.getElementById('newSessionBtn');
-const sessionPath = document.getElementById('sessionPath');
-const createBtn = document.getElementById('createBtn');
-const cancelBtn = document.getElementById('cancelBtn');
-const modalError = document.getElementById('modalError');
-const recentLocations = document.getElementById('recentLocations');
+document.addEventListener('DOMContentLoaded', () => {
+  const modalOverlay = document.getElementById('modalOverlay');
+  const newSessionBtn = document.getElementById('newSessionBtn');
+  const sessionPath = document.getElementById('sessionPath');
+  const createBtn = document.getElementById('createBtn');
+  const cancelBtn = document.getElementById('cancelBtn');
+  const modalError = document.getElementById('modalError');
+  const recentLocations = document.getElementById('recentLocations');
 
-function openModal() {
-  modalOverlay.classList.add('open');
-  sessionPath.value = '';
-  modalError.textContent = '';
-  loadRecentLocations();
-  setTimeout(() => sessionPath.focus(), 10);
-}
-
-function closeModal() {
-  modalOverlay.classList.remove('open');
-}
-
-function loadRecentLocations() {
-  fetch('/api/recent-locations')
-    .then(r => r.json())
-    .then(data => {
-      recentLocations.innerHTML = '';
-      if (!data.locations || data.locations.length === 0) return;
-      data.locations.slice(0, 10).forEach(loc => {
-        const chip = document.createElement('span');
-        chip.className = 'recent-chip';
-        chip.textContent = loc;
-        chip.addEventListener('click', () => {
-          sessionPath.value = loc;
-          sessionPath.focus();
-        });
-        recentLocations.appendChild(chip);
-      });
-    })
-    .catch(() => {});
-}
-
-function doCreate() {
-  const path = sessionPath.value.trim();
-  if (!path) {
-    modalError.textContent = 'Please enter a path';
-    return;
+  function openModal() {
+    modalOverlay.classList.add('open');
+    sessionPath.value = '';
+    modalError.textContent = '';
+    loadRecentLocations();
+    setTimeout(() => sessionPath.focus(), 10);
   }
-  createBtn.disabled = true;
-  createBtn.textContent = 'Creating...';
-  fetch('/api/new-session', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ path })
-  })
-    .then(r => r.json())
-    .then(data => {
-      createBtn.disabled = false;
-      createBtn.textContent = 'Create';
-      if (data.ok && data.id) {
-        window.location.href = '/session?id=' + encodeURIComponent(data.id);
-      } else {
-        modalError.textContent = data.error || 'Failed to create session';
-      }
-    })
-    .catch(err => {
-      createBtn.disabled = false;
-      createBtn.textContent = 'Create';
-      modalError.textContent = err.message || 'Network error';
-    });
-}
 
-newSessionBtn.addEventListener('click', openModal);
-cancelBtn.addEventListener('click', closeModal);
-createBtn.addEventListener('click', doCreate);
-sessionPath.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') doCreate();
-  if (e.key === 'Escape') closeModal();
-});
-modalOverlay.addEventListener('click', (e) => {
-  if (e.target === modalOverlay) closeModal();
+  function closeModal() {
+    modalOverlay.classList.remove('open');
+  }
+
+  function loadRecentLocations() {
+    fetch('/api/recent-locations')
+      .then(r => r.json())
+      .then(data => {
+        recentLocations.innerHTML = '';
+        if (!data.locations || data.locations.length === 0) return;
+        data.locations.slice(0, 10).forEach(loc => {
+          const chip = document.createElement('span');
+          chip.className = 'recent-chip';
+          chip.textContent = loc;
+          chip.addEventListener('click', () => {
+            sessionPath.value = loc;
+            sessionPath.focus();
+          });
+          recentLocations.appendChild(chip);
+        });
+      })
+      .catch(() => {});
+  }
+
+  function doCreate() {
+    const path = sessionPath.value.trim();
+    if (!path) {
+      modalError.textContent = 'Please enter a path';
+      return;
+    }
+    createBtn.disabled = true;
+    createBtn.textContent = 'Creating...';
+    fetch('/api/new-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path })
+    })
+      .then(r => r.json())
+      .then(data => {
+        createBtn.disabled = false;
+        createBtn.textContent = 'Create';
+        if (data.ok && data.id) {
+          window.location.href = '/session?id=' + encodeURIComponent(data.id);
+        } else {
+          modalError.textContent = data.error || 'Failed to create session';
+        }
+      })
+      .catch(err => {
+        createBtn.disabled = false;
+        createBtn.textContent = 'Create';
+        modalError.textContent = err.message || 'Network error';
+      });
+  }
+
+  newSessionBtn.addEventListener('click', openModal);
+  cancelBtn.addEventListener('click', closeModal);
+  createBtn.addEventListener('click', doCreate);
+  sessionPath.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') doCreate();
+    if (e.key === 'Escape') closeModal();
+  });
+  modalOverlay.addEventListener('click', (e) => {
+    if (e.target === modalOverlay) closeModal();
+  });
 });
 </script>
 <div class="modal-overlay" id="modalOverlay">
