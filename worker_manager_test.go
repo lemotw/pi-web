@@ -69,6 +69,46 @@ func TestWorkerManagerReportsMissingWorkerIdle(t *testing.T) {
 	}
 }
 
+func TestWorkerManagerEvictsErroredWorker(t *testing.T) {
+	created := 0
+	factory := func(sessionPath string) (ChatWorker, error) {
+		created++
+		return &fakeChatWorker{}, nil
+	}
+	manager := NewWorkerManager(factory)
+	ctx := context.Background()
+	if err := manager.Send(ctx, "a.jsonl", "/tmp/a.jsonl", ChatRequest{Message: "a"}); err != nil {
+		t.Fatal(err)
+	}
+	// Force the existing worker into an error state.
+	manager.mu.Lock()
+	dead := manager.workers["a.jsonl"].(*fakeChatWorker)
+	manager.mu.Unlock()
+	dead.mu.Lock()
+	dead.streaming = false
+	dead.mu.Unlock()
+	// Replace its Status by swapping in a wrapper that reports error.
+	manager.mu.Lock()
+	manager.workers["a.jsonl"] = erroredWorker{}
+	manager.mu.Unlock()
+
+	if err := manager.Send(ctx, "a.jsonl", "/tmp/a.jsonl", ChatRequest{Message: "retry"}); err != nil {
+		t.Fatal(err)
+	}
+	if created != 2 {
+		t.Fatalf("created workers = %d, want 2 (errored worker should be replaced)", created)
+	}
+}
+
+type erroredWorker struct{}
+
+func (erroredWorker) Prompt(ctx context.Context, chat ChatRequest) error               { return nil }
+func (erroredWorker) SetModel(ctx context.Context, provider, modelID string) error     { return nil }
+func (erroredWorker) SetThinkingLevel(ctx context.Context, level string) error         { return nil }
+func (erroredWorker) GetState(ctx context.Context) (WorkerStatus, error)               { return WorkerStatus{State: WorkerStateError}, nil }
+func (erroredWorker) Status() WorkerStatus                                             { return WorkerStatus{State: WorkerStateError, Error: "dead"} }
+func (erroredWorker) Close() error                                                     { return nil }
+
 func TestBusyWorkerUsesSteeringCommand(t *testing.T) {
 	worker := &fakeChatWorker{streaming: true}
 	manager := NewWorkerManager(func(sessionPath string) (ChatWorker, error) { return worker, nil })

@@ -9,8 +9,8 @@ import (
 
 type ChatSender interface {
 	Send(ctx context.Context, sessionID, sessionPath string, chat ChatRequest) error
-	SetModel(sessionID, sessionPath, provider, modelID string) error
-	SetThinkingLevel(sessionID, sessionPath, level string) error
+	SetModel(ctx context.Context, sessionID, sessionPath, provider, modelID string) error
+	SetThinkingLevel(ctx context.Context, sessionID, sessionPath, level string) error
 	GetState(ctx context.Context, sessionID string) (WorkerStatus, error)
 	Status(sessionID string) WorkerStatus
 }
@@ -97,7 +97,7 @@ func (s *server) handleSetModel(w http.ResponseWriter, r *http.Request) {
 		writeJSONError(w, http.StatusBadRequest, "provider and modelId required")
 		return
 	}
-	if err := s.chatSender.SetModel(resolved.Session.ID, resolved.Path, body.Provider, body.ModelID); err != nil {
+	if err := s.chatSender.SetModel(r.Context(), resolved.Session.ID, resolved.Path, body.Provider, body.ModelID); err != nil {
 		writeJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -134,7 +134,7 @@ func (s *server) handleSetThinkingLevel(w http.ResponseWriter, r *http.Request) 
 		writeJSONError(w, http.StatusBadRequest, "level required")
 		return
 	}
-	if err := s.chatSender.SetThinkingLevel(resolved.Session.ID, resolved.Path, body.Level); err != nil {
+	if err := s.chatSender.SetThinkingLevel(r.Context(), resolved.Session.ID, resolved.Path, body.Level); err != nil {
 		writeJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}

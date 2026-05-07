@@ -249,13 +249,13 @@ func (s *server) handleSession(w http.ResponseWriter, r *http.Request) {
 func (s *server) handleApiSession(w http.ResponseWriter, r *http.Request) {
 	id := r.URL.Query().Get("id")
 	if id == "" {
-		http.Error(w, `{"error":"missing id"}`, 400)
+		writeJSONError(w, http.StatusBadRequest, "missing id")
 		return
 	}
 
 	sessions, err := s.loadSessions()
 	if err != nil {
-		http.Error(w, `{"error":"`+err.Error()+`"}`, 500)
+		writeJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -269,7 +269,7 @@ func (s *server) handleApiSession(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	http.Error(w, `{"error":"not found"}`, 404)
+	writeJSONError(w, http.StatusNotFound, "not found")
 }
 
 func (s *server) handleEvents(w http.ResponseWriter, r *http.Request) {

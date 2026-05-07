@@ -55,7 +55,9 @@ pi-web --host 100.x.y.z
 
 By default, pi-web binds to your Tailscale IP when available, otherwise `127.0.0.1`.
 
-> Warning: there is no authentication yet. Anyone who can reach the bound address can view sessions and send instructions to pi.
+> Warning: by default there is no authentication. Anyone who can reach the bound address can view sessions and send instructions to pi.
+>
+> To require a token, set `PI_WEB_TOKEN` before starting `pi-web`. Clients can pass it via the `Authorization: Bearer <token>` header, the `X-Pi-Token` header, or once via `?token=<token>` (which sets a `pi_token` cookie for subsequent requests). Tokens passed via `?token=` end up in browser history, server access logs, and `Referer` headers from any links on the page — prefer the header form for anything beyond the initial bookmark.
 
 ## Browser chat
 

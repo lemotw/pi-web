@@ -23,11 +23,11 @@ func (f *fakeSender) Send(ctx context.Context, sessionID, sessionPath string, ch
 	return nil
 }
 
-func (f *fakeSender) SetModel(sessionID, sessionPath, provider, modelID string) error {
+func (f *fakeSender) SetModel(ctx context.Context, sessionID, sessionPath, provider, modelID string) error {
 	return nil
 }
 
-func (f *fakeSender) SetThinkingLevel(sessionID, sessionPath, level string) error {
+func (f *fakeSender) SetThinkingLevel(ctx context.Context, sessionID, sessionPath, level string) error {
 	return nil
 }
 

@@ -19,27 +19,11 @@ func resolveSessionByID(sessionsDir, id string) (ResolvedSession, error) {
 	if id == "" || filepath.Base(id) != id || filepath.Ext(id) != ".jsonl" {
 		return ResolvedSession{}, errInvalidSessionID
 	}
-
-	sessions, err := loadAllSessions(sessionsDir)
-	if err != nil {
-		return ResolvedSession{}, err
-	}
-	var matched *Session
-	for i := range sessions {
-		if sessions[i].ID == id {
-			matched = &sessions[i]
-			break
-		}
-	}
-	if matched == nil {
-		return ResolvedSession{}, errSessionNotFound
-	}
-
 	path, err := findSessionPathByFilename(sessionsDir, id)
 	if err != nil {
 		return ResolvedSession{}, err
 	}
-	return ResolvedSession{Session: *matched, Path: path}, nil
+	return ResolvedSession{Session: Session{ID: id, Filename: id}, Path: path}, nil
 }
 
 func findSessionPathByFilename(sessionsDir, id string) (string, error) {

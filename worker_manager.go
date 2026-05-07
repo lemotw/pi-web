@@ -70,20 +70,20 @@ func (m *WorkerManager) Status(sessionID string) WorkerStatus {
 	return worker.Status()
 }
 
-func (m *WorkerManager) SetModel(sessionID, sessionPath, provider, modelID string) error {
+func (m *WorkerManager) SetModel(ctx context.Context, sessionID, sessionPath, provider, modelID string) error {
 	worker, err := m.workerFor(sessionID, sessionPath)
 	if err != nil {
 		return err
 	}
-	return worker.SetModel(context.Background(), provider, modelID)
+	return worker.SetModel(ctx, provider, modelID)
 }
 
-func (m *WorkerManager) SetThinkingLevel(sessionID, sessionPath, level string) error {
+func (m *WorkerManager) SetThinkingLevel(ctx context.Context, sessionID, sessionPath, level string) error {
 	worker, err := m.workerFor(sessionID, sessionPath)
 	if err != nil {
 		return err
 	}
-	return worker.SetThinkingLevel(context.Background(), level)
+	return worker.SetThinkingLevel(ctx, level)
 }
 
 func (m *WorkerManager) GetState(ctx context.Context, sessionID string) (WorkerStatus, error) {
@@ -114,10 +114,17 @@ func (m *WorkerManager) Close() error {
 func (m *WorkerManager) workerFor(sessionID, sessionPath string) (ChatWorker, error) {
 	m.mu.Lock()
 	if worker := m.workers[sessionID]; worker != nil {
+		if worker.Status().State != WorkerStateError {
+			m.mu.Unlock()
+			return worker, nil
+		}
+		// Worker is in error state — evict and recreate so callers don't get a dead process.
+		delete(m.workers, sessionID)
 		m.mu.Unlock()
-		return worker, nil
+		_ = worker.Close()
+	} else {
+		m.mu.Unlock()
 	}
-	m.mu.Unlock()
 
 	worker, err := m.factory(sessionPath)
 	if err != nil {
@@ -126,7 +133,7 @@ func (m *WorkerManager) workerFor(sessionID, sessionPath string) (ChatWorker, er
 
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	if existing := m.workers[sessionID]; existing != nil {
+	if existing := m.workers[sessionID]; existing != nil && existing.Status().State != WorkerStateError {
 		_ = worker.Close()
 		return existing, nil
 	}
