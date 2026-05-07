@@ -217,8 +217,8 @@ export default function (pi: ExtensionAPI) {
 
       if (hasQr) {
         const QRCode = await import("qrcode");
-        const qrText = await QRCode.toString(url, { type: "terminal", small: true });
-        ctx.sendMessage({
+        const qrText = await QRCode.toString(url, { type: "utf8", margin: 2 });
+        pi.sendMessage({
           customType: "pi-web-mobile",
           content: `Scan this QR code to open the session on your mobile device:\n\n${qrText}\n\n${url}`,
           display: true,
