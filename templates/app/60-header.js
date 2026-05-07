@@ -66,7 +66,7 @@ function renderHeader() {
     <div class="header">
       <h1>Session: ${escapeHtml(header?.id || 'unknown')}</h1>
       <div class="help-bar">
-        <span class="help-hint">T thinking · O tools · P tool output</span>
+        <span class="help-hint">T show/hide thinking · O show/hide tools · P expand/collapse tool output</span>
         <div class="help-actions">
           <button type="button" class="header-toggle-btn" data-action="toggle-thinking" title="Show/hide thinking (T)">Thinking</button>
           <button type="button" class="header-toggle-btn" data-action="toggle-tools" title="Show/hide tools (O)">Tools</button>

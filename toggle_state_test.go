@@ -17,6 +17,7 @@ func TestSessionToggleButtonsReflectPersistedActiveState(t *testing.T) {
 		"btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');",
 		"data-action=\"toggle-tool-output\"",
 		"Tool output",
+		"T show/hide thinking · O show/hide tools · P expand/collapse tool output",
 		".header-toggle-btn.active",
 	}
 	combined := templateJs + templateCss
