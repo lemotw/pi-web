@@ -1,13 +1,51 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
+
+// syncRecorder wraps httptest.ResponseRecorder so the handler goroutine's
+// writes and the test goroutine's reads of the body do not race under -race.
+type syncRecorder struct {
+	*httptest.ResponseRecorder
+	mu  sync.Mutex
+	buf bytes.Buffer
+}
+
+func newSyncRecorder() *syncRecorder {
+	return &syncRecorder{ResponseRecorder: httptest.NewRecorder()}
+}
+
+func (s *syncRecorder) Write(p []byte) (int, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.buf.Write(p)
+}
+
+func (s *syncRecorder) body() string {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.buf.String()
+}
+
+func waitFor(t *testing.T, rec *syncRecorder, want string) {
+	t.Helper()
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) {
+		if strings.Contains(rec.body(), want) {
+			return
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+	t.Fatalf("timeout waiting for %q in body:\n%s", want, rec.body())
+}
 
 func TestHandleEventsSendsStatusSnapshotForAllSubscribers(t *testing.T) {
 	s := &Server{
@@ -20,7 +58,7 @@ func TestHandleEventsSendsStatusSnapshotForAllSubscribers(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/events?id=__all__", nil)
 	ctx, cancel := context.WithCancel(req.Context())
 	req = req.WithContext(ctx)
-	w := httptest.NewRecorder()
+	w := newSyncRecorder()
 
 	done := make(chan struct{})
 	go func() {
@@ -28,12 +66,12 @@ func TestHandleEventsSendsStatusSnapshotForAllSubscribers(t *testing.T) {
 		close(done)
 	}()
 
-	// Wait briefly for the snapshot to be written, then close.
-	time.Sleep(50 * time.Millisecond)
+	// Wait for the snapshot to be written, then close.
+	waitFor(t, w, "event: status-snapshot")
 	cancel()
 	<-done
 
-	body := w.Body.String()
+	body := w.body()
 	if !strings.Contains(body, "event: status-snapshot") {
 		t.Fatalf("missing snapshot event header in body:\n%s", body)
 	}
@@ -53,7 +91,7 @@ func TestHandleEventsForwardsNamedDeltaEvents(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/events?id=__all__", nil)
 	ctx, cancel := context.WithCancel(req.Context())
 	req = req.WithContext(ctx)
-	w := httptest.NewRecorder()
+	w := newSyncRecorder()
 
 	done := make(chan struct{})
 	go func() {
@@ -61,15 +99,16 @@ func TestHandleEventsForwardsNamedDeltaEvents(t *testing.T) {
 		close(done)
 	}()
 
-	// Wait for snapshot, then push a delta and a legacy reload.
-	time.Sleep(50 * time.Millisecond)
+	// Wait for the initial :ok, then push a delta and a legacy reload.
+	waitFor(t, w, ":ok")
 	s.broadcast(globalSessID, "event: status-delta\ndata: {\"id\":\"x\",\"running\":true}")
 	s.broadcast(globalSessID, "new-session")
-	time.Sleep(50 * time.Millisecond)
+	waitFor(t, w, "event: status-delta")
+	waitFor(t, w, "data: new-session")
 	cancel()
 	<-done
 
-	body := w.Body.String()
+	body := w.body()
 	if !strings.Contains(body, "event: status-delta\ndata: {\"id\":\"x\",\"running\":true}") {
 		t.Fatalf("expected named delta passthrough, got:\n%s", body)
 	}
