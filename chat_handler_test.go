@@ -319,3 +319,38 @@ func TestHandleWorkerStatusFallsThroughForIdleStatusFile(t *testing.T) {
 		t.Fatalf("body = %q", got)
 	}
 }
+
+func TestComputeWorkerStatusUsesSessionStatusFile(t *testing.T) {
+	root := t.TempDir()
+	sessionsDir := filepath.Join(root, "sessions")
+	statusDir := filepath.Join(root, "session-status")
+	if err := os.MkdirAll(statusDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	sessionID := "test-session.jsonl"
+	status := map[string]any{
+		"sessionId": sessionID,
+		"state":     "running",
+		"updatedAt": time.Now().UTC().Format(time.RFC3339),
+	}
+	data, _ := json.Marshal(status)
+	if err := os.WriteFile(filepath.Join(statusDir, sessionID), data, 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	s := &server{sessionsDir: sessionsDir, chatSender: &fakeSender{}}
+	result := s.computeWorkerStatus(context.Background(), sessionID)
+	if result == nil || result.State != workers.WorkerStateRunning {
+		t.Fatalf("expected running, got %v", result)
+	}
+}
+
+func TestComputeWorkerStatusReturnsIdleWhenNoStatusFile(t *testing.T) {
+	root := t.TempDir()
+	sessionsDir := filepath.Join(root, "sessions")
+	s := &server{sessionsDir: sessionsDir, chatSender: &fakeSender{}}
+	result := s.computeWorkerStatus(context.Background(), "nonexistent.jsonl")
+	if result == nil || result.State != workers.WorkerStateIdle {
+		t.Fatalf("expected idle, got %v", result)
+	}
+}

@@ -103,25 +103,25 @@ func (s *server) readSessionStatus(sessionID string) *workers.WorkerStatus {
 	return &workers.WorkerStatus{State: workers.WorkerStateRunning}
 }
 
-func (s *server) handleWorkerStatus(w http.ResponseWriter, r *http.Request) {
-	sessionID := r.URL.Query().Get("id")
-
-	// Check session status file first (terminal-owned sessions)
+func (s *server) computeWorkerStatus(ctx context.Context, sessionID string) *workers.WorkerStatus {
 	if status := s.readSessionStatus(sessionID); status != nil {
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(status)
-		return
+		return status
 	}
-
 	status := s.chatSender.Status(sessionID)
 	if status.State != workers.WorkerStateRunning {
-		if state, err := s.chatSender.GetState(r.Context(), sessionID); err == nil {
+		if state, err := s.chatSender.GetState(ctx, sessionID); err == nil {
 			status.ThinkingLevel = state.ThinkingLevel
 		}
 	}
 	if status.State == workers.WorkerStateIdle && s.hasRecentSessionActivity(sessionID) {
 		status.State = workers.WorkerStateRunning
 	}
+	return &status
+}
+
+func (s *server) handleWorkerStatus(w http.ResponseWriter, r *http.Request) {
+	sessionID := r.URL.Query().Get("id")
+	status := s.computeWorkerStatus(r.Context(), sessionID)
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(status)
 }
