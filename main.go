@@ -19,6 +19,11 @@ import (
 const defaultPort = "31483"
 const tokenEnvVar = "PI_WEB_TOKEN"
 
+// globalSessID is the sentinel SSE topic for events that are not tied to a
+// specific session — e.g. a new session file appearing on disk. The index
+// page subscribes to this so it can refresh when new sessions show up.
+const globalSessID = "__all__"
+
 func main() {
 	port := flag.String("p", defaultPort, "port to listen on")
 	hostOverride := flag.String("host", "", "host/IP to bind; defaults to Tailscale IP when available, otherwise 127.0.0.1")

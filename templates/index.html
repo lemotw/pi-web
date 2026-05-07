@@ -284,7 +284,7 @@ body {
 </style>
 <script defer src="/static/alpine.js"></script>
 </head>
-<body x-data="sessionsPage()" x-init="filter()">
+<body x-data="sessionsPage()" x-init="filter(); subscribe()">
 <div class="header">
   <div class="header-inner">
     <div class="header-top">
@@ -355,6 +355,17 @@ function sessionsPage() {
     recent: [],
     creating: false,
     error: '',
+
+    subscribe() {
+      try {
+        const es = new EventSource('/events?id=__all__');
+        es.onmessage = (e) => {
+          if (e.data === 'new-session') {
+            window.location.reload();
+          }
+        };
+      } catch {}
+    },
 
     filter() {
       const q = this.query.toLowerCase();

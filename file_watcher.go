@@ -140,6 +140,12 @@ func (s *server) handleFsEvent(w *fsnotify.Watcher, ev fsnotify.Event, deb *debo
 	if ev.Op&(fsnotify.Write|fsnotify.Create) == 0 {
 		return
 	}
+	// New session file → notify index-page subscribers so the list refreshes
+	// without a manual reload. Only fires on Create events post-startup, since
+	// the initial scan goes straight through scanForChanges/recordModTime.
+	if ev.Op&fsnotify.Create != 0 {
+		s.broadcast(globalSessID, "new-session")
+	}
 	deb.schedule(ev.Name)
 }
 
