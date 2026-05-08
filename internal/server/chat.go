@@ -64,8 +64,7 @@ func (s *Server) handleChat(w http.ResponseWriter, r *http.Request) {
 		writeJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"ok": true, "status": "accepted"})
+	writeJSON(w, 0, map[string]any{"ok": true, "status": "accepted"})
 }
 
 const recentSessionActivityWindow = 3 * time.Second
@@ -115,8 +114,7 @@ func (s *Server) handleWorkerStatus(w http.ResponseWriter, r *http.Request) {
 			status.ThinkingLevel = state.ThinkingLevel
 		}
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(status)
+	writeJSON(w, 0, status)
 }
 
 func (s *Server) hasRecentSessionActivity(sessionID string) bool {
@@ -172,8 +170,7 @@ func (s *Server) handleSetModel(w http.ResponseWriter, r *http.Request) {
 		writeJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"ok": true})
+	writeJSON(w, 0, map[string]any{"ok": true})
 }
 
 func (s *Server) handleSetThinkingLevel(w http.ResponseWriter, r *http.Request) {
@@ -213,6 +210,5 @@ func (s *Server) handleSetThinkingLevel(w http.ResponseWriter, r *http.Request) 
 	if state, err := s.chatSender.GetState(r.Context(), resolved.Session.ID); err == nil {
 		status.ThinkingLevel = state.ThinkingLevel
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"ok": true, "thinkingLevel": status.ThinkingLevel})
+	writeJSON(w, 0, map[string]any{"ok": true, "thinkingLevel": status.ThinkingLevel})
 }

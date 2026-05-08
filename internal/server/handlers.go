@@ -55,8 +55,7 @@ func (s *Server) handleApiSession(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{
+	writeJSON(w, 0, map[string]any{
 		"header":  resolved.Session.Header,
 		"entries": resolved.Session.Entries,
 	})
@@ -85,16 +84,7 @@ func (s *Server) handleNewSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Pre-initialize a worker so the session page can read default model and
-	// thinking level immediately instead of waiting for the first chat message.
-	if s.chatSender != nil {
-		if resolved, err := sessions.ResolveByID(s.sessionsDir, id); err == nil {
-			go s.chatSender.EnsureWorker(context.Background(), resolved.Session.ID, resolved.Path)
-		}
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"ok": true, "id": id})
+	writeJSON(w, 0, map[string]any{"ok": true, "id": id})
 }
 
 func (s *Server) handleRecentLocations(w http.ResponseWriter, r *http.Request) {
@@ -102,8 +92,7 @@ func (s *Server) handleRecentLocations(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		locations = []string{}
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"locations": locations})
+	writeJSON(w, 0, map[string]any{"locations": locations})
 }
 
 func (s *Server) handleAvailableModels(w http.ResponseWriter, r *http.Request) {
@@ -132,6 +121,5 @@ func (s *Server) handleAvailableModels(w http.ResponseWriter, r *http.Request) {
 		writeJSONError(w, http.StatusInternalServerError, "invalid model list payload: "+err.Error())
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"models": payload.Models})
+	writeJSON(w, 0, map[string]any{"models": payload.Models})
 }

@@ -171,3 +171,14 @@ func writeJSONError(w http.ResponseWriter, status int, message string) {
 	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(map[string]any{"error": message})
 }
+
+// writeJSON writes payload as JSON. Pass status=0 to leave the default 200.
+// Encode errors are intentionally discarded — by then headers are sent and
+// the client is the right party to detect transport failure.
+func writeJSON(w http.ResponseWriter, status int, payload any) {
+	w.Header().Set("Content-Type", "application/json")
+	if status != 0 {
+		w.WriteHeader(status)
+	}
+	_ = json.NewEncoder(w).Encode(payload)
+}
