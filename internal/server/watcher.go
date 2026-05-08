@@ -18,16 +18,24 @@ import (
 func (s *Server) watchFiles() {
 	if err := s.watchFilesFsnotify(); err != nil {
 		fmt.Fprintf(os.Stderr, "fsnotify unavailable, falling back to polling: %v\n", err)
-		s.watchFilesPolling()
+		s.wg.Add(1)
+		go func() {
+			defer s.wg.Done()
+			s.watchFilesPolling()
+		}()
 	}
 }
 
 func (s *Server) watchFilesPolling() {
 	ticker := time.NewTicker(1500 * time.Millisecond)
 	defer ticker.Stop()
-
-	for range ticker.C {
-		s.scanForChanges()
+	for {
+		select {
+		case <-ticker.C:
+			s.scanForChanges()
+		case <-s.stopCh:
+			return
+		}
 	}
 }
 
@@ -104,10 +112,20 @@ func (s *Server) watchFilesFsnotify() error {
 	s.scanForChanges()
 
 	debouncers := newDebouncer(50 * time.Millisecond)
-	go debouncers.run(s)
+	debDone := make(chan struct{})
 	go func() {
+		debouncers.run(s)
+		close(debDone)
+	}()
+
+	s.wg.Add(1)
+	go func() {
+		defer s.wg.Done()
 		defer w.Close()
-		defer debouncers.stop()
+		defer func() {
+			debouncers.stop()
+			<-debDone
+		}()
 		for {
 			select {
 			case ev, ok := <-w.Events:
@@ -120,10 +138,11 @@ func (s *Server) watchFilesFsnotify() error {
 					return
 				}
 				fmt.Fprintf(os.Stderr, "fsnotify error: %v\n", err)
+			case <-s.stopCh:
+				return
 			}
 		}
 	}()
-
 	return nil
 }
 

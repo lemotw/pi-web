@@ -57,6 +57,8 @@ type Server struct {
 	lastKnown     map[string]struct{} // session ids currently broadcast as running
 	lastKnownMu   sync.Mutex
 	stopCh        chan struct{}
+	stopOnce      sync.Once
+	wg            sync.WaitGroup
 }
 
 func New(deps Deps) *Server {
@@ -78,12 +80,25 @@ func New(deps Deps) *Server {
 		lastKnown:     make(map[string]struct{}),
 		stopCh:        make(chan struct{}),
 	}
-	go s.watchFiles()
+	s.watchFiles()
 	if err := s.startSessionStatusWatcher(); err != nil {
 		fmt.Fprintf(os.Stderr, "session-status watcher unavailable: %v\n", err)
 	}
-	go s.runStatusSweeper(s.stopCh, time.Second)
+	s.wg.Add(1)
+	go func() {
+		defer s.wg.Done()
+		s.runStatusSweeper(s.stopCh, time.Second)
+	}()
 	return s
+}
+
+// Shutdown stops background goroutines and waits for them to exit.
+// Idempotent and safe to call from any goroutine.
+func (s *Server) Shutdown() {
+	s.stopOnce.Do(func() {
+		close(s.stopCh)
+	})
+	s.wg.Wait()
 }
 
 // Register installs every HTTP handler on mux, wrapped with the auth
