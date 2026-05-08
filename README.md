@@ -164,7 +164,7 @@ launchctl load ~/Library/LaunchAgents/com.pi-web.plist
 
 pi-web reads session JSONL files from `~/.pi/agent/sessions/` and renders them with pi's own export templates, embedded into the binary at build time. There are three moving parts:
 
-- **Live reload.** A `fsnotify` watcher tails the sessions directory and pushes a one-line SSE event to any connected browser the moment pi appends to the file. A 1.5s polling fallback kicks in if fsnotify can't initialize (e.g. NFS).
+- **Live reload and chat preview.** A `fsnotify` watcher tails the sessions directory and pushes SSE reload events to connected browsers when pi appends to the file. Session pages fetch `/api/session` and append/upsert canonical JSONL entries in place. Browser-started chat also streams best-effort assistant previews over the same SSE connection; the next JSONL reload remains the source-of-truth reconciliation.
 - **Per-session workers.** When you send a message from the browser, pi-web spawns a headless `pi --mode rpc` subprocess scoped to that session, switches it to the session file, and forwards your prompt. Subsequent messages reuse the same worker. If the worker crashes it's evicted and replaced on the next request; idle workers are reaped after 30 minutes so long-lived servers don't accumulate processes.
 - **Sharing.** Renders a self-contained HTML snapshot and shells out to `gh gist create --public=false`. Snapshots don't live-update.
 

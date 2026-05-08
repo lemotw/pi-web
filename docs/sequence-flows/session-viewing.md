@@ -146,7 +146,7 @@ The server:
 2. Sends `:ok\n\n` (SSE comment to confirm connection)
 3. Blocks reading from `client.ch` or `r.Context().Done()`
 
-When the session file changes, the file watcher calls `broadcast(sessID, "reload")`, which writes to the client's channel, and the browser reloads the page.
+When the session file changes, the file watcher calls `broadcast(sessID, "reload")`. The browser fetches `/api/session`, appends new canonical entries, upserts live-rendered entries, and clears any temporary chat preview.
 
 ## Caching Behavior
 

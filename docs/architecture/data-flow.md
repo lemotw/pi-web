@@ -157,7 +157,8 @@ Editor saves session file
            │
            ▼
     Browser EventSource receives "reload"
-           └──▶ window.location.reload()
+           └──▶ fetch /api/session
+                └──▶ append/upsert canonical entries and clear preview
 ```
 
 ## Data Flow: Share to Gist

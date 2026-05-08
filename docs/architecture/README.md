@@ -48,7 +48,7 @@ This directory contains the architecture documentation for **pi-web**, a local w
 
 1. **Read-only session storage**: pi-web reads from `~/.pi/agent/sessions/` but never writes to existing sessions. New sessions can be created via the web UI.
 
-2. **Live reload via SSE**: Instead of polling, the browser opens an EventSource connection. The server watches session files via `fsnotify` (with polling fallback) and pushes `reload` events to connected clients.
+2. **Live updates via SSE**: The browser opens an EventSource connection. The server watches session files via `fsnotify` (with polling fallback) and pushes `reload` events; session pages fetch `/api/session` to reconcile canonical JSONL entries. Browser chat can also receive best-effort `chat-preview` SSE events before JSONL reconciliation.
 
 3. **Chat via RPC workers**: Each session gets a dedicated `pi --mode rpc` subprocess. Workers are cached and reaped after 30 minutes of idle time.
 

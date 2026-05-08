@@ -94,7 +94,7 @@ This flow covers a user typing a message (with optional image attachment) in the
      │  SSE: agent_end
      │◀──────────── event: reload ──────────────────────────────────────────────────────│
      │             │              │                  │                  │               │
-     │  (page reloads, showing new assistant response)
+     │  (browser reconciles from `/api/session`; interim assistant text may have appeared earlier via `chat-preview` SSE)
 ```
 
 ## Step-by-Step

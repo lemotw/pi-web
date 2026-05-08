@@ -6,7 +6,7 @@ pi-web pushes real-time updates to the browser via **Server-Sent Events (SSE)**.
 
 There are two independent live-update mechanisms:
 
-1. **File Change Reload** — when a session JSONL file is modified, the session page auto-refreshes
+1. **File Change Reload** — when a session JSONL file is modified, the session page fetches `/api/session` and reconciles canonical entries
 2. **Running Status Updates** — when a session starts/stops running, the index page updates card badges in real-time
 
 ## 1. File Change Reload
@@ -46,7 +46,8 @@ There are two independent live-update mechanisms:
      │             │                │                │   SSE: reload │
      │             │                │                │───────────────▶
      │             │                │                │               │
-     │             │                │                │               │─── window.location.reload()
+     │             │                │                │               │─── fetch /api/session
+     │             │                │                │               │─── append/upsert canonical entries
      │             │                │                │               │
 ```
 
@@ -168,6 +169,7 @@ This catches cases where a signal goes stale (e.g., terminal process crashes wit
 | `new-session` | `__all__` | `"new-session"` | New `.jsonl` file created |
 | `status-snapshot` | `__all__` | `{"running": ["id1", "id2"]}` | Client connects to `/events?id=__all__` |
 | `status-delta` | `__all__` | `{"id": "abc", "running": true}` | Running status changes |
+| `chat-preview` | `sessID` | `{"content": "...", "done": false}` | Best-effort browser chat preview |
 
 ### Browser Handling
 
@@ -180,5 +182,14 @@ es.onmessage = (e) => { if (e.data === 'new-session') window.location.reload() }
 
 **Session page** (`/events?id=<sessID>`):
 ```js
-es.onmessage = (e) => { if (e.data === 'reload') window.location.reload() }
+es.onmessage = (e) => {
+  if (e.data !== 'reload') return
+  fetch('/api/session?id=' + encodeURIComponent(sessId))
+    .then((r) => r.json())
+    .then((data) => {
+      clearChatPreview()
+      // append/upsert canonical entries
+    })
+}
+es.addEventListener('chat-preview', (e) => renderChatPreview(JSON.parse(e.data)))
 ```

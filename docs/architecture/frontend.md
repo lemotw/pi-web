@@ -81,7 +81,8 @@ These are concatenated in lexical order (numeric prefix controls load order):
 
 The session page opens its own SSE connection to `/events?id=<sessionId>`:
 
-- On `reload` event → `window.location.reload()`
+- On `reload` event → fetch `/api/session?id=…`, append/upsert canonical entries, clear any temporary chat preview
+- On `chat-preview` event → render/update a temporary assistant preview block until canonical JSONL reload arrives
 - Debounced in the server watcher to avoid multiple reloads per save
 
 ## Shared Frontend Modules
