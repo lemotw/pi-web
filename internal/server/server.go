@@ -76,12 +76,12 @@ func New(deps Deps) *Server {
 		renderSession: deps.RenderSession,
 		models:        deps.Models,
 		lastKnown:     make(map[string]struct{}),
+		stopCh:        make(chan struct{}),
 	}
 	go s.watchFiles()
 	if err := s.startSessionStatusWatcher(); err != nil {
 		fmt.Fprintf(os.Stderr, "session-status watcher unavailable: %v\n", err)
 	}
-	s.stopCh = make(chan struct{})
 	go s.runStatusSweeper(s.stopCh, time.Second)
 	return s
 }
