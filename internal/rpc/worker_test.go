@@ -62,6 +62,49 @@ func TestHandleRPCLineTracksTurnEndAsStreamActivity(t *testing.T) {
 	}
 }
 
+func TestHandleRPCLineEmitsStreamPreviewCallbacks(t *testing.T) {
+	var previews []StreamPreview
+	w := &piRPCWorker{
+		status:        workers.WorkerStatus{State: workers.WorkerStateIdle},
+		pending:       make(map[string]chan response),
+		streamSink:    func(preview StreamPreview) { previews = append(previews, preview) },
+		streamPreview: &streamPreviewAccumulator{},
+	}
+
+	w.handleRPCLine(`{"type":"message_update","assistantMessageEvent":{"type":"text_delta","delta":"hel"}}`)
+	w.handleRPCLine(`{"type":"message_update","assistantMessageEvent":{"type":"text_delta","delta":"lo"}}`)
+
+	if len(previews) != 2 {
+		t.Fatalf("previews = %d, want 2", len(previews))
+	}
+	if previews[0].Content != "hel" || previews[0].Done {
+		t.Fatalf("first preview = %+v", previews[0])
+	}
+	if previews[1].Content != "hello" || previews[1].Done {
+		t.Fatalf("second preview = %+v", previews[1])
+	}
+}
+
+func TestHandleRPCLineEmitsDonePreviewOnAgentEnd(t *testing.T) {
+	var previews []StreamPreview
+	w := &piRPCWorker{
+		status:        workers.WorkerStatus{State: workers.WorkerStateIdle},
+		pending:       make(map[string]chan response),
+		streamSink:    func(preview StreamPreview) { previews = append(previews, preview) },
+		streamPreview: &streamPreviewAccumulator{},
+	}
+
+	w.handleRPCLine(`{"type":"message_update","assistantMessageEvent":{"type":"text_delta","delta":"hello"}}`)
+	w.handleRPCLine(`{"type":"agent_end"}`)
+
+	if len(previews) != 2 {
+		t.Fatalf("previews = %d, want 2", len(previews))
+	}
+	if previews[1].Content != "hello" || !previews[1].Done {
+		t.Fatalf("done preview = %+v", previews[1])
+	}
+}
+
 func TestHandleRPCLineTracksMessageEndAsStreamActivity(t *testing.T) {
 	w := &piRPCWorker{
 		status:  workers.WorkerStatus{State: workers.WorkerStateIdle},

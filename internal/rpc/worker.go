@@ -32,6 +32,8 @@ type piRPCWorker struct {
 	stderrBuf            *strings.Builder
 	lastActive           atomic.Int64 // unix nanos; only user-initiated actions update this
 	lastStreamActivity   atomic.Int64 // unix nanos; stream/turn events keep worker visually running
+	streamSink           StreamEventSink
+	streamPreview        *streamPreviewAccumulator
 }
 
 // idleReportable is implemented by workers that can report when they were last
@@ -55,6 +57,10 @@ func (w *piRPCWorker) IdleSince(now time.Time) time.Duration {
 }
 
 func NewPiWorker(sessionPath string) (workers.ChatWorker, error) {
+	return NewPiWorkerWithStream(sessionPath, nil)
+}
+
+func NewPiWorkerWithStream(sessionPath string, streamSink StreamEventSink) (workers.ChatWorker, error) {
 	if _, err := exec.LookPath("pi"); err != nil {
 		return nil, fmt.Errorf("pi executable not found: %w", err)
 	}
@@ -74,8 +80,10 @@ func NewPiWorker(sessionPath string) (workers.ChatWorker, error) {
 		cmd:         cmd,
 		stdin:       stdin,
 		status:      workers.WorkerStatus{State: workers.WorkerStateIdle},
-		pending:     make(map[string]chan response),
-		stderrBuf:   &stderrBuf,
+		pending:       make(map[string]chan response),
+		stderrBuf:     &stderrBuf,
+		streamSink:    streamSink,
+		streamPreview: &streamPreviewAccumulator{},
 	}
 	if err := cmd.Start(); err != nil {
 		return nil, err
@@ -337,10 +345,22 @@ func (w *piRPCWorker) handleRPCLine(line string) {
 		}
 		return
 	}
+	if raw["type"] == "message_update" {
+		var msg struct {
+			AssistantMessageEvent assistantMessageEvent `json:"assistantMessageEvent"`
+		}
+		if err := json.Unmarshal([]byte(line), &msg); err == nil {
+			w.emitStreamPreview(msg.AssistantMessageEvent)
+		}
+	}
 	switch raw["type"] {
 	case "message_update", "message_end", "turn_end":
 		w.noteStreamActivity()
+		if raw["type"] == "message_end" || raw["type"] == "turn_end" {
+			w.completeStreamPreview()
+		}
 	case "agent_end":
+		w.completeStreamPreview()
 		w.mu.Lock()
 		w.status = workers.WorkerStatus{State: workers.WorkerStateIdle}
 		w.mu.Unlock()
@@ -357,6 +377,24 @@ func (w *piRPCWorker) handleRPCLine(line string) {
 
 func (w *piRPCWorker) noteStreamActivity() {
 	w.lastStreamActivity.Store(time.Now().UnixNano())
+}
+
+func (w *piRPCWorker) emitStreamPreview(event assistantMessageEvent) {
+	if w.streamSink == nil || w.streamPreview == nil {
+		return
+	}
+	if preview, ok := w.streamPreview.handleAssistantEvent(event); ok {
+		w.streamSink(preview)
+	}
+}
+
+func (w *piRPCWorker) completeStreamPreview() {
+	if w.streamSink == nil || w.streamPreview == nil {
+		return
+	}
+	if preview, ok := w.streamPreview.complete(); ok {
+		w.streamSink(preview)
+	}
 }
 
 func (w *piRPCWorker) hasRecentStreamActivityLocked(now time.Time) bool {
