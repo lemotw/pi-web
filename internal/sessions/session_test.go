@@ -93,8 +93,9 @@ func TestListRecentLocationsReturnsNewestBoundedLocations(t *testing.T) {
 func TestCreateSessionFile(t *testing.T) {
 	tmpDir := t.TempDir()
 	sessDir := filepath.Join(tmpDir, "sessions")
+	projectPath := filepath.Join(tmpDir, "test-project")
 
-	id, err := CreateSessionFile(sessDir, "/Users/setkyar/test-project")
+	id, err := CreateSessionFile(sessDir, projectPath)
 	if err != nil {
 		t.Fatalf("CreateSessionFile failed: %v", err)
 	}
@@ -103,7 +104,7 @@ func TestCreateSessionFile(t *testing.T) {
 	}
 
 	// Verify file exists
-	projectDir := filepath.Join(sessDir, "--Users-setkyar-test-project--")
+	projectDir := filepath.Join(sessDir, EncodeProjectName(projectPath))
 	entries, err := os.ReadDir(projectDir)
 	if err != nil {
 		t.Fatalf("project dir not created: %v", err)
@@ -120,7 +121,7 @@ func TestCreateSessionFile(t *testing.T) {
 	if !strings.Contains(string(data), `"type":"session"`) {
 		t.Fatalf("missing session header: %s", string(data))
 	}
-	if !strings.Contains(string(data), `"cwd":"/Users/setkyar/test-project"`) {
+	if !strings.Contains(string(data), `"cwd":"`+projectPath+`"`) {
 		t.Fatalf("missing cwd: %s", string(data))
 	}
 }
