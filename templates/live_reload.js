@@ -616,12 +616,30 @@
   var resumeBtn = document.getElementById('resume-btn');
   if (resumeBtn) {
     resumeBtn.addEventListener('click', function() {
-      var cmd = 'pi --session ' + sessId;
-      function markCopied() {
-        resumeBtn.textContent = 'Copied!';
-        setTimeout(function() {
-          if (resumeBtn) resumeBtn.textContent = 'Resume in Terminal';
-        }, 1500);
+      var resumeSessionArg = decodeURIComponent(sessId).replace(/\.jsonl$/, '');
+      var underscore = resumeSessionArg.indexOf('_');
+      if (underscore !== -1) resumeSessionArg = resumeSessionArg.substring(underscore + 1);
+      var cmd = 'pi --session ' + resumeSessionArg;
+      var hideTimer;
+      function showCopiedNotice() {
+        var notice = document.getElementById('resume-copy-notice');
+        if (!notice) {
+          notice = document.createElement('button');
+          notice.type = 'button';
+          notice.id = 'resume-copy-notice';
+          notice.className = 'session-action';
+          resumeBtn.parentNode.insertBefore(notice, resumeBtn.nextSibling);
+        }
+        notice.textContent = 'Copied — tap to view';
+        notice.title = cmd;
+        notice.onclick = function() {
+          notice.textContent = cmd;
+        };
+        notice.style.display = '';
+        clearTimeout(hideTimer);
+        hideTimer = setTimeout(function() {
+          notice.style.display = 'none';
+        }, 3500);
       }
       function fallbackCopy() {
         var textarea = document.createElement('textarea');
@@ -632,10 +650,10 @@
         textarea.select();
         var ok = document.execCommand('copy');
         document.body.removeChild(textarea);
-        if (ok) markCopied();
+        if (ok) showCopiedNotice();
       }
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(cmd).then(markCopied).catch(fallbackCopy);
+        navigator.clipboard.writeText(cmd).then(showCopiedNotice).catch(fallbackCopy);
       } else {
         fallbackCopy();
       }

@@ -48,6 +48,23 @@ func TestResumeButtonClipboardGuardAndFallback(t *testing.T) {
 	}
 }
 
+func TestResumeButtonShowsNotificationWithoutChangingButtonText(t *testing.T) {
+	session := sessions.Session{SessionSummary: sessions.SessionSummary{ID: "2026-05-08T13-05-24.068Z_492e5bad-c6e9-4c74-9195-f7efc309a7c7.jsonl", Filename: "2026-05-08T13-05-24.068Z_492e5bad-c6e9-4c74-9195-f7efc309a7c7.jsonl"}, Entries: []map[string]any{{"id": "aaaaaaaa"}}}
+	html := generateExportHtml(session, true)
+	if strings.Contains(html, `resumeBtn.textContent = 'Copied!'`) {
+		t.Fatalf("resume button text should not change to Copied")
+	}
+	if !strings.Contains(html, `Copied — tap to view`) {
+		t.Fatalf("resume copy should show a nearby tap-to-view notification")
+	}
+	if !strings.Contains(html, `resumeSessionArg`) {
+		t.Fatalf("resume copy should derive UUID-only session argument")
+	}
+	if !strings.Contains(html, `substring(underscore + 1)`) {
+		t.Fatalf("resume copy should strip timestamp prefix from session filename")
+	}
+}
+
 func TestGenerateExportHtmlOmitsResumeButtonForShare(t *testing.T) {
 	session := sessions.Session{SessionSummary: sessions.SessionSummary{ID: "s.jsonl", Filename: "s.jsonl"}, Entries: []map[string]any{{"id": "aaaaaaaa"}}}
 	html := generateExportHtml(session, false)
