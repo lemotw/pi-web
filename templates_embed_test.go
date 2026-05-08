@@ -139,3 +139,30 @@ func TestIndexTemplateOmitsViewOnlyBadgeForChatableSessions(t *testing.T) {
 		t.Fatal("rendered index page should not show view only badge for chatable sessions")
 	}
 }
+
+func TestIndexTemplateDoesNotRegisterFmtTime(t *testing.T) {
+	if _, ok := funcMap["fmtTime"]; ok {
+		t.Fatal("funcMap should not contain fmtTime; timestamps are formatted client-side")
+	}
+}
+
+func TestIndexTemplateRendersDataTimestampAttribute(t *testing.T) {
+	var buf bytes.Buffer
+	data := []sessions.Session{{SessionSummary: sessions.SessionSummary{
+		ID:            "s1.jsonl",
+		Project:       "/tmp/project",
+		LastActivity:  "2026-05-08T09:49:41.591Z",
+		ChatAvailable: true,
+	}}}
+	if err := indexTmpl.Execute(&buf, data); err != nil {
+		t.Fatalf("failed to render index template: %v", err)
+	}
+	rendered := buf.String()
+	if !strings.Contains(rendered, `data-timestamp="2026-05-08T09:49:41.591Z"`) {
+		t.Fatalf("rendered index page missing data-timestamp attribute, got: %s", rendered)
+	}
+	// Ensure the old server-side formatted text is NOT present
+	if strings.Contains(rendered, "May 8, 2026 9:49 AM") {
+		t.Fatal("rendered index page still contains server-side formatted timestamp")
+	}
+}

@@ -4,19 +4,10 @@ import (
 	_ "embed"
 	"fmt"
 	"html/template"
-	"time"
 )
 
 //go:embed templates/index.html
 var indexTmplStr string
-
-func fmtTime(ts string) string {
-	t, err := time.Parse(time.RFC3339, ts)
-	if err != nil {
-		return ts
-	}
-	return t.Format("Jan 2, 2006 3:04 PM")
-}
 
 func fmtTokens(n int) string {
 	if n >= 1_000_000 {
@@ -36,7 +27,6 @@ func fmtCost(n float64) string {
 }
 
 var funcMap = template.FuncMap{
-	"fmtTime":     fmtTime,
 	"fmtTokens":   fmtTokens,
 	"fmtCost":     fmtCost,
 	"indexScript": func() string { return indexScriptPath },

@@ -358,7 +358,7 @@ body {
       </div>
       <div class="session-project">{{ .Project | html }}</div>
       <div class="session-meta">
-        <span>{{ fmtTime .LastActivity }}</span>
+        <span data-timestamp="{{ .LastActivity }}">{{ .LastActivity }}</span>
         <span>{{ .MessageCount }} msgs</span>
         <span>{{ fmtTokens .TokenTotal }} tok</span>
         <span>{{ fmtCost .CostTotal }}</span>
@@ -393,6 +393,22 @@ body {
     <div class="modal-error" id="modalError" x-text="error"></div>
   </div>
 </div>
+<script>
+(function() {
+  document.querySelectorAll('[data-timestamp]').forEach(function(el) {
+    var ts = el.dataset.timestamp;
+    if (ts) {
+      var d = new Date(ts);
+      if (!isNaN(d)) {
+        el.textContent = d.toLocaleString(undefined, {
+          month: 'short', day: 'numeric', year: 'numeric',
+          hour: 'numeric', minute: '2-digit'
+        });
+      }
+    }
+  });
+})();
+</script>
 <script type="module" src="{{ indexScript }}"></script>
 </body>
 </html>
