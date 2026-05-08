@@ -617,12 +617,13 @@
   if (resumeBtn) {
     resumeBtn.addEventListener('click', function() {
       var cmd = 'pi --session ' + sessId;
-      navigator.clipboard.writeText(cmd).then(function() {
+      function markCopied() {
         resumeBtn.textContent = 'Copied!';
         setTimeout(function() {
           if (resumeBtn) resumeBtn.textContent = 'Resume in Terminal';
         }, 1500);
-      }).catch(function() {
+      }
+      function fallbackCopy() {
         var textarea = document.createElement('textarea');
         textarea.value = cmd;
         textarea.style.position = 'fixed';
@@ -631,13 +632,13 @@
         textarea.select();
         var ok = document.execCommand('copy');
         document.body.removeChild(textarea);
-        if (ok) {
-          resumeBtn.textContent = 'Copied!';
-          setTimeout(function() {
-            if (resumeBtn) resumeBtn.textContent = 'Resume in Terminal';
-          }, 1500);
-        }
-      });
+        if (ok) markCopied();
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(cmd).then(markCopied).catch(fallbackCopy);
+      } else {
+        fallbackCopy();
+      }
     });
   }
 })();

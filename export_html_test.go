@@ -37,6 +37,17 @@ func TestGenerateExportHtmlIncludesResumeButtonWhenButtonsShown(t *testing.T) {
 	}
 }
 
+func TestResumeButtonClipboardGuardAndFallback(t *testing.T) {
+	session := sessions.Session{SessionSummary: sessions.SessionSummary{ID: "s.jsonl", Filename: "s.jsonl"}, Entries: []map[string]any{{"id": "aaaaaaaa"}}}
+	html := generateExportHtml(session, true)
+	if !strings.Contains(html, "if (navigator.clipboard && navigator.clipboard.writeText) {\n        navigator.clipboard.writeText(cmd)") {
+		t.Fatalf("resume clipboard code should guard navigator.clipboard before writeText")
+	}
+	if !strings.Contains(html, `document.execCommand('copy')`) {
+		t.Fatalf("resume clipboard code should include execCommand fallback")
+	}
+}
+
 func TestGenerateExportHtmlOmitsResumeButtonForShare(t *testing.T) {
 	session := sessions.Session{SessionSummary: sessions.SessionSummary{ID: "s.jsonl", Filename: "s.jsonl"}, Entries: []map[string]any{{"id": "aaaaaaaa"}}}
 	html := generateExportHtml(session, false)
