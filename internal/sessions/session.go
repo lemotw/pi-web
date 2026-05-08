@@ -252,21 +252,44 @@ func DecodeProjectName(dirName string) string {
 	return s
 }
 
+const maxRecentLocations = 10
+
+type recentLocationDir struct {
+	name    string
+	modTime time.Time
+}
+
 func ListRecentLocations(sessionsDir string) ([]string, error) {
 	entries, err := os.ReadDir(sessionsDir)
 	if err != nil {
 		return nil, err
 	}
-	var locations []string
-	seen := make(map[string]bool)
+	dirs := make([]recentLocationDir, 0, len(entries))
 	for _, e := range entries {
 		if !e.IsDir() {
 			continue
 		}
-		loc := DecodeProjectName(e.Name())
-		if loc != "" && !seen[loc] {
-			seen[loc] = true
-			locations = append(locations, loc)
+		info, err := e.Info()
+		if err != nil {
+			continue
+		}
+		dirs = append(dirs, recentLocationDir{name: e.Name(), modTime: info.ModTime()})
+	}
+	sort.Slice(dirs, func(i, j int) bool {
+		return dirs[i].modTime.After(dirs[j].modTime)
+	})
+
+	locations := make([]string, 0, maxRecentLocations)
+	seen := make(map[string]bool)
+	for _, dir := range dirs {
+		loc := DecodeProjectName(dir.name)
+		if loc == "" || seen[loc] {
+			continue
+		}
+		seen[loc] = true
+		locations = append(locations, loc)
+		if len(locations) == maxRecentLocations {
+			break
 		}
 	}
 	return locations, nil

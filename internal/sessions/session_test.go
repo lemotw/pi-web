@@ -1,10 +1,12 @@
 package sessions
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestEncodeProjectName(t *testing.T) {
@@ -54,6 +56,37 @@ func TestEncodeDecodeRoundTrip(t *testing.T) {
 		if decoded != p {
 			t.Errorf("round-trip failed: %q -> %q -> %q", p, encoded, decoded)
 		}
+	}
+}
+
+func TestListRecentLocationsReturnsNewestBoundedLocations(t *testing.T) {
+	tmp := t.TempDir()
+	base := time.Date(2026, 5, 8, 12, 0, 0, 0, time.UTC)
+
+	for i := 0; i < 15; i++ {
+		project := filepath.Join("/tmp", fmt.Sprintf("project%02d", i))
+		dir := filepath.Join(tmp, EncodeProjectName(project))
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			t.Fatalf("mkdir project dir: %v", err)
+		}
+		mtime := base.Add(time.Duration(i) * time.Minute)
+		if err := os.Chtimes(dir, mtime, mtime); err != nil {
+			t.Fatalf("chtimes project dir: %v", err)
+		}
+	}
+
+	locations, err := ListRecentLocations(tmp)
+	if err != nil {
+		t.Fatalf("ListRecentLocations failed: %v", err)
+	}
+	if len(locations) != 10 {
+		t.Fatalf("expected 10 bounded locations, got %d: %#v", len(locations), locations)
+	}
+	if locations[0] != "/tmp/project14" {
+		t.Fatalf("expected newest project first, got %q", locations[0])
+	}
+	if locations[9] != "/tmp/project05" {
+		t.Fatalf("expected tenth newest project last, got %q", locations[9])
 	}
 }
 
