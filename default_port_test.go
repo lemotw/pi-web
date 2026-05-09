@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-const expectedDefaultPort = "31483"
+const expectedDefaultPort = "31415"
 
 func TestDefaultPortMatchesPublishedDefaults(t *testing.T) {
 	if defaultPort != expectedDefaultPort {

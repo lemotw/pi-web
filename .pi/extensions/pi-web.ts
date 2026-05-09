@@ -39,7 +39,7 @@ async function detectHostPort(pi: ExtensionAPI): Promise<{ host: string; port: s
       if (line) {
         const parts = line.split(/\s+/);
         const args = parts.slice(1);
-        let port = "31483";
+        let port = "31415";
         let host = "127.0.0.1";
         for (let i = 0; i < args.length; i++) {
           if ((args[i] === "-p" || args[i] === "--port") && args[i + 1]) {
@@ -59,7 +59,7 @@ async function detectHostPort(pi: ExtensionAPI): Promise<{ host: string; port: s
   }
 
   // 3. Default fallback
-  return { host: "127.0.0.1", port: "31483", tailscale: false };
+  return { host: "127.0.0.1", port: "31415", tailscale: false };
 }
 
 function isTailscaleHost(host: string): boolean {

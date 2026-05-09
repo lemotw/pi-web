@@ -15,8 +15,8 @@ Run the `pi-web` command:
 # Start the viewer and auto-open browser
 pi-web -o
 
-# Or start on a specific port (default is 31483)
-pi-web -p 31483 -o
+# Or start on a specific port (default is 31415)
+pi-web -p 31415 -o
 ```
 
 ## What it does
@@ -30,7 +30,7 @@ pi-web -p 31483 -o
 
 | Flag | Description |
 |------|-------------|
-| `-p <port>` | Port to listen on (default: **31483**) |
+| `-p <port>` | Port to listen on (default: **31415**) |
 | `-o` | Auto-open browser |
 
 The binary is installed at `~/.pi/agent/bin/pi-web`.

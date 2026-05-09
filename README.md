@@ -52,7 +52,7 @@ by hand, run `npm --prefix web install && npm --prefix web run build` before
 ## Usage
 
 ```bash
-# Start on the default port (31483)
+# Start on the default port (31415)
 pi-web
 
 # Start and open a browser
