@@ -2,11 +2,6 @@ import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
 
 export default defineConfig({
-  server: {
-    fs: {
-      allow: ['..']
-    }
-  },
   build: {
     manifest: true,
     outDir: 'dist',

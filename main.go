@@ -81,14 +81,14 @@ func main() {
 	mux := http.NewServeMux()
 	srv.Register(mux)
 	mux.HandleFunc("/static/alpine.js", serveStaticJS(alpineJs))
-	if scripts, err := loadFrontendScripts(distFS(), indexEntry, "src/session/session.js", "src/live/live.js"); err == nil {
+	if scripts, err := loadFrontendScripts(distFS(), indexEntry, sessionEntry, liveEntry); err == nil {
 		for _, script := range scripts {
 			switch script.Entry {
 			case indexEntry:
 				indexScriptPath = script.Path
-			case "src/session/session.js":
+			case sessionEntry:
 				sessionScriptPath = script.Path
-			case "src/live/live.js":
+			case liveEntry:
 				liveScriptPath = script.Path
 			}
 			mux.HandleFunc(script.Path, serveIndexJS(script.JS, script.Path != "/static/assets/index.js"))

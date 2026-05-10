@@ -67,9 +67,6 @@ var templateCss string
 //go:embed live_templates/session.html
 var liveSessionHtml string
 
-//go:embed live_templates/session.css
-var liveSessionCss string
-
 //go:embed export/vendor/marked.min.js
 var markedJs string
 
@@ -115,10 +112,9 @@ func generateExportHtml(session sessions.Session, showButtons bool) string {
 	cardBg := "#1e1e24"
 	infoBg := "#3c3728"
 
+	// Both live and export sessions currently share the same CSS.
+	// live_templates/session.css was removed because it was an exact duplicate.
 	css := templateCss
-	if showButtons {
-		css = liveSessionCss
-	}
 	css = strings.Replace(css, "{{THEME_VARS}}", precomputedThemeVars, 1)
 	css = strings.Replace(css, "{{BODY_BG}}", bodyBg, 1)
 	css = strings.Replace(css, "{{CONTAINER_BG}}", cardBg, 1)

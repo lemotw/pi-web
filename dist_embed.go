@@ -25,7 +25,11 @@ func distFS() fs.FS {
 	return sub
 }
 
-const indexEntry = "src/index/index.js"
+const (
+	indexEntry   = "src/index/index.js"
+	sessionEntry = "src/session/session.js"
+	liveEntry    = "src/live/live.js"
+)
 
 // frontendScript is one Vite-built JavaScript entrypoint ready to be served by Go.
 type frontendScript struct {
@@ -93,14 +97,6 @@ func loadFrontendScripts(distFS fs.FS, entryNames ...string) ([]frontendScript, 
 		scripts = append(scripts, script)
 	}
 	return scripts, nil
-}
-
-func loadIndexScript(distFS fs.FS) (scriptPath string, js string, err error) {
-	scripts, err := loadFrontendScripts(distFS, indexEntry)
-	if err != nil {
-		return "", "", err
-	}
-	return scripts[0].Path, scripts[0].JS, nil
 }
 
 func serveIndexJS(js string, immutable bool) http.HandlerFunc {

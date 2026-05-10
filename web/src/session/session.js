@@ -11,7 +11,7 @@ import headerJs from './legacy/header.js?raw';
 import { createSessionNavigator } from './navigation/session-navigation.js';
 import uiJs from './legacy/ui.js?raw';
 import chatJs from './legacy/chat.js?raw';
-import liveReloadJs from '../../../live_templates/live_reload.js?raw';
+import liveReloadJs from './legacy/live_reload.js?raw';
 export { buildSessionLookups, createSessionDataModel, decodeBase64JSON, getSessionSearchParams, loadSessionData, readSessionPayload } from './data/session-data.js';
 export { buildActivePathIds, buildTree, buildTreeNodeMap, buildTreePrefix, findNewestLeaf, flattenTree, getPath } from './tree/session-tree.js';
 export { createTreeRenderer } from './tree/tree-renderer.js';
@@ -153,9 +153,12 @@ export function runLegacySessionApp({ target = window } = {}) {
     closeSidebar: () => target.closeSidebar?.()
   });
   const bundle = `(function() {\n'use strict';\n${sessionDataPrelude}\n${legacySessionSources.join('\n')}\n})();\n${liveReloadJs}`;
-  // Keep the old ordered session app running as a Vite-owned asset while the
-  // internals are split into testable modules.
-  return target.Function(bundle)();
+  // Execute the legacy bundle as an inline script instead of using the
+  // Function constructor. This preserves the shared IIFE scope the legacy
+  // sources depend on while eliminating the eval-like pattern.
+  const script = target.document.createElement('script');
+  script.textContent = bundle;
+  target.document.head.appendChild(script);
 }
 
 if (typeof window !== 'undefined' && typeof document !== 'undefined' && document.getElementById('session-data')) {
