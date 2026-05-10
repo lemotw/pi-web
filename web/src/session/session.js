@@ -11,7 +11,7 @@ import headerJs from './legacy/header.js?raw';
 import { createSessionNavigator } from './navigation/session-navigation.js';
 import uiJs from './legacy/ui.js?raw';
 import chatJs from './legacy/chat.js?raw';
-import liveReloadJs from '../../../templates/live_reload.js?raw';
+import liveReloadJs from '../../../live_templates/live_reload.js?raw';
 export { buildSessionLookups, createSessionDataModel, decodeBase64JSON, getSessionSearchParams, loadSessionData, readSessionPayload } from './data/session-data.js';
 export { buildActivePathIds, buildTree, buildTreeNodeMap, buildTreePrefix, findNewestLeaf, flattenTree, getPath } from './tree/session-tree.js';
 export { createTreeRenderer } from './tree/tree-renderer.js';

@@ -14,7 +14,7 @@ import (
 	"pi-web/internal/sessions"
 )
 
-//go:embed templates/app/*.js
+//go:embed export/app/*.js
 var appJsFS embed.FS
 
 // Concatenated app JS bundle, wrapped in a single IIFE so all modules share
@@ -23,9 +23,9 @@ var appJsFS embed.FS
 var templateJs = buildTemplateJsBundle()
 
 func buildTemplateJsBundle() string {
-	entries, err := appJsFS.ReadDir("templates/app")
+	entries, err := appJsFS.ReadDir("export/app")
 	if err != nil {
-		panic(fmt.Errorf("read templates/app: %w", err))
+		panic(fmt.Errorf("read export/app: %w", err))
 	}
 	names := make([]string, 0, len(entries))
 	for _, e := range entries {
@@ -38,7 +38,7 @@ func buildTemplateJsBundle() string {
 	var b strings.Builder
 	b.WriteString("(function() {\n'use strict';\n")
 	for _, name := range names {
-		body, err := appJsFS.ReadFile("templates/app/" + name)
+		body, err := appJsFS.ReadFile("export/app/" + name)
 		if err != nil {
 			panic(fmt.Errorf("read %s: %w", name, err))
 		}
@@ -58,25 +58,31 @@ func serveStaticJS(body string) http.HandlerFunc {
 	}
 }
 
-//go:embed templates/template.html
+//go:embed export/template.html
 var templateHtml string
 
-//go:embed templates/template.css
+//go:embed export/template.css
 var templateCss string
 
-//go:embed templates/vendor/marked.min.js
+//go:embed live_templates/session.html
+var liveSessionHtml string
+
+//go:embed live_templates/session.css
+var liveSessionCss string
+
+//go:embed export/vendor/marked.min.js
 var markedJs string
 
-//go:embed templates/vendor/highlight.min.js
+//go:embed export/vendor/highlight.min.js
 var hljsJs string
 
-//go:embed templates/vendor/alpine.min.js
+//go:embed export/vendor/alpine.min.js
 var alpineJs string
 
-//go:embed templates/live_reload.js
+//go:embed live_templates/live_reload.js
 var liveReloadJsBody string
 
-//go:embed templates/chat_composer.html
+//go:embed live_templates/chat_composer.html
 var chatComposerTmplStr string
 
 var liveReloadJs = "<script>\n" + liveReloadJsBody + "</script>\n"
@@ -110,12 +116,18 @@ func generateExportHtml(session sessions.Session, showButtons bool) string {
 	infoBg := "#3c3728"
 
 	css := templateCss
+	if showButtons {
+		css = liveSessionCss
+	}
 	css = strings.Replace(css, "{{THEME_VARS}}", precomputedThemeVars, 1)
 	css = strings.Replace(css, "{{BODY_BG}}", bodyBg, 1)
 	css = strings.Replace(css, "{{CONTAINER_BG}}", cardBg, 1)
 	css = strings.Replace(css, "{{INFO_BG}}", infoBg, 1)
 
 	html := templateHtml
+	if showButtons {
+		html = liveSessionHtml
+	}
 	html = strings.Replace(html, "<title>Session Export</title>", "<title>"+template.HTMLEscapeString(session.Name)+"</title>", 1)
 	html = strings.Replace(html, "{{CSS}}", css, 1)
 	html = strings.Replace(html, "{{SESSION_DATA}}", dataBase64, 1)

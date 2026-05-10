@@ -6,7 +6,7 @@ import (
 	"html/template"
 )
 
-//go:embed templates/index.html
+//go:embed live_templates/index.html
 var indexTmplStr string
 
 func fmtTokens(n int) string {

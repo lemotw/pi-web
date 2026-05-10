@@ -1,5 +1,6 @@
     :root {
-      {{THEME_VARS}}
+      /* Keep in sync with live_templates/session.css until live session CSS is fully Vite-owned. */
+{{THEME_VARS}}
       --body-bg: {{BODY_BG}};
       --container-bg: {{CONTAINER_BG}};
       --info-bg: {{INFO_BG}};

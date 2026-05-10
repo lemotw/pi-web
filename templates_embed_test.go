@@ -11,7 +11,7 @@ import (
 
 func TestLiveReloadJsIsEmbeddedAndWrapped(t *testing.T) {
 	if liveReloadJsBody == "" {
-		t.Fatal("liveReloadJsBody is empty; templates/live_reload.js was not embedded")
+		t.Fatal("liveReloadJsBody is empty; live_templates/live_reload.js was not embedded")
 	}
 	if !strings.HasPrefix(liveReloadJs, "<script>\n") {
 		t.Fatalf("liveReloadJs missing <script> open tag, got prefix %q", liveReloadJs[:min(20, len(liveReloadJs))])
@@ -55,7 +55,7 @@ func TestChatComposerTemplateInterpolatesPlainSessionID(t *testing.T) {
 
 func TestIndexTemplateLoadedFromEmbeddedFile(t *testing.T) {
 	if indexTmplStr == "" {
-		t.Fatal("indexTmplStr is empty; templates/index.html was not embedded")
+		t.Fatal("indexTmplStr is empty; live_templates/index.html was not embedded")
 	}
 	rendered := indexTmpl.Tree.Root.String()
 	for _, marker := range []string{
