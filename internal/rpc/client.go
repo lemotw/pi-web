@@ -1,10 +1,8 @@
 package rpc
 
 import (
-	"bufio"
 	"encoding/json"
 	"io"
-	"strings"
 
 	"pi-web/internal/chat"
 )
@@ -22,22 +20,6 @@ type model struct {
 	ID       string `json:"id"`
 	Name     string `json:"name"`
 	Provider string `json:"provider"`
-}
-
-func readJSONLLines(r io.Reader) ([]string, error) {
-	scanner := bufio.NewScanner(r)
-	scanner.Buffer(make([]byte, 0, 64*1024), 10*1024*1024)
-	var lines []string
-	for scanner.Scan() {
-		line := strings.TrimSuffix(scanner.Text(), "\r")
-		if strings.TrimSpace(line) != "" {
-			lines = append(lines, line)
-		}
-	}
-	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
-	return lines, nil
 }
 
 func WriteCommand(w io.Writer, cmd map[string]any) error {

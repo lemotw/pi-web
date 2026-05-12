@@ -86,8 +86,4 @@ func (c *Cache) LoadAll(dir string) ([]SessionSummary, error) {
 	return summaries, nil
 }
 
-func (c *Cache) stats() (parses, hits, size int) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	return c.parses, c.hits, len(c.entries)
-}
+

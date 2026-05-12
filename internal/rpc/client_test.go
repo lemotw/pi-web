@@ -1,13 +1,32 @@
 package rpc
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"errors"
+	"io"
+	"strings"
 	"testing"
 
 	"pi-web/internal/chat"
 )
+
+func readJSONLLines(r io.Reader) ([]string, error) {
+	scanner := bufio.NewScanner(r)
+	scanner.Buffer(make([]byte, 0, 64*1024), 10*1024*1024)
+	var lines []string
+	for scanner.Scan() {
+		line := strings.TrimSuffix(scanner.Text(), "\r")
+		if strings.TrimSpace(line) != "" {
+			lines = append(lines, line)
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+	return lines, nil
+}
 
 func TestSplitJSONLLinesHandlesCRLF(t *testing.T) {
 	lines, err := readJSONLLines(bytes.NewBufferString("{\"a\":1}\r\n{\"b\":2}\n"))

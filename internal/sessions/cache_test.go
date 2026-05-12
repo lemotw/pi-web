@@ -20,8 +20,7 @@ func TestSessionCacheReusesParsedSessions(t *testing.T) {
 	if len(first) != 1 {
 		t.Fatalf("first: got %d sessions, want 1", len(first))
 	}
-	parses1, hits1, _ := c.stats()
-	if parses1 != 1 || hits1 != 0 {
+	if c.parses != 1 || c.hits != 0 {
 		t.Fatalf("after first call: parses=%d hits=%d, want 1/0", parses1, hits1)
 	}
 
@@ -32,11 +31,10 @@ func TestSessionCacheReusesParsedSessions(t *testing.T) {
 	if len(second) != 1 {
 		t.Fatalf("second: got %d sessions, want 1", len(second))
 	}
-	parses2, hits2, _ := c.stats()
-	if parses2 != 1 {
-		t.Fatalf("expected no additional parses on cached read, got parses=%d", parses2)
+	if c.parses != 1 {
+		t.Fatalf("expected no additional parses on cached read, got parses=%d", c.parses)
 	}
-	if hits2 != 1 {
+	if c.hits != 1 {
 		t.Fatalf("expected 1 cache hit, got %d", hits2)
 	}
 }
@@ -59,11 +57,10 @@ func TestSessionCacheReparsesOnModTimeChange(t *testing.T) {
 	if _, err := c.LoadAll(root); err != nil {
 		t.Fatalf("second loadAll: %v", err)
 	}
-	parses, hits, _ := c.stats()
-	if parses != 2 {
-		t.Fatalf("expected re-parse after modtime bump, got parses=%d", parses)
+	if c.parses != 2 {
+		t.Fatalf("expected re-parse after modtime bump, got parses=%d", c.parses)
 	}
-	if hits != 0 {
+	if c.hits != 0 {
 		t.Fatalf("expected 0 hits when modtime changed, got %d", hits)
 	}
 }
@@ -76,8 +73,8 @@ func TestSessionCacheEvictsRemovedFiles(t *testing.T) {
 	if _, err := c.LoadAll(root); err != nil {
 		t.Fatalf("first loadAll: %v", err)
 	}
-	if _, _, size := c.stats(); size != 1 {
-		t.Fatalf("after first: cache size = %d, want 1", size)
+	if len(c.entries) != 1 {
+		t.Fatalf("after first: cache size = %d, want 1", len(c.entries))
 	}
 
 	if err := os.Remove(path); err != nil {
@@ -91,8 +88,8 @@ func TestSessionCacheEvictsRemovedFiles(t *testing.T) {
 	if len(got) != 0 {
 		t.Fatalf("expected 0 sessions after deletion, got %d", len(got))
 	}
-	if _, _, size := c.stats(); size != 0 {
-		t.Fatalf("expected cache to evict deleted file, size=%d", size)
+	if len(c.entries) != 0 {
+		t.Fatalf("expected cache to evict deleted file, size=%d", len(c.entries))
 	}
 }
 
@@ -114,11 +111,10 @@ func TestSessionCachePicksUpNewFiles(t *testing.T) {
 	if len(got) != 2 {
 		t.Fatalf("expected 2 sessions, got %d", len(got))
 	}
-	parses, hits, _ := c.stats()
-	if parses != 2 {
-		t.Fatalf("expected exactly one re-parse (for new file), got parses=%d", parses)
+	if c.parses != 2 {
+		t.Fatalf("expected exactly one re-parse (for new file), got parses=%d", c.parses)
 	}
-	if hits != 1 {
+	if c.hits != 1 {
 		t.Fatalf("expected 1 hit (the unchanged first file), got %d", hits)
 	}
 }

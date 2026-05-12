@@ -33,47 +33,6 @@ type Session struct {
 	Entries []map[string]any
 }
 
-func LoadAll(dir string) ([]Session, error) {
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		return nil, err
-	}
-
-	var sessions []Session
-	for _, e := range entries {
-		if !e.IsDir() {
-			continue
-		}
-		subDir := filepath.Join(dir, e.Name())
-		subs, err := os.ReadDir(subDir)
-		if err != nil {
-			continue
-		}
-		for _, f := range subs {
-			if f.IsDir() || !strings.HasSuffix(f.Name(), ".jsonl") {
-				continue
-			}
-			path := filepath.Join(subDir, f.Name())
-			sess, err := ParseFile(path, e.Name(), f.Name())
-			if err != nil {
-				continue
-			}
-			sessions = append(sessions, sess)
-		}
-	}
-
-	SortByActivity(sessions)
-	return sessions, nil
-}
-
-func SortByActivity(sessions []Session) {
-	sort.Slice(sessions, func(i, j int) bool {
-		ti, _ := time.Parse(time.RFC3339, sessions[i].LastActivity)
-		tj, _ := time.Parse(time.RFC3339, sessions[j].LastActivity)
-		return ti.After(tj)
-	})
-}
-
 func SortSummariesByActivity(s []SessionSummary) {
 	sort.Slice(s, func(i, j int) bool {
 		ti, _ := time.Parse(time.RFC3339, s[i].LastActivity)

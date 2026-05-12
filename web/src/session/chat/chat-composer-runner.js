@@ -105,23 +105,17 @@ export function runChatComposer({
 
   function setupCwdCopy() {
     const cwdEl = document.querySelector('.pi-chat-cwd');
-    if (!cwdEl) {
-      console.log('[pi-chat] no .pi-chat-cwd element found');
-      return;
-    }
-    console.log('[pi-chat] attaching cwd copy handler to', cwdEl);
+    if (!cwdEl) return;
     cwdEl.addEventListener('click', async () => {
       const path = cwdEl.dataset.cwd || cwdEl.textContent.replace(/^cwd:\s*/, '');
-      console.log('[pi-chat] cwd clicked, path =', path);
       let ok = false;
       try {
         if (navigator.clipboard && navigator.clipboard.writeText) {
           await navigator.clipboard.writeText(path);
           ok = true;
-          console.log('[pi-chat] clipboard API success');
         }
-      } catch (err) {
-        console.error('[pi-chat] Clipboard API failed:', err);
+      } catch {
+        /* ignore clipboard API failure, try fallback */
       }
       if (!ok) {
         try {
@@ -133,9 +127,8 @@ export function runChatComposer({
           ta.select();
           ok = document.execCommand('copy');
           document.body.removeChild(ta);
-          console.log('[pi-chat] execCommand copy result:', ok);
-        } catch (err) {
-          console.error('[pi-chat] execCommand copy failed:', err);
+        } catch {
+          /* ignore fallback copy failure */
         }
       }
       if (ok) {

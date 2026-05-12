@@ -110,10 +110,6 @@ func renderLiveSessionPage(session sessions.Session) string {
 	return html
 }
 
-func chatComposerHtml(sessionID string) string {
-	return chatComposerHtmlForSession(sessions.Session{SessionSummary: sessions.SessionSummary{ID: sessionID, ChatAvailable: true}})
-}
-
 func chatComposerHtmlForSession(session sessions.Session) string {
 	var buf strings.Builder
 	chatAvailable := session.ChatAvailable || session.ChatDisabledReason == ""

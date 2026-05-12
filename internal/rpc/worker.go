@@ -56,10 +56,6 @@ func (w *piRPCWorker) IdleSince(now time.Time) time.Duration {
 	return now.Sub(time.Unix(0, last))
 }
 
-func NewPiWorker(sessionPath string) (workers.ChatWorker, error) {
-	return NewPiWorkerWithStream(sessionPath, nil)
-}
-
 func NewPiWorkerWithStream(sessionPath string, streamSink StreamEventSink) (workers.ChatWorker, error) {
 	if _, err := exec.LookPath("pi"); err != nil {
 		return nil, fmt.Errorf("pi executable not found: %w", err)

@@ -10,7 +10,7 @@ import (
 )
 
 func TestChatComposerTemplateEscapesSessionID(t *testing.T) {
-	got := chatComposerHtml(`"><script>alert(1)</script>`)
+	got := chatComposerHtmlForSession(sessions.Session{SessionSummary: sessions.SessionSummary{ID: `"><script>alert(1)</script>`, ChatAvailable: true}})
 	if strings.Contains(got, "<script>alert(1)</script>") {
 		t.Fatalf("chat composer leaked unescaped session id: %s", got)
 	}
@@ -20,7 +20,7 @@ func TestChatComposerTemplateEscapesSessionID(t *testing.T) {
 }
 
 func TestChatComposerTemplateInterpolatesPlainSessionID(t *testing.T) {
-	got := chatComposerHtml("abc123.jsonl")
+	got := chatComposerHtmlForSession(sessions.Session{SessionSummary: sessions.SessionSummary{ID: "abc123.jsonl", ChatAvailable: true}})
 	if !strings.Contains(got, `data-session-id="abc123.jsonl"`) {
 		t.Fatalf("chat composer missing expected session id attribute, got: %s", got)
 	}
