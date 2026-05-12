@@ -48,7 +48,8 @@ The most important doc for frontend work is **`docs/dev/templates-vs-web.md`** �
 - `dist_embed.go` — `//go:embed all:web/dist` (Vite output embedded into binary)
 - `session_page.go` — **Live session page** rendering (`live_templates/session.html`, chat composer)
 - `export.go` — **Export/share snapshot** rendering (`export/index.html`, inlined JS, no server deps)
-- `export/template.css` — Shared session CSS (used by **both** live and export)
+- `live_templates/session.css` — Live session page CSS
+- `export/template.css` — Export snapshot CSS
 - `.pi/extensions/pi-web.ts` — Pi extension with `/web`, `/mobile`, `/refresh` commands
 
 ### Live App vs. Export — DO NOT MIX THESE UP
@@ -58,7 +59,7 @@ The most important doc for frontend work is **`docs/dev/templates-vs-web.md`** �
 | Go file | `session_page.go` | `export.go` |
 | HTML shell | `live_templates/session.html` | `export/index.html` |
 | JS source | `web/src/session/` (Vite) | `export/app/*.js` + `export/vendor/` |
-| CSS | `export/template.css` (shared) | `export/template.css` (shared) |
+| CSS | `live_templates/session.css` | `export/template.css` |
 | Chat composer | Yes (`live_templates/chat_composer.html`) | No |
 | Action buttons | Yes (baked into `live_templates/session.html`) | No |
 | SSE/API calls | Yes | No |

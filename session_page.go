@@ -15,8 +15,8 @@ import (
 //go:embed live_templates/session.html
 var liveSessionHtml string
 
-//go:embed export/template.css
-var sessionCss string
+//go:embed live_templates/session.css
+var liveSessionCss string
 
 
 
@@ -63,7 +63,7 @@ func computeThemeVars() string {
 
 // prepareSessionPageData computes the shared payload (base64-encoded session
 // data, themed CSS, and body attributes) used by both live and export renders.
-func prepareSessionPageData(session sessions.Session) (dataBase64, css, bodyAttrs string) {
+func prepareSessionPageData(session sessions.Session, cssTemplate string) (dataBase64, css, bodyAttrs string) {
 	leafID := ""
 	if len(session.Entries) > 0 {
 		if id, ok := session.Entries[len(session.Entries)-1]["id"].(string); ok {
@@ -87,8 +87,7 @@ func prepareSessionPageData(session sessions.Session) (dataBase64, css, bodyAttr
 	cardBg := "#1e1e24"
 	infoBg := "#3c3728"
 
-	// Both live and export sessions share the same CSS.
-	css = sessionCss
+	css = cssTemplate
 	css = strings.Replace(css, "{{THEME_VARS}}", precomputedThemeVars, 1)
 	css = strings.Replace(css, "{{BODY_BG}}", bodyBg, 1)
 	css = strings.Replace(css, "{{CONTAINER_BG}}", cardBg, 1)
@@ -103,7 +102,7 @@ func prepareSessionPageData(session sessions.Session) (dataBase64, css, bodyAttr
 // renderLiveSessionPage renders the interactive session viewer served at
 // /session. It loads the Vite-built session module and includes the chat composer.
 func renderLiveSessionPage(session sessions.Session) string {
-	dataBase64, css, bodyAttrs := prepareSessionPageData(session)
+	dataBase64, css, bodyAttrs := prepareSessionPageData(session, liveSessionCss)
 
 	html := liveSessionHtml
 	html = strings.Replace(html, "{{TITLE}}", template.HTMLEscapeString(session.Name), 1)

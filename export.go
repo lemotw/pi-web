@@ -15,6 +15,9 @@ import (
 //go:embed export/index.html
 var exportHtml string
 
+//go:embed export/template.css
+var exportSessionCss string
+
 //go:embed export/app/*.js
 var appJsFS embed.FS
 
@@ -64,7 +67,7 @@ func buildExportJsBundle() string {
 // GitHub Gist sharing. All JS is inlined and server-dependent chrome (buttons,
 // chat composer) is stripped.
 func renderExportSessionPage(session sessions.Session) string {
-	dataBase64, css, bodyAttrs := prepareSessionPageData(session)
+	dataBase64, css, bodyAttrs := prepareSessionPageData(session, exportSessionCss)
 
 	html := exportHtml
 	html = strings.Replace(html, "{{TITLE}}", template.HTMLEscapeString(session.Name), 1)
