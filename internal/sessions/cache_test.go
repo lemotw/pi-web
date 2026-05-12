@@ -21,7 +21,7 @@ func TestSessionCacheReusesParsedSessions(t *testing.T) {
 		t.Fatalf("first: got %d sessions, want 1", len(first))
 	}
 	if c.parses != 1 || c.hits != 0 {
-		t.Fatalf("after first call: parses=%d hits=%d, want 1/0", parses1, hits1)
+		t.Fatalf("after first call: parses=%d hits=%d, want 1/0", c.parses, c.hits)
 	}
 
 	second, err := c.LoadAll(root)
@@ -35,7 +35,7 @@ func TestSessionCacheReusesParsedSessions(t *testing.T) {
 		t.Fatalf("expected no additional parses on cached read, got parses=%d", c.parses)
 	}
 	if c.hits != 1 {
-		t.Fatalf("expected 1 cache hit, got %d", hits2)
+		t.Fatalf("expected 1 cache hit, got %d", c.hits)
 	}
 }
 
@@ -61,7 +61,7 @@ func TestSessionCacheReparsesOnModTimeChange(t *testing.T) {
 		t.Fatalf("expected re-parse after modtime bump, got parses=%d", c.parses)
 	}
 	if c.hits != 0 {
-		t.Fatalf("expected 0 hits when modtime changed, got %d", hits)
+		t.Fatalf("expected 0 hits when modtime changed, got %d", c.hits)
 	}
 }
 
@@ -115,7 +115,7 @@ func TestSessionCachePicksUpNewFiles(t *testing.T) {
 		t.Fatalf("expected exactly one re-parse (for new file), got parses=%d", c.parses)
 	}
 	if c.hits != 1 {
-		t.Fatalf("expected 1 hit (the unchanged first file), got %d", hits)
+		t.Fatalf("expected 1 hit (the unchanged first file), got %d", c.hits)
 	}
 }
 

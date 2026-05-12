@@ -38,9 +38,6 @@ export { escapeHtml, formatToolCall, getTreeNodeDisplayHtml, shortenPath, trunca
 
 export const sessionEntrypointLoaded = true;
 
-export const sessionCompatibilitySources = [];
-export const liveReloadSource = '';
-
 export function runSessionApp({ target = window } = {}) {
   const documentImpl = target.document;
   target.marked = target.marked || marked;
