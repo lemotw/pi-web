@@ -9,3 +9,4 @@ web/dist/
 .pi/extensions/node_modules/
 
 node_modules/
+tmp/
