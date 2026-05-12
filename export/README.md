@@ -20,8 +20,7 @@ export/
 │   └── 80-ui.js             # UI helpers, keyboard shortcuts, initial render
 ├── vendor/           # Vendored third-party libraries
 │   ├── marked.min.js
-│   ├── highlight.min.js
-│   └── alpine.min.js  # Used by live app (/static/alpine.js), not inlined in export
+│   └── highlight.min.js
 └── README.md
 ```
 

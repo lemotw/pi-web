@@ -87,14 +87,14 @@ func TestIndexTemplateLoadedFromEmbeddedFile(t *testing.T) {
 	}
 }
 
-func TestIndexTemplateUsesViteModuleNotStandaloneAlpine(t *testing.T) {
+func TestIndexTemplateUsesViteModuleNotStandaloneScript(t *testing.T) {
 	var buf bytes.Buffer
 	if err := indexTmpl.Execute(&buf, []sessions.Session{}); err != nil {
 		t.Fatalf("failed to render index template: %v", err)
 	}
 	rendered := buf.String()
 	if strings.Contains(rendered, "/static/alpine.js") {
-		t.Fatal("rendered index page still contains standalone /static/alpine.js script")
+		t.Fatal("rendered index page still contains standalone /static/alpine.js script reference")
 	}
 	if !strings.Contains(rendered, "/static/assets/index.js") {
 		t.Fatal("rendered index page missing Vite module script /static/assets/index.js")

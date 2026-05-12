@@ -8,7 +8,7 @@ This directory contains the architecture documentation for **pi-web**, a local w
 |----------|-------------|
 | [system-overview.md](./system-overview.md) | High-level system architecture, component diagram, and tech stack |
 | [backend.md](./backend.md) | Go backend: packages, responsibilities, and key types |
-| [frontend.md](./frontend.md) | Frontend architecture: embedded templates, Vite build, and Alpine.js |
+| [frontend.md](./frontend.md) | Frontend architecture: embedded templates, Vite build, and vanilla JS |
 | [data-flow.md](./data-flow.md) | Session file format, data model, and storage layout |
 
 ## Architecture at a Glance
@@ -18,7 +18,7 @@ This directory contains the architecture documentation for **pi-web**, a local w
 │                           Browser                                    │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────────┐  │
 │  │  / (index)  │  │ /session?id │  │      SSE /events            │  │
-│  │  Alpine.js  │  │  Embedded   │  │   Live reload + status      │  │
+│  │  vanilla JS │  │  Embedded   │  │   Live reload + status      │  │
 │  │   (Vite)    │  │   HTML/CSS  │  │        updates              │  │
 │  └─────────────┘  └─────────────┘  └─────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────────────┘
@@ -53,7 +53,7 @@ This directory contains the architecture documentation for **pi-web**, a local w
 3. **Chat via RPC workers**: Each session gets a dedicated `pi --mode rpc` subprocess. Workers are cached and reaped after 30 minutes of idle time.
 
 4. **Dual frontend strategy**:
-   - **Index page** (`/`): Built with Vite + Alpine.js, served from embedded `web/dist`
+   - **Index page** (`/`): Built with Vite + vanilla JS, served from embedded `web/dist`
    - **Session page** (`/session`): Server-rendered HTML with embedded JS templates (no build step)
 
 5. **Security**: Token-based auth (`PI_WEB_TOKEN`) is required when binding to non-loopback addresses (e.g., Tailscale).

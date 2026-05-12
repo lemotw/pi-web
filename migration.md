@@ -23,7 +23,7 @@ This document tracks the migration from the legacy `export/` + `live_templates/`
 
 3. ~~**Duplicated HTML shells.** `live_templates/session.html` and `export/template.html` are copy-paste twins with a `<!-- Keep in sync... -->` comment.~~ **Fixed** — live uses `live_templates/session.html` and export uses `export/index.html`.
 
-4. **Dead vendor files.** `export/vendor/marked.min.js`, `highlight.min.js`, and `alpine.min.js` are all bundled by Vite (they are npm dependencies) but still vendored separately.
+4. ~~**Dead vendor files.** `export/vendor/marked.min.js` and `highlight.min.js` are still vendored separately for share/export inlining.~~ **Partially fixed** — `alpine.min.js` deleted.
 
 5. **Empty `live.js` entry point.** `web/src/live/live.js` exports nothing and is built but never loaded.
 
@@ -75,9 +75,9 @@ This document tracks the migration from the legacy `export/` + `live_templates/`
 - [ ] Delete the entire `export/app/` directory (10 legacy JS files)
 - [ ] Delete `export/vendor/marked.min.js` — `marked` is already an npm dep bundled by Vite
 - [ ] Delete `export/vendor/highlight.min.js` — `highlight.js` is already an npm dep bundled by Vite
-- [ ] Delete `export/vendor/alpine.min.js` — `alpinejs` is already an npm dep bundled by Vite
-- [ ] Remove the `/static/alpine.js` HTTP handler from `main.go`
-- [ ] Remove the `alpineJs` embed from `export.go`
+- [x] ~~Delete `export/vendor/alpine.min.js` — `alpinejs` is already an npm dep bundled by Vite~~
+- [x] ~~Remove the `/static/alpine.js` HTTP handler from `main.go`~~
+- [x] ~~Remove the `alpineJs` embed from `export.go`~~
 
 **After this phase:** One JavaScript codebase. Share HTML is still fully self-contained (no external requests), but built from the modern Vite output.
 
@@ -164,7 +164,7 @@ export/
 ## Quick Wins (do these first)
 
 1. **Delete `export/vendor/`** — the files are unused by the live UI and will be replaced by Vite bundles for share.
-2. **Delete `/static/alpine.js` handler** — nothing references it.
+2. ~~**Delete `/static/alpine.js` handler** — nothing references it.~~ **Done**
 3. **Delete `web/src/live/live.js`** — empty, never loaded.
 
 These are zero-risk deletions that reduce confusion immediately.
