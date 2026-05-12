@@ -81,6 +81,71 @@ export function runChatComposer({
     }
   }
 
+  function showCwdToast(message, isError = false) {
+    const composer = document.getElementById('pi-chat-composer');
+    if (!composer) return;
+    let notice = document.getElementById('pi-chat-cwd-toast');
+    if (!notice) {
+      notice = document.createElement('div');
+      notice.id = 'pi-chat-cwd-toast';
+      notice.style.cssText = 'position:fixed;top:8px;right:8px;z-index:200;padding:2px 8px;font-size:10px;font-family:inherit;background:var(--accent);color:var(--body-bg);border-radius:3px;opacity:0;transition:opacity 0.3s;pointer-events:none;';
+      document.body.appendChild(notice);
+    }
+    notice.textContent = message;
+    notice.style.background = isError ? 'var(--error)' : 'var(--accent)';
+    notice.style.opacity = '1';
+    clearTimeout(notice._hideTimer);
+    notice._hideTimer = setTimeout(() => {
+      notice.style.opacity = '0';
+      setTimeout(() => {
+        if (notice.parentNode) notice.parentNode.removeChild(notice);
+      }, 300);
+    }, 1200);
+  }
+
+  function setupCwdCopy() {
+    const cwdEl = document.querySelector('.pi-chat-cwd');
+    if (!cwdEl) {
+      console.log('[pi-chat] no .pi-chat-cwd element found');
+      return;
+    }
+    console.log('[pi-chat] attaching cwd copy handler to', cwdEl);
+    cwdEl.addEventListener('click', async () => {
+      const path = cwdEl.dataset.cwd || cwdEl.textContent.replace(/^cwd:\s*/, '');
+      console.log('[pi-chat] cwd clicked, path =', path);
+      let ok = false;
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(path);
+          ok = true;
+          console.log('[pi-chat] clipboard API success');
+        }
+      } catch (err) {
+        console.error('[pi-chat] Clipboard API failed:', err);
+      }
+      if (!ok) {
+        try {
+          const ta = document.createElement('textarea');
+          ta.value = path;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.select();
+          ok = document.execCommand('copy');
+          document.body.removeChild(ta);
+          console.log('[pi-chat] execCommand copy result:', ok);
+        } catch (err) {
+          console.error('[pi-chat] execCommand copy failed:', err);
+        }
+      }
+      if (ok) {
+        showCwdToast('Path copied');
+      } else {
+        showCwdToast('Copy failed', true);
+      }
+    });
+  }
+
   function setupPiChatComposer() {
     const form = document.getElementById('pi-chat-composer');
     if (!form) return false;
@@ -136,6 +201,7 @@ export function runChatComposer({
     }
 
     attachButton.addEventListener('click', () => fileInput.click());
+
     if (cancelButton) {
       cancelButton.addEventListener('click', async () => {
         cancelButton.disabled = true;
@@ -293,6 +359,7 @@ export function runChatComposer({
   }
 
   function initPiChatControls() {
+    setupCwdCopy();
     if (!setupPiChatComposer()) return;
     loadModelSelector();
     setupThinkingLevelSelector();

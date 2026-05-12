@@ -1,25 +1,132 @@
-<form id="pi-chat-composer" class="pi-chat-composer" data-session-id="{{.SessionID}}" data-chat-available="{{.ChatAvailable}}" data-chat-disabled-reason="{{.ChatDisabledReason}}">
-  <input id="pi-chat-images" name="images" type="file" accept="image/*" multiple hidden {{if not .ChatAvailable}}disabled{{end}}>
-  <div class="pi-chat-shell">
-    {{if not .ChatAvailable}}<div class="pi-chat-disabled-notice">{{.ChatDisabledReason}}</div>{{end}}
-    <textarea id="pi-chat-message" name="message" rows="2" placeholder="Continue this pi session…" {{if not .ChatAvailable}}disabled{{end}}></textarea>
-    <div id="pi-chat-attachments" class="pi-chat-attachments"></div>
-    <div id="pi-chat-model-popup" class="pi-chat-model-popup" style="display:none">
-      <input type="text" id="pi-chat-model-search" class="pi-chat-model-search" placeholder="Search models…" autocomplete="off">
-      <div id="pi-chat-model-list" class="pi-chat-model-list"></div>
+<form
+    id="pi-chat-composer"
+    class="pi-chat-composer"
+    data-session-id="{{.SessionID}}"
+    data-chat-available="{{.ChatAvailable}}"
+    data-chat-disabled-reason="{{.ChatDisabledReason}}"
+>
+    <input
+        id="pi-chat-images"
+        name="images"
+        type="file"
+        accept="image/*"
+        multiple
+        hidden
+        {{if
+        not
+        .ChatAvailable}}disabled{{end}}
+    />
+    <div class="pi-chat-shell">
+        {{if .Cwd}}
+        <div class="pi-chat-toolbar">
+            <span class="pi-chat-cwd" title="Click to copy path" data-cwd="{{.Cwd}}">cwd: {{.Cwd}}</span>
+        </div>
+        {{end}}
+        {{if not .ChatAvailable}}
+        <div class="pi-chat-disabled-notice">{{.ChatDisabledReason}}</div>
+        {{end}}
+        <textarea
+            id="pi-chat-message"
+            name="message"
+            rows="2"
+            placeholder="Continue this pi session…"
+            {{if
+            not
+            .ChatAvailable}}disabled{{end}}
+        ></textarea>
+        <div id="pi-chat-attachments" class="pi-chat-attachments"></div>
+        <div
+            id="pi-chat-model-popup"
+            class="pi-chat-model-popup"
+            style="display: none"
+        >
+            <input
+                type="text"
+                id="pi-chat-model-search"
+                class="pi-chat-model-search"
+                placeholder="Search models…"
+                autocomplete="off"
+            />
+            <div id="pi-chat-model-list" class="pi-chat-model-list"></div>
+        </div>
+        <div
+            id="pi-chat-thinking-popup"
+            class="pi-chat-thinking-popup"
+            style="display: none"
+        >
+            <div id="pi-chat-thinking-list" class="pi-chat-thinking-list"></div>
+        </div>
+        <div class="pi-chat-toolbar">
+            <div class="pi-chat-toolbar-left">
+                <button
+                    type="button"
+                    id="pi-chat-attach"
+                    class="pi-chat-icon-button pi-chat-photo-button"
+                    title="Attach photos"
+                    aria-label="Attach photos"
+                    {{if
+                    not
+                    .ChatAvailable}}disabled{{end}}
+                >
+                    <svg
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                        focusable="false"
+                    >
+                        <path
+                            d="M4.75 5.5h14.5c.69 0 1.25.56 1.25 1.25v10.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25V6.75c0-.69.56-1.25 1.25-1.25Zm0 1.5v8.73l3.58-3.58a1 1 0 0 1 1.41 0l2.18 2.18 3.33-3.33a1 1 0 0 1 1.41 0L19 13.34V7H4.75Zm12.5 2.25a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z"
+                        />
+                    </svg>
+                </button>
+                <span id="pi-chat-status" class="pi-chat-status"
+                    >{{if .ChatAvailable}}idle{{else}}unavailable{{end}}</span
+                >
+                <button
+                    type="button"
+                    id="pi-chat-thinking-label"
+                    class="pi-chat-thinking-label"
+                    style="display: none"
+                    title="Switch effort"
+                    {{if
+                    not
+                    .ChatAvailable}}disabled{{end}}
+                ></button>
+                <button
+                    type="button"
+                    id="pi-chat-model-label"
+                    class="pi-chat-model-label"
+                    style="display: none"
+                    title="Switch model"
+                    {{if
+                    not
+                    .ChatAvailable}}disabled{{end}}
+                ></button>
+            </div>
+            <div class="actions">
+                <button
+                    type="button"
+                    id="pi-chat-cancel"
+                    class="pi-chat-cancel"
+                    style="display: none"
+                    title="Cancel running response"
+                    aria-label="Cancel running response"
+                    {{if
+                    not
+                    .ChatAvailable}}disabled{{end}}
+                >
+                    Cancel
+                </button>
+                <button
+                    type="submit"
+                    id="pi-chat-send"
+                    class="pi-chat-send"
+                    {{if
+                    not
+                    .ChatAvailable}}disabled{{end}}
+                >
+                    Send
+                </button>
+            </div>
+        </div>
     </div>
-    <div id="pi-chat-thinking-popup" class="pi-chat-thinking-popup" style="display:none">
-      <div id="pi-chat-thinking-list" class="pi-chat-thinking-list"></div>
-    </div>
-    <div class="pi-chat-toolbar">
-      <button type="button" id="pi-chat-attach" class="pi-chat-icon-button pi-chat-photo-button" title="Attach photos" aria-label="Attach photos" {{if not .ChatAvailable}}disabled{{end}}>
-        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4.75 5.5h14.5c.69 0 1.25.56 1.25 1.25v10.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25V6.75c0-.69.56-1.25 1.25-1.25Zm0 1.5v8.73l3.58-3.58a1 1 0 0 1 1.41 0l2.18 2.18 3.33-3.33a1 1 0 0 1 1.41 0L19 13.34V7H4.75Zm12.5 2.25a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z"/></svg>
-      </button>
-      <span id="pi-chat-status" class="pi-chat-status">{{if .ChatAvailable}}idle{{else}}unavailable{{end}}</span>
-      <button type="button" id="pi-chat-thinking-label" class="pi-chat-thinking-label" style="display:none" title="Switch effort" {{if not .ChatAvailable}}disabled{{end}}></button>
-      <button type="button" id="pi-chat-model-label" class="pi-chat-model-label" style="display:none" title="Switch model" {{if not .ChatAvailable}}disabled{{end}}></button>
-      <button type="button" id="pi-chat-cancel" class="pi-chat-cancel" style="display:none" title="Cancel running response" aria-label="Cancel running response" {{if not .ChatAvailable}}disabled{{end}}>Cancel</button>
-      <button type="submit" id="pi-chat-send" class="pi-chat-send" {{if not .ChatAvailable}}disabled{{end}}>Send</button>
-    </div>
-  </div>
 </form>

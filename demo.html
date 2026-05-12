@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Follow Button Position Demo</title>
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --surface: #141414;
+    --surface-2: #1a1a1a;
+    --border: #2a2a2a;
+    --text: #e0e0e0;
+    --text-muted: #888;
+    --accent: #4ade80;
+    --accent-text: #0d0d0d;
+    --composer-bg: #141414;
+    --radius: 6px;
+    --gap: 16px;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .header {
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .header .status {
+    font-size: 11px;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+  .header .meta {
+    color: var(--text-muted);
+    font-size: 11px;
+  }
+
+  .layout {
+    display: flex;
+    height: calc(100vh - 41px); /* minus header */
+  }
+  .sidebar {
+    width: 220px;
+    border-right: 1px solid var(--border);
+    padding: 12px;
+    flex-shrink: 0;
+    overflow-y: auto;
+  }
+  .sidebar-item {
+    padding: 6px 10px;
+    border-radius: var(--radius);
+    margin-bottom: 4px;
+    font-size: 12px;
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+  .sidebar-item:hover { background: var(--surface-2); color: var(--text); }
+
+  .chat-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    position: relative;
+  }
+
+  /* Messages scroll area */
+  .messages-area {
+    flex: 1;
+    overflow-y: auto;
+    position: relative;
+  }
+
+  /* ===== NEW: Follow button pinned at top of chatbox ===== */
+  .follow-bar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: flex;
+    justify-content: center;
+    padding: 8px 0;
+    background: linear-gradient(to bottom, rgba(13,13,13,0.95) 0%, rgba(13,13,13,0.7) 70%, transparent 100%);
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(-6px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+  .follow-bar.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+  .follow-btn-new {
+    background: var(--accent);
+    color: var(--accent-text);
+    border: none;
+    border-radius: 999px;
+    padding: 5px 14px;
+    font-size: 11px;
+    font-family: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+    line-height: 1;
+  }
+  .follow-btn-new:hover { filter: brightness(1.08); }
+  .follow-btn-new svg { width: 12px; height: 12px; flex-shrink: 0; }
+  /* ====================================================== */
+
+  .messages-inner {
+    padding: 0 24px 16px;
+  }
+
+  .message {
+    max-width: 92%;
+    margin-bottom: 14px;
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    font-size: 13px;
+    word-break: break-word;
+  }
+  .message.assistant { margin-right: auto; }
+  .message.user { margin-left: auto; background: var(--surface-2); }
+  .message .role {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+
+  .composer {
+    border-top: 1px solid var(--border);
+    background: var(--composer-bg);
+    padding: 10px 16px 14px;
+    flex-shrink: 0;
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+  }
+  .composer textarea {
+    flex: 1;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 13px;
+    resize: none;
+    outline: none;
+    min-height: 36px;
+    max-height: 120px;
+  }
+  .composer button {
+    background: var(--accent);
+    color: var(--accent-text);
+    border: none;
+    border-radius: var(--radius);
+    padding: 8px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  /* OLD fixed bottom-right button */
+  .old-follow-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 200;
+    padding: 6px 14px;
+    font-size: 11px;
+    font-family: inherit;
+    background: var(--accent);
+    color: var(--accent-text);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    display: none;
+  }
+
+  .controls {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 300;
+    display: flex;
+    gap: 8px;
+  }
+  .controls button {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .controls button.active {
+    background: var(--accent);
+    color: var(--accent-text);
+    border-color: var(--accent);
+  }
+
+  .hint {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 11px;
+    padding: 12px 0 4px;
+    user-select: none;
+  }
+</style>
+</head>
+<body>
+
+<div class="controls">
+  <button id="mode-old">Old (bottom-right)</button>
+  <button id="mode-new" class="active">New (top of chatbox)</button>
+  <button id="btn-add-msg">+ Add message</button>
+</div>
+
+<div class="header">
+  <span class="status">running</span>
+  <span class="meta">medium &nbsp;|&nbsp; kimi-k2.6 @ opencode-go-work</span>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="sidebar-item">Session A</div>
+    <div class="sidebar-item">Session B</div>
+    <div class="sidebar-item">Session C</div>
+  </div>
+
+  <div class="chat-wrap">
+    <div class="messages-area" id="messages">
+      <!-- Sticky follow button at top of scroll area -->
+      <div class="follow-bar" id="followBar">
+        <button class="follow-btn-new" id="followBtnNew">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+          <span id="followText">1 new</span>
+        </button>
+      </div>
+
+      <div class="messages-inner" id="messagesInner">
+        <!-- messages go here -->
+      </div>
+    </div>
+
+    <div class="composer">
+      <textarea rows="1" placeholder="Continue this pi session…"></textarea>
+      <button>Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- Old button for comparison -->
+<button class="old-follow-btn" id="oldFollowBtn">↓ 1 new</button>
+
+<script>
+  const messagesArea = document.getElementById('messages');
+  const messagesInner = document.getElementById('messagesInner');
+  const followBar = document.getElementById('followBar');
+  const followBtnNew = document.getElementById('followBtnNew');
+  const followText = document.getElementById('followText');
+  const oldFollowBtn = document.getElementById('oldFollowBtn');
+  const modeOld = document.getElementById('mode-old');
+  const modeNew = document.getElementById('mode-new');
+
+  let mode = 'new';
+  let msgCount = 0;
+  let pendingCount = 0;
+  let isFollowing = true;
+
+  function addMessage(text, role = 'assistant') {
+    const div = document.createElement('div');
+    div.className = 'message ' + role;
+    div.innerHTML = '<div class="role">' + role + '</div><div>' + text + '</div>';
+    messagesInner.appendChild(div);
+    msgCount++;
+
+    if (isFollowing) {
+      scrollToBottom();
+    } else {
+      pendingCount++;
+      updateFollowButton();
+    }
+  }
+
+  function scrollToBottom() {
+    messagesArea.scrollTo({ top: messagesArea.scrollHeight, behavior: 'smooth' });
+  }
+
+  function updateFollowButton() {
+    const shouldShow = pendingCount > 0 && !isFollowing;
+    if (mode === 'new') {
+      followText.textContent = pendingCount + ' new' + (pendingCount > 1 ? 's' : '');
+      followBar.classList.toggle('visible', shouldShow);
+    } else {
+      oldFollowBtn.textContent = '↓ ' + pendingCount + ' new' + (pendingCount > 1 ? 's' : '');
+      oldFollowBtn.style.opacity = shouldShow ? '1' : '0';
+    }
+  }
+
+  function hideFollowButton() {
+    pendingCount = 0;
+    if (mode === 'new') {
+      followBar.classList.remove('visible');
+    } else {
+      oldFollowBtn.style.opacity = '0';
+    }
+  }
+
+  // Scroll detection
+  messagesArea.addEventListener('scroll', () => {
+    const threshold = 40;
+    const remaining = messagesArea.scrollHeight - messagesArea.scrollTop - messagesArea.clientHeight;
+    const atBottom = remaining < threshold;
+    isFollowing = atBottom;
+    if (atBottom) hideFollowButton();
+  }, { passive: true });
+
+  followBtnNew.addEventListener('click', () => {
+    isFollowing = true;
+    hideFollowButton();
+    scrollToBottom();
+  });
+
+  oldFollowBtn.addEventListener('click', () => {
+    isFollowing = true;
+    hideFollowButton();
+    scrollToBottom();
+  });
+
+  document.getElementById('btn-add-msg').addEventListener('click', () => {
+    const longText = 'Message ' + (msgCount + 1) + ' — Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.';
+    addMessage(longText, msgCount % 2 === 0 ? 'assistant' : 'user');
+  });
+
+  function setMode(m) {
+    mode = m;
+    if (m === 'new') {
+      modeNew.classList.add('active');
+      modeOld.classList.remove('active');
+      oldFollowBtn.style.display = 'none';
+      updateFollowButton();
+    } else {
+      modeOld.classList.add('active');
+      modeNew.classList.remove('active');
+      followBar.classList.remove('visible');
+      oldFollowBtn.style.display = 'block';
+      updateFollowButton();
+    }
+  }
+  modeOld.addEventListener('click', () => setMode('old'));
+  modeNew.addEventListener('click', () => setMode('new'));
+
+  // Seed with enough messages to be scrollable
+  for (let i = 1; i <= 20; i++) {
+    addMessage('Message ' + i + ' — Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.', i % 2 === 0 ? 'assistant' : 'user');
+  }
+
+  // Start at bottom
+  scrollToBottom();
+</script>
+</body>
+</html>

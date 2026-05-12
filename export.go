@@ -158,14 +158,22 @@ func chatComposerHtml(sessionID string) string {
 func chatComposerHtmlForSession(session sessions.Session) string {
 	var buf strings.Builder
 	chatAvailable := session.ChatAvailable || session.ChatDisabledReason == ""
+	cwd := ""
+	if session.Header != nil {
+		if c, ok := session.Header["cwd"].(string); ok {
+			cwd = c
+		}
+	}
 	data := struct {
 		SessionID          string
 		ChatAvailable      bool
 		ChatDisabledReason string
+		Cwd                string
 	}{
 		SessionID:          session.ID,
 		ChatAvailable:      chatAvailable,
 		ChatDisabledReason: session.ChatDisabledReason,
+		Cwd:                cwd,
 	}
 	if !data.ChatAvailable && data.ChatDisabledReason == "" {
 		data.ChatDisabledReason = "This session can be viewed, but chat is disabled because its working directory no longer exists."

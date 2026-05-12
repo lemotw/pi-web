@@ -1,4 +1,4 @@
-.PHONY: build setup frontend-setup go-setup frontend-build frontend-test go-test vet test check clean
+.PHONY: build setup frontend-setup go-setup frontend-build frontend-test go-test vet test check clean dev
 
 BINARY ?= pi-web
 WEB_DIR := web
@@ -35,6 +35,13 @@ vet: go-setup
 test: frontend-test go-test
 
 check: frontend-test frontend-build go-test vet
+
+dev: frontend-setup go-setup
+	@echo "Starting dev mode (frontend watcher + Go hot-reloader)..."
+	@cd $(WEB_DIR) && npm run dev & \
+	VITE_PID=$$!; \
+	trap "kill $$VITE_PID 2>/dev/null; exit" INT TERM EXIT; \
+	air
 
 clean:
 	rm -f $(BINARY)

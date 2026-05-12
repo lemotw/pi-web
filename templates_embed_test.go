@@ -53,6 +53,51 @@ func TestChatComposerTemplateInterpolatesPlainSessionID(t *testing.T) {
 	}
 }
 
+func TestChatComposerTemplateRendersCwdFromHeader(t *testing.T) {
+	got := chatComposerHtmlForSession(sessions.Session{
+		SessionSummary: sessions.SessionSummary{ID: "s.jsonl", ChatAvailable: true},
+		Header:         map[string]any{"cwd": "/home/user/project"},
+	})
+	if !strings.Contains(got, "cwd: /home/user/project") {
+		t.Fatalf("chat composer missing expected cwd text, got: %s", got)
+	}
+	if !strings.Contains(got, `class="pi-chat-cwd"`) {
+		t.Fatal("chat composer cwd span missing pi-chat-cwd class")
+	}
+	if !strings.Contains(got, `data-cwd="/home/user/project"`) {
+		t.Fatal("chat composer cwd span missing data-cwd attribute")
+	}
+	if !strings.Contains(got, `title="Click to copy path"`) {
+		t.Fatal("chat composer cwd span missing copy tooltip")
+	}
+}
+
+func TestChatComposerTemplateEscapesCwd(t *testing.T) {
+	got := chatComposerHtmlForSession(sessions.Session{
+		SessionSummary: sessions.SessionSummary{ID: "s.jsonl", ChatAvailable: true},
+		Header:         map[string]any{"cwd": "/tmp/<script>alert(1)</script>"},
+	})
+	if strings.Contains(got, "<script>alert(1)</script>") {
+		t.Fatalf("chat composer leaked unescaped cwd: %s", got)
+	}
+	if !strings.Contains(got, "&lt;script&gt;") {
+		t.Fatal("chat composer did not escape cwd properly")
+	}
+}
+
+func TestChatComposerTemplateOmitsCwdWhenEmpty(t *testing.T) {
+	got := chatComposerHtmlForSession(sessions.Session{
+		SessionSummary: sessions.SessionSummary{ID: "s.jsonl", ChatAvailable: true},
+		Header:         nil,
+	})
+	if strings.Contains(got, "pi-chat-cwd") {
+		t.Fatal("chat composer should omit cwd span when cwd is empty")
+	}
+	if strings.Contains(got, "cwd:") {
+		t.Fatal("chat composer should omit cwd text when cwd is empty")
+	}
+}
+
 func TestIndexTemplateLoadedFromEmbeddedFile(t *testing.T) {
 	if indexTmplStr == "" {
 		t.Fatal("indexTmplStr is empty; live_templates/index.html was not embedded")
