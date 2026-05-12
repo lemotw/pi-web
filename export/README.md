@@ -17,11 +17,11 @@ export/
 │   ├── 50-render-entry.js   # Entry detail rendering
 │   ├── 60-header.js         # Session header rendering
 │   ├── 70-navigation.js     # Tree selection & breadcrumb
-│   ├── 80-ui.js             # UI helpers (modals, toasts, etc.)
-│   └── 90-chat.js           # Chat-related rendering (export has no composer)
+│   └── 80-ui.js             # UI helpers, keyboard shortcuts, initial render
 ├── vendor/           # Vendored third-party libraries
 │   ├── marked.min.js
-│   └── highlight.min.js
+│   ├── highlight.min.js
+│   └── alpine.min.js  # Used by live app (/static/alpine.js), not inlined in export
 └── README.md
 ```
 
