@@ -61,7 +61,7 @@ func TestSessionViteSourceShowsAnimatedWorkingPreviewLabel(t *testing.T) {
 
 func TestGenerateExportHtmlIncludesChatComposerWhenButtonsShown(t *testing.T) {
 	session := sessions.Session{SessionSummary: sessions.SessionSummary{ID: "s.jsonl", Filename: "s.jsonl"}, Entries: []map[string]any{{"id": "aaaaaaaa"}}}
-	html := generateExportHtml(session, true)
+	html := renderSessionPage(session, true)
 	if !strings.Contains(html, `id="pi-chat-composer"`) {
 		t.Fatalf("chat composer missing from local session page")
 	}
@@ -72,7 +72,7 @@ func TestGenerateExportHtmlIncludesChatComposerWhenButtonsShown(t *testing.T) {
 
 func TestGenerateExportHtmlOmitsChatComposerForShare(t *testing.T) {
 	session := sessions.Session{SessionSummary: sessions.SessionSummary{ID: "s.jsonl", Filename: "s.jsonl"}, Entries: []map[string]any{{"id": "aaaaaaaa"}}}
-	html := generateExportHtml(session, false)
+	html := renderSessionPage(session, false)
 	if strings.Contains(html, `id="pi-chat-composer"`) {
 		t.Fatalf("chat composer should not be included in share export")
 	}
@@ -80,7 +80,7 @@ func TestGenerateExportHtmlOmitsChatComposerForShare(t *testing.T) {
 
 func TestGenerateExportHtmlIncludesResumeButtonWhenButtonsShown(t *testing.T) {
 	session := sessions.Session{SessionSummary: sessions.SessionSummary{ID: "s.jsonl", Filename: "s.jsonl", SessionUUID: "019e122d-bcc4-7308-8a30-7ef83dae1983"}, Entries: []map[string]any{{"id": "aaaaaaaa"}}}
-	html := generateExportHtml(session, true)
+	html := renderSessionPage(session, true)
 	if !strings.Contains(html, `id="resume-btn"`) {
 		t.Fatalf("resume button missing from local session page")
 	}
@@ -135,7 +135,7 @@ func TestResumeButtonShowsToastWithoutChangingButtonText(t *testing.T) {
 
 func TestGenerateExportHtmlOmitsResumeButtonForShare(t *testing.T) {
 	session := sessions.Session{SessionSummary: sessions.SessionSummary{ID: "s.jsonl", Filename: "s.jsonl"}, Entries: []map[string]any{{"id": "aaaaaaaa"}}}
-	html := generateExportHtml(session, false)
+	html := renderSessionPage(session, false)
 	if strings.Contains(html, `id="resume-btn"`) {
 		t.Fatalf("resume button should not be included in share export")
 	}
@@ -151,7 +151,7 @@ func TestGenerateExportHtmlShowsDisabledChatNoticeForBrokenSession(t *testing.T)
 		},
 		Entries: []map[string]any{{"id": "aaaaaaaa"}},
 	}
-	html := generateExportHtml(session, true)
+	html := renderSessionPage(session, true)
 	if !strings.Contains(html, `data-chat-available="false"`) {
 		t.Fatalf("broken session should mark chat unavailable")
 	}

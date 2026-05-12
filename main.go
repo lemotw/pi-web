@@ -72,7 +72,7 @@ func main() {
 		ChatSender:    manager,
 		Cache:         sessions.NewCache(),
 		RenderIndex:   func(w io.Writer, ss []sessions.SessionSummary) error { return indexTmpl.Execute(w, ss) },
-		RenderSession: generateExportHtml,
+		RenderSession: renderSessionPage,
 		Models: func(ctx context.Context) (json.RawMessage, error) {
 			return defaultModelsCache.get(ctx)
 		},

@@ -27,7 +27,7 @@ func TestMobileSessionActionsStayAtTopAndHideBehindSidebar(t *testing.T) {
 		"@media (max-width: 900px)",
 		"top: calc(10px + env(safe-area-inset-top));",
 	}
-	combined := templateCss + templateHtml + liveReloadJs + templateJs + chatComposerHtml("s.jsonl") + generateExportHtml(sessions.Session{SessionSummary: sessions.SessionSummary{ID: "s.jsonl"}}, true)
+	combined := templateCss + templateHtml + liveReloadJs + templateJs + chatComposerHtml("s.jsonl") + renderSessionPage(sessions.Session{SessionSummary: sessions.SessionSummary{ID: "s.jsonl"}}, true)
 	for _, check := range checks {
 		if !strings.Contains(combined, check) {
 			t.Fatalf("mobile action UI missing %q", check)
