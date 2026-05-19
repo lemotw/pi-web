@@ -82,7 +82,18 @@ func (s *Server) writeStatusSnapshot(w http.ResponseWriter) {
 		idJSON, _ := json.Marshal(id)
 		sb.Write(idJSON)
 	}
-	sb.WriteString("]}")
+	sb.WriteString(`],"statuses":{`)
+	for i, id := range ids {
+		if i > 0 {
+			sb.WriteByte(',')
+		}
+		idJSON, _ := json.Marshal(id)
+		sb.Write(idJSON)
+		sb.WriteByte(':')
+		data, _ := json.Marshal(s.runningStatusPayload(id, true))
+		sb.Write(data)
+	}
+	sb.WriteString("}}")
 
 	fmt.Fprintf(w, "event: status-snapshot\ndata: %s\n\n", sb.String())
 }

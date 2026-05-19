@@ -73,6 +73,7 @@ describe('chat composer runner', () => {
     });
     dom.window.document.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
 
+    dom.window.URL.createObjectURL = vi.fn(() => 'blob:preview');
     const textarea = dom.window.document.getElementById('pi-chat-message');
     const file = new dom.window.File(['blob'], 'screenshot.png', { type: 'image/png' });
     const pasteEvent = new dom.window.Event('paste', { bubbles: true, cancelable: true });
@@ -81,7 +82,11 @@ describe('chat composer runner', () => {
     });
     textarea.dispatchEvent(pasteEvent);
 
-    expect(dom.window.document.getElementById('pi-chat-attachments').children.length).toBe(1);
+    const attachment = dom.window.document.getElementById('pi-chat-attachments').firstElementChild;
+    expect(attachment).toBeTruthy();
+    expect(attachment.classList.contains('image-only')).toBe(true);
+    expect(attachment.querySelector('.pi-chat-attachment-preview')).toBeTruthy();
+    expect(attachment.querySelector('.pi-chat-attachment-name')).toBe(null);
     expect(pasteEvent.defaultPrevented).toBe(true);
   });
 

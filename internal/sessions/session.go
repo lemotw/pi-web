@@ -21,13 +21,17 @@ type summaryLine struct {
 	Name      string      `json:"name"`
 	CWD       string      `json:"cwd"`
 	ID        string      `json:"id"`
+	Provider  string      `json:"provider"`
+	ModelID   string      `json:"modelId"`
 	Message   *summaryMsg `json:"message"`
 }
 
 type summaryMsg struct {
-	Role    string          `json:"role"`
-	Content json.RawMessage `json:"content"`
-	Usage   summaryUsage    `json:"usage"`
+	Role     string          `json:"role"`
+	Provider string          `json:"provider"`
+	Model    string          `json:"model"`
+	Content  json.RawMessage `json:"content"`
+	Usage    summaryUsage    `json:"usage"`
 }
 
 type summaryUsage struct {
@@ -49,6 +53,8 @@ type SessionSummary struct {
 	MessageCount       int
 	TokenTotal         int
 	CostTotal          float64
+	Model              string
+	ModelProvider      string
 	ChatAvailable      bool
 	ChatDisabledReason string
 }
@@ -60,13 +66,37 @@ type Session struct {
 }
 
 func SortSummariesByActivity(s []SessionSummary) {
-	times := make([]time.Time, len(s))
-	for i := range s {
-		times[i], _ = time.Parse(time.RFC3339, s[i].LastActivity)
+	type sortableSummary struct {
+		summary  SessionSummary
+		activity time.Time
+		valid    bool
+		index    int
 	}
-	sort.Slice(s, func(i, j int) bool {
-		return times[i].After(times[j])
+
+	items := make([]sortableSummary, len(s))
+	for i := range s {
+		activity, err := time.Parse(time.RFC3339, s[i].LastActivity)
+		items[i] = sortableSummary{
+			summary:  s[i],
+			activity: activity,
+			valid:    err == nil,
+			index:    i,
+		}
+	}
+
+	sort.Slice(items, func(i, j int) bool {
+		if items[i].valid != items[j].valid {
+			return items[i].valid
+		}
+		if !items[i].activity.Equal(items[j].activity) {
+			return items[i].activity.After(items[j].activity)
+		}
+		return items[i].index < items[j].index
 	})
+
+	for i := range items {
+		s[i] = items[i].summary
+	}
 }
 
 // ParseSummary streams path line-by-line, accumulating only the fields the
@@ -124,8 +154,20 @@ func ParseSummary(path, dirName, fileName string) (SessionSummary, error) {
 			s.MessageCount++
 			s.TokenTotal += int(msg.Usage.TotalTokens)
 			s.CostTotal += msg.Usage.Cost.Total
+			if msg.Model != "" {
+				s.Model = msg.Model
+				s.ModelProvider = msg.Provider
+			}
 			if firstUserText == "" && msg.Role == "user" {
 				firstUserText = extractRawText(msg.Content)
+			}
+		case "model_change":
+			if raw.Timestamp != "" {
+				s.LastActivity = raw.Timestamp
+			}
+			if raw.ModelID != "" {
+				s.Model = raw.ModelID
+				s.ModelProvider = raw.Provider
 			}
 		default:
 			if raw.Timestamp != "" {
@@ -155,6 +197,7 @@ func ParseSummary(path, dirName, fileName string) (SessionSummary, error) {
 	}
 
 	if headerCwd != "" {
+		s.Project = headerCwd
 		if _, err := os.Stat(headerCwd); err != nil {
 			s.ChatAvailable = false
 			s.ChatDisabledReason = "This session can be viewed, but chat is disabled because its working directory no longer exists."
@@ -285,6 +328,10 @@ func ParseFile(path, dirName, fileName string) (Session, error) {
 				continue
 			}
 			s.MessageCount++
+			if model, _ := msg["model"].(string); model != "" {
+				s.Model = model
+				s.ModelProvider, _ = msg["provider"].(string)
+			}
 			if usage, ok := msg["usage"].(map[string]any); ok {
 				if t, ok := usage["totalTokens"].(float64); ok {
 					s.TokenTotal += int(t)
@@ -299,6 +346,14 @@ func ParseFile(path, dirName, fileName string) (Session, error) {
 				if role, _ := msg["role"].(string); role == "user" {
 					firstUserText = extractMessageText(msg["content"])
 				}
+			}
+		case "model_change":
+			if ts, ok := raw["timestamp"].(string); ok {
+				s.LastActivity = ts
+			}
+			if model, _ := raw["modelId"].(string); model != "" {
+				s.Model = model
+				s.ModelProvider, _ = raw["provider"].(string)
 			}
 		default:
 			if ts, ok := raw["timestamp"].(string); ok {
@@ -328,6 +383,7 @@ func ParseFile(path, dirName, fileName string) (Session, error) {
 	}
 
 	if headerCwd != "" {
+		s.Project = headerCwd
 		if _, err := os.Stat(headerCwd); err != nil {
 			s.ChatAvailable = false
 			s.ChatDisabledReason = "This session can be viewed, but chat is disabled because its working directory no longer exists."

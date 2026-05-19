@@ -13,10 +13,25 @@ function sessionCards(root = document) {
   return Array.from(root.querySelectorAll('.session-card[data-session-id]'));
 }
 
-function syncRunningCardClasses(runningSessionIds, root = document) {
+function formatRunningModel(status) {
+  if (!status || typeof status !== 'object') return '';
+  const model = typeof status.modelName === 'string' && status.modelName ? status.modelName
+    : typeof status.model === 'string' ? status.model : '';
+  const provider = typeof status.modelProvider === 'string' ? status.modelProvider : '';
+  if (model && provider) return `${provider}/${model}`;
+  return model || provider;
+}
+
+function syncRunningCardClasses(runningSessionIds, runningStatuses = new Map(), root = document) {
   sessionCards(root).forEach((card) => {
     const id = card.dataset.sessionId;
-    card.classList.toggle('session-card--running', !!id && runningSessionIds.has(id));
+    const running = !!id && runningSessionIds.has(id);
+    card.classList.toggle('session-card--running', running);
+    const model = running ? formatRunningModel(runningStatuses.get(id)) : '';
+    const runningModelEl = card.querySelector('[data-running-model]');
+    if (runningModelEl) runningModelEl.textContent = model;
+    const sessionModelEl = card.querySelector('[data-session-model]');
+    if (sessionModelEl && model) sessionModelEl.textContent = model;
   });
 }
 
@@ -50,6 +65,7 @@ export function createSessionsPage({
     creating: false,
     error: '',
     runningSessionIds: new Set(),
+    runningStatuses: new Map(),
     _statusEvents: null,
     _reloadTimer: null,
 
@@ -58,21 +74,29 @@ export function createSessionsPage({
     },
 
     syncRunningCardClasses() {
-      syncRunningCardClasses(this.runningSessionIds, root);
+      syncRunningCardClasses(this.runningSessionIds, this.runningStatuses, root);
     },
 
     isSessionRunning(id) {
       return this.runningSessionIds.has(id);
     },
 
-    setRunningSessions(ids) {
+    setRunningSessions(snapshot) {
+      const ids = Array.isArray(snapshot) ? snapshot : snapshot?.ids;
+      const statuses = snapshot && !Array.isArray(snapshot) ? snapshot.statuses : {};
       this.runningSessionIds = new Set(Array.isArray(ids) ? ids : []);
+      this.runningStatuses = new Map(Object.entries(statuses || {}));
       this.syncRunningCardClasses();
     },
 
-    setSessionRunning(id, running) {
-      if (running) this.runningSessionIds.add(id);
-      else this.runningSessionIds.delete(id);
+    setSessionRunning(id, running, status = {}) {
+      if (running) {
+        this.runningSessionIds.add(id);
+        this.runningStatuses.set(id, status);
+      } else {
+        this.runningSessionIds.delete(id);
+        this.runningStatuses.delete(id);
+      }
       this.syncRunningCardClasses();
     },
 
@@ -123,8 +147,8 @@ export function createSessionsPage({
       try {
         this.cleanup();
         this._statusEvents = createStatusEvents({
-          onSnapshot: (ids) => this.setRunningSessions(ids),
-          onDelta: ({ id, running }) => this.setSessionRunning(id, running),
+          onSnapshot: (snapshot) => this.setRunningSessions(snapshot),
+          onDelta: (status) => this.setSessionRunning(status.id, status.running, status),
           onMessage: (message) => {
             if (message === 'new-session') reload();
             if (message === 'reload') this.scheduleReload();

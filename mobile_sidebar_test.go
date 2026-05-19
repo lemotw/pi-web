@@ -40,7 +40,7 @@ func TestMobileSessionActionsStayAtTopAndHideBehindSidebar(t *testing.T) {
 
 func TestMobileSessionActionsDoNotCoverHeaderToggleButtons(t *testing.T) {
 	checks := []string{
-		"padding: calc(var(--line-height) * 3) 16px var(--line-height);",
+		"padding: calc(var(--line-height) * 3) 16px calc(var(--pi-chat-composer-height, 0px) + var(--line-height));",
 		".header-toggle-btn",
 		"data-action=\"toggle-thinking\"",
 		"data-action=\"toggle-tools\"",

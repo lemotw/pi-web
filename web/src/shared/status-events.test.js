@@ -39,12 +39,12 @@ describe('createStatusEvents', () => {
     const es = FakeEventSource.instances[0];
     expect(es.url).toBe('/events?id=__all__');
 
-    es.emit('status-snapshot', JSON.stringify({ running: ['a.jsonl'] }));
-    es.emit('status-delta', JSON.stringify({ id: 'a.jsonl', running: false }));
+    es.emit('status-snapshot', JSON.stringify({ running: ['a.jsonl'], statuses: { 'a.jsonl': { model: 'm', modelProvider: 'p' } } }));
+    es.emit('status-delta', JSON.stringify({ id: 'a.jsonl', running: false, model: 'm', modelProvider: 'p' }));
     es.emit('message', 'new-session');
 
-    expect(onSnapshot).toHaveBeenCalledWith(['a.jsonl']);
-    expect(onDelta).toHaveBeenCalledWith({ id: 'a.jsonl', running: false });
+    expect(onSnapshot).toHaveBeenCalledWith({ ids: ['a.jsonl'], statuses: { 'a.jsonl': { model: 'm', modelProvider: 'p' } } });
+    expect(onDelta).toHaveBeenCalledWith({ id: 'a.jsonl', running: false, model: 'm', modelName: '', modelProvider: 'p' });
     expect(onMessage).toHaveBeenCalledWith('new-session');
   });
 

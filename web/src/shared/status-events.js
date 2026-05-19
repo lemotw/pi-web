@@ -7,12 +7,22 @@ function parseJSON(data) {
 }
 
 function normalizeRunning(payload) {
-  return Array.isArray(payload?.running) ? payload.running : null;
+  if (!Array.isArray(payload?.running)) return null;
+  return {
+    ids: payload.running,
+    statuses: payload.statuses && typeof payload.statuses === 'object' ? payload.statuses : {}
+  };
 }
 
 function normalizeDelta(payload) {
   if (!payload || typeof payload.id !== 'string') return null;
-  return { id: payload.id, running: !!payload.running };
+  return {
+    id: payload.id,
+    running: !!payload.running,
+    model: typeof payload.model === 'string' ? payload.model : '',
+    modelName: typeof payload.modelName === 'string' ? payload.modelName : '',
+    modelProvider: typeof payload.modelProvider === 'string' ? payload.modelProvider : ''
+  };
 }
 
 export function createStatusEvents({
@@ -45,8 +55,8 @@ export function createStatusEvents({
 
     es.onmessage = (event) => onMessage(event.data);
     es.addEventListener('status-snapshot', (event) => {
-      const running = normalizeRunning(parseJSON(event.data));
-      if (running) onSnapshot(running);
+      const snapshot = normalizeRunning(parseJSON(event.data));
+      if (snapshot) onSnapshot(snapshot);
     });
     es.addEventListener('status-delta', (event) => {
       const delta = normalizeDelta(parseJSON(event.data));

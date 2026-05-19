@@ -193,20 +193,43 @@ body {
   background: color-mix(in srgb, var(--container-bg) 92%, white 8%);
 }
 .session-project {
+  display: none;
+}
+.session-model {
   font-size: 11px;
+  line-height: var(--line-height);
   color: var(--accent);
   margin-bottom: 8px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.session-model:empty { display: none; }
 .session-meta {
+  min-width: 0;
   font-size: 11px;
   color: var(--muted);
   display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
+  gap: 8px;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  white-space: nowrap;
 }
+.session-meta span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.session-meta .session-time { flex: 0 1 auto; }
+.session-meta .session-run-model {
+  display: none;
+  flex: 1 1 auto;
+  color: var(--accent);
+}
+.session-card--running .session-run-model:not(:empty) { display: inline-block; }
+.session-meta .session-count,
+.session-meta .session-tokens,
+.session-meta .session-cost { flex: 0 0 auto; }
 .empty-state {
   text-align: center;
   padding: 60px 20px;
@@ -358,11 +381,13 @@ body {
         </div>
       </div>
       <div class="session-project">{{ .Project | html }}</div>
+      <div class="session-model" data-session-model>{{ if .Model }}{{ if .ModelProvider }}{{ .ModelProvider | html }}/{{ end }}{{ .Model | html }}{{ end }}</div>
       <div class="session-meta">
-        <span data-timestamp="{{ .LastActivity }}">{{ .LastActivity }}</span>
-        <span>{{ .MessageCount }} msgs</span>
-        <span>{{ fmtTokens .TokenTotal }} tok</span>
-        <span>{{ fmtCost .CostTotal }}</span>
+        <span class="session-time" data-timestamp="{{ .LastActivity }}" title="{{ .LastActivity }}">{{ fmtRelativeTime .LastActivity }}</span>
+        <span class="session-run-model" data-running-model></span>
+        <span class="session-count">{{ .MessageCount }} msgs</span>
+        <span class="session-tokens">{{ fmtTokens .TokenTotal }} tok</span>
+        <span class="session-cost">{{ fmtCost .CostTotal }}</span>
       </div>
     </div>
   {{ end }}
@@ -383,18 +408,32 @@ body {
 </div>
 <script>
 (function() {
-  document.querySelectorAll('[data-timestamp]').forEach(function(el) {
-    var ts = el.dataset.timestamp;
-    if (ts) {
-      var d = new Date(ts);
-      if (!isNaN(d)) {
-        el.textContent = d.toLocaleString(undefined, {
-          month: 'short', day: 'numeric', year: 'numeric',
-          hour: 'numeric', minute: '2-digit'
-        });
-      }
+  function formatRelativeTime(date) {
+    var seconds = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
+    var units = [
+      ['year', 31536000], ['month', 2592000], ['week', 604800],
+      ['day', 86400], ['hour', 3600], ['minute', 60]
+    ];
+    for (var i = 0; i < units.length; i++) {
+      var count = Math.floor(seconds / units[i][1]);
+      if (count >= 1) return count + ' ' + units[i][0] + (count === 1 ? '' : 's') + ' ago';
     }
-  });
+    return 'just now';
+  }
+  function updateRelativeTimes() {
+    document.querySelectorAll('[data-timestamp]').forEach(function(el) {
+      var ts = el.dataset.timestamp;
+      if (!ts) return;
+      var d = new Date(ts);
+      if (isNaN(d)) return;
+      el.title = d.toLocaleString();
+      el.textContent = formatRelativeTime(d);
+    });
+  }
+  setTimeout(function tickRelativeTimes() {
+    updateRelativeTimes();
+    setTimeout(tickRelativeTimes, 60000);
+  }, 60000);
 })();
 </script>
 <script type="module" src="{{ indexScript }}"></script>

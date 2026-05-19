@@ -59,6 +59,47 @@ func TestEncodeDecodeRoundTrip(t *testing.T) {
 	}
 }
 
+func TestSortSummariesByActivityOrdersNewestFirst(t *testing.T) {
+	summaries := []SessionSummary{
+		{ID: "old", LastActivity: "2026-02-27T15:13:25.383Z"},
+		{ID: "older", LastActivity: "2026-02-27T15:16:22.278Z"},
+		{ID: "newest", LastActivity: "2026-05-18T19:05:05.064Z"},
+		{ID: "middle", LastActivity: "2026-05-06T17:10:28.485Z"},
+		{ID: "newer", LastActivity: "2026-05-18T18:59:50.965Z"},
+	}
+
+	SortSummariesByActivity(summaries)
+
+	got := make([]string, len(summaries))
+	for i := range summaries {
+		got[i] = summaries[i].ID
+	}
+	want := []string{"newest", "newer", "middle", "older", "old"}
+	if strings.Join(got, ",") != strings.Join(want, ",") {
+		t.Fatalf("sorted IDs = %v, want %v", got, want)
+	}
+}
+
+func TestSortSummariesByActivityKeepsInvalidTimestampsLast(t *testing.T) {
+	summaries := []SessionSummary{
+		{ID: "invalid", LastActivity: "not-a-time"},
+		{ID: "newest", LastActivity: "2026-05-18T19:05:05.064Z"},
+		{ID: "empty", LastActivity: ""},
+		{ID: "older", LastActivity: "2026-02-27T15:16:22.278Z"},
+	}
+
+	SortSummariesByActivity(summaries)
+
+	got := make([]string, len(summaries))
+	for i := range summaries {
+		got[i] = summaries[i].ID
+	}
+	want := []string{"newest", "older", "invalid", "empty"}
+	if strings.Join(got, ",") != strings.Join(want, ",") {
+		t.Fatalf("sorted IDs = %v, want %v", got, want)
+	}
+}
+
 func TestListRecentLocationsReturnsNewestBoundedLocations(t *testing.T) {
 	tmp := t.TempDir()
 	base := time.Date(2026, 5, 8, 12, 0, 0, 0, time.UTC)
@@ -314,6 +355,40 @@ func TestParseSummaryAccumulatesUsage(t *testing.T) {
 	}
 }
 
+func TestParseSummaryTracksLatestModelInfo(t *testing.T) {
+	tmp := t.TempDir()
+	path := filepath.Join(tmp, "s.jsonl")
+	content := `{"type":"message","timestamp":"2026-05-08T10:00:01Z","message":{"role":"assistant","provider":"anthropic","model":"claude-4","content":"x"}}` + "\n" +
+		`{"type":"model_change","timestamp":"2026-05-08T10:00:02Z","provider":"deepseek","modelId":"deepseek-v4-pro"}` + "\n"
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+	s, err := ParseSummary(path, "--proj--", "s.jsonl")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if s.ModelProvider != "deepseek" || s.Model != "deepseek-v4-pro" {
+		t.Fatalf("model = %q/%q, want deepseek/deepseek-v4-pro", s.ModelProvider, s.Model)
+	}
+}
+
+func TestParseFileTracksLatestModelInfo(t *testing.T) {
+	tmp := t.TempDir()
+	path := filepath.Join(tmp, "s.jsonl")
+	content := `{"type":"message","timestamp":"2026-05-08T10:00:01Z","message":{"role":"assistant","provider":"anthropic","model":"claude-4","content":"x"}}` + "\n" +
+		`{"type":"model_change","timestamp":"2026-05-08T10:00:02Z","provider":"deepseek","modelId":"deepseek-v4-pro"}` + "\n"
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+	s, err := ParseFile(path, "--proj--", "s.jsonl")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if s.ModelProvider != "deepseek" || s.Model != "deepseek-v4-pro" {
+		t.Fatalf("model = %q/%q, want deepseek/deepseek-v4-pro", s.ModelProvider, s.Model)
+	}
+}
+
 func TestParseFileMarksSessionBrokenWhenCwdMissing(t *testing.T) {
 	root := t.TempDir()
 	path := filepath.Join(root, "session.jsonl")
@@ -331,6 +406,58 @@ func TestParseFileMarksSessionBrokenWhenCwdMissing(t *testing.T) {
 	}
 	if !strings.Contains(sess.ChatDisabledReason, "working directory no longer exists") {
 		t.Fatalf("reason = %q", sess.ChatDisabledReason)
+	}
+}
+
+func TestParseSummaryUsesHeaderCwdAsProject(t *testing.T) {
+	tmp := t.TempDir()
+	path := filepath.Join(tmp, "s.jsonl")
+	content := `{"type":"session","timestamp":"2026-05-08T10:00:00Z","cwd":"/Users/setkyar/pi-web"}` + "\n"
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+	s, err := ParseSummary(path, "--Users-setkyar-pi-web--", "s.jsonl")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if s.Project != "/Users/setkyar/pi-web" {
+		t.Errorf("Project = %q, want %q", s.Project, "/Users/setkyar/pi-web")
+	}
+}
+
+func TestParseSummaryFallsBackToDirNameWhenCwdMissing(t *testing.T) {
+	tmp := t.TempDir()
+	path := filepath.Join(tmp, "s.jsonl")
+	content := `{"type":"session","timestamp":"2026-05-08T10:00:00Z"}` + "\n"
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+	s, err := ParseSummary(path, "--Users-setkyar--pi--web--", "s.jsonl")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if s.Project != "Users-setkyar/pi/web" {
+		t.Errorf("Project = %q, want %q", s.Project, "Users-setkyar/pi/web")
+	}
+}
+
+func TestParseFileUsesHeaderCwdAsProject(t *testing.T) {
+	root := t.TempDir()
+	cwd := filepath.Join(root, "project")
+	if err := os.MkdirAll(cwd, 0755); err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(root, "s.jsonl")
+	content := `{"type":"session","timestamp":"2026-05-08T10:00:00Z","cwd":"` + cwd + `"}` + "\n"
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+	sess, err := ParseFile(path, "--tmp-project--", "s.jsonl")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if sess.Project != cwd {
+		t.Errorf("Project = %q, want %q", sess.Project, cwd)
 	}
 }
 

@@ -158,6 +158,18 @@ export function runChatComposer({
     const sendButton = document.getElementById('pi-chat-send');
     const cancelButton = document.getElementById('pi-chat-cancel');
     let selectedChatFiles = [];
+    const attachmentObjectUrls = new WeakMap();
+
+    function updateComposerHeightVar() {
+      const height = Math.ceil(form.getBoundingClientRect().height || 0);
+      document.documentElement.style.setProperty('--pi-chat-composer-height', height + 'px');
+    }
+
+    updateComposerHeightVar();
+    window.addEventListener('resize', updateComposerHeightVar, { passive: true });
+    if (window.ResizeObserver) {
+      new ResizeObserver(updateComposerHeightVar).observe(form);
+    }
 
     function setStatus(text, cls) {
       setChatStatus(text, cls);
@@ -171,26 +183,68 @@ export function runChatComposer({
       return !!(window.matchMedia && window.matchMedia('(hover: none) and (pointer: coarse)').matches);
     }
 
+    function getAttachmentObjectUrl(file) {
+      if (!file.type || !file.type.startsWith('image/')) return '';
+      const urlApi = window.URL || window.webkitURL;
+      if (!urlApi || typeof urlApi.createObjectURL !== 'function') return '';
+      let url = attachmentObjectUrls.get(file);
+      if (!url) {
+        url = urlApi.createObjectURL(file);
+        attachmentObjectUrls.set(file, url);
+      }
+      return url;
+    }
+
+    function revokeAttachmentObjectUrl(file) {
+      const url = attachmentObjectUrls.get(file);
+      const urlApi = window.URL || window.webkitURL;
+      if (url && urlApi && typeof urlApi.revokeObjectURL === 'function') {
+        urlApi.revokeObjectURL(url);
+      }
+      attachmentObjectUrls.delete(file);
+    }
+
+    function clearSelectedChatFiles() {
+      selectedChatFiles.forEach(revokeAttachmentObjectUrl);
+      selectedChatFiles = [];
+    }
+
     function renderAttachments() {
-      attachmentList.innerHTML = '';
+      const fragment = document.createDocumentFragment();
       selectedChatFiles.forEach((file, index) => {
         const item = document.createElement('span');
-        item.className = 'pi-chat-attachment';
-        const name = document.createElement('span');
-        name.className = 'pi-chat-attachment-name';
-        name.textContent = '▧ ' + file.name;
+        const previewUrl = getAttachmentObjectUrl(file);
+        item.className = 'pi-chat-attachment' + (previewUrl ? ' image-only' : '');
+
+        if (previewUrl) {
+          const preview = document.createElement('img');
+          preview.className = 'pi-chat-attachment-preview';
+          preview.src = previewUrl;
+          preview.alt = '';
+          preview.loading = 'lazy';
+          preview.decoding = 'async';
+          item.appendChild(preview);
+        } else {
+          const name = document.createElement('span');
+          name.className = 'pi-chat-attachment-name';
+          name.textContent = file.name;
+          item.appendChild(name);
+        }
+
         const remove = document.createElement('button');
         remove.type = 'button';
         remove.className = 'pi-chat-remove';
         remove.setAttribute('aria-label', 'Remove ' + file.name);
         remove.textContent = '×';
         remove.addEventListener('click', () => {
-          selectedChatFiles.splice(index, 1);
+          const [removed] = selectedChatFiles.splice(index, 1);
+          if (removed) revokeAttachmentObjectUrl(removed);
           renderAttachments();
         });
-        item.append(name, remove);
-        attachmentList.appendChild(item);
+        item.appendChild(remove);
+        fragment.appendChild(item);
       });
+      attachmentList.replaceChildren(fragment);
     }
 
     attachButton.addEventListener('click', () => fileInput.click());
@@ -301,7 +355,7 @@ export function runChatComposer({
       const sent = await sendChatMessage(message);
       if (sent) {
         textarea.value = '';
-        selectedChatFiles = [];
+        clearSelectedChatFiles();
         fileInput.value = '';
         renderAttachments();
       }

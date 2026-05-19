@@ -4,11 +4,11 @@ import { createSessionsPage } from './sessions-page.js';
 function mountSessionCards() {
   document.body.innerHTML = `
     <div class="project-group">
-      <div class="session-card" data-session-id="alpha.jsonl" data-search="alpha project"></div>
-      <div class="session-card" data-session-id="beta.jsonl" data-search="beta project"></div>
+      <div class="session-card" data-session-id="alpha.jsonl" data-search="alpha project"><div data-session-model></div><span data-running-model></span></div>
+      <div class="session-card" data-session-id="beta.jsonl" data-search="beta project"><div data-session-model></div><span data-running-model></span></div>
     </div>
     <div class="project-group">
-      <div class="session-card" data-session-id="gamma.jsonl" data-search="gamma other"></div>
+      <div class="session-card" data-session-id="gamma.jsonl" data-search="gamma other"><div data-session-model></div><span data-running-model></span></div>
     </div>
   `;
 }
@@ -44,6 +44,20 @@ describe('createSessionsPage scalable state', () => {
     page.setSessionRunning('alpha.jsonl', false);
     expect(page.isSessionRunning('alpha.jsonl')).toBe(false);
     expect(document.querySelector('[data-session-id="alpha.jsonl"]').classList.contains('session-card--running')).toBe(false);
+  });
+
+  it('renders model/provider from status snapshots and deltas', () => {
+    const page = createSessionsPage();
+
+    page.setRunningSessions({
+      ids: ['alpha.jsonl'],
+      statuses: { 'alpha.jsonl': { modelProvider: 'deepseek', model: 'deepseek-v4-pro' } }
+    });
+    expect(document.querySelector('[data-session-id="alpha.jsonl"] [data-session-model]').textContent).toBe('deepseek/deepseek-v4-pro');
+    expect(document.querySelector('[data-session-id="alpha.jsonl"] [data-running-model]').textContent).toBe('deepseek/deepseek-v4-pro');
+
+    page.setSessionRunning('beta.jsonl', true, { modelProvider: 'anthropic', modelName: 'Claude Sonnet 4.5', model: 'claude-sonnet-4-5' });
+    expect(document.querySelector('[data-session-id="beta.jsonl"] [data-session-model]').textContent).toBe('anthropic/Claude Sonnet 4.5');
   });
 
   it('wires subscription callbacks without exposing EventSource details to page state', () => {

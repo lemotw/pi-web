@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"fmt"
 
 	"pi-web/internal/workers"
 )
@@ -28,6 +27,24 @@ func (s *Server) computeRunningStatus(sessionID string) bool {
 		return true
 	}
 	return s.hasRecentSessionActivity(sessionID)
+}
+
+func (s *Server) runningStatusPayload(sessionID string, running bool) map[string]any {
+	payload := map[string]any{"id": sessionID, "running": running}
+	if !running || s.chatSender == nil {
+		return payload
+	}
+	status := s.chatSender.Status(sessionID)
+	if status.Model != "" {
+		payload["model"] = status.Model
+	}
+	if status.ModelName != "" {
+		payload["modelName"] = status.ModelName
+	}
+	if status.ModelProvider != "" {
+		payload["modelProvider"] = status.ModelProvider
+	}
+	return payload
 }
 
 // recomputeAndBroadcastStatus recomputes the running state for sessionID and,
@@ -57,7 +74,6 @@ func (s *Server) recomputeAndBroadcastStatus(sessionID string) {
 	}
 	s.lastKnownMu.Unlock()
 
-	idJSON, _ := json.Marshal(sessionID)
-	payload := fmt.Sprintf(`{"id":%s,"running":%t}`, idJSON, now)
-	s.broadcast(globalSessID, "event: status-delta\ndata: "+payload)
+	data, _ := json.Marshal(s.runningStatusPayload(sessionID, now))
+	s.broadcast(globalSessID, "event: status-delta\ndata: "+string(data))
 }
