@@ -291,16 +291,35 @@ setup_linux() {
   }
 }
 
-# ── Token reminder ──────────────────────────────────────────────────
-token_reminder() {
-  if [[ -z "${PI_WEB_TOKEN:-}" ]]; then
-    echo ""
-    warn "PI_WEB_TOKEN is not set."
-    warn "pi-web will only bind to loopback (127.0.0.1) without a token."
-    warn "For Tailscale or LAN access, set it in your shell profile:"
-    warn "  export PI_WEB_TOKEN=\$(openssl rand -hex 16)"
-    echo ""
+# ── Token setup ─────────────────────────────────────────────────────
+setup_token_env() {
+  local env_dir="${HOME}/.config/pi-web"
+  local env_file="${env_dir}/env"
+
+  if [[ -n "${PI_WEB_TOKEN:-}" ]]; then
+    return 0
   fi
+
+  if [[ -f "$env_file" ]] && grep -q '^PI_WEB_TOKEN=' "$env_file"; then
+    return 0
+  fi
+
+  mkdir -p "$env_dir"
+  chmod 700 "$env_dir" 2>/dev/null || true
+
+  local token
+  if command -v openssl &>/dev/null; then
+    token="$(openssl rand -hex 16)"
+  else
+    token="$(date +%s%N)-$RANDOM-$RANDOM"
+  fi
+
+  umask 077
+  printf 'PI_WEB_TOKEN=%s\n' "$token" > "$env_file"
+  chmod 600 "$env_file" 2>/dev/null || true
+
+  info "Generated PI_WEB_TOKEN in ${env_file}"
+  warn "Use this token when opening pi-web from another device: ${token}"
 }
 
 # ── Main ────────────────────────────────────────────────────────────
@@ -335,12 +354,12 @@ main() {
     exit 0
   fi
 
+  setup_token_env
+
   case "$(uname -s)" in
     Darwin) setup_macos ;;
     Linux)  setup_linux ;;
   esac
-
-  token_reminder
 
   info "Done! pi-web ${tag} is ready."
   echo ""
