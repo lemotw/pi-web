@@ -161,7 +161,7 @@ Standalone shell installs still default to `/usr/local/bin/pi-web`; set `PI_WEB_
 
 Then restart pi (or run `/reload`), and use:
 
-- `/pi-web` — show pi-web status, version, install path, start the server, or run `/pi-web remote`
+- `/pi-web` — show pi-web status, version, install path, start/stop/restart/update the server, or run `/pi-web remote`
 - `/remote` — show a QR code and URL for remote access over Tailscale
 - `/refresh` — pull new messages written from remote browsers back into the terminal session
 

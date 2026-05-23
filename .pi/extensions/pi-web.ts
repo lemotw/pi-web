@@ -112,6 +112,40 @@ async function startPiWeb(pi: ExtensionAPI): Promise<void> {
   throw new Error("auto-start is only supported on macOS launchd or Linux systemd user services");
 }
 
+async function stopPiWeb(pi: ExtensionAPI): Promise<void> {
+  if (process.platform === "darwin") {
+    await pi.exec("sh", [
+      "-lc",
+      `launchctl bootout "gui/$(id -u)/com.pi-web" 2>/dev/null || launchctl stop com.pi-web 2>/dev/null || true`,
+    ]);
+    return;
+  }
+
+  if (process.platform === "linux") {
+    await pi.exec("systemctl", ["--user", "stop", "pi-web.service"]);
+    return;
+  }
+
+  throw new Error("stop is only supported on macOS launchd or Linux systemd user services");
+}
+
+async function restartPiWeb(pi: ExtensionAPI): Promise<void> {
+  if (process.platform === "darwin") {
+    await pi.exec("sh", [
+      "-lc",
+      `plist="$HOME/Library/LaunchAgents/com.pi-web.plist"; if [ ! -f "$plist" ]; then exit 127; fi; launchctl bootstrap "gui/$(id -u)" "$plist" 2>/dev/null || launchctl load "$plist" 2>/dev/null || true; launchctl kickstart -k "gui/$(id -u)/com.pi-web" 2>/dev/null || { launchctl stop com.pi-web 2>/dev/null || true; launchctl start com.pi-web; }`,
+    ]);
+    return;
+  }
+
+  if (process.platform === "linux") {
+    await pi.exec("systemctl", ["--user", "restart", "pi-web.service"]);
+    return;
+  }
+
+  throw new Error("restart is only supported on macOS launchd or Linux systemd user services");
+}
+
 async function ensurePiWebRunning(pi: ExtensionAPI, host: string, port: string): Promise<boolean> {
   if (await healthCheck(host, port)) return true;
 
@@ -444,7 +478,7 @@ export default function (pi: ExtensionAPI) {
       const tailscaleUrl = detected?.tailscaleUrl || (running ? await detectTailscaleHttpsUrl(pi, port) : null);
 
       if (subcommand === "help" || subcommand === "--help" || subcommand === "-h") {
-        ctx.ui.notify("Usage: /pi-web [status|version|path|start|remote|help]", "info");
+        ctx.ui.notify("Usage: /pi-web [status|version|path|start|stop|restart|remote|update|help]", "info");
         return;
       }
 
@@ -489,13 +523,62 @@ export default function (pi: ExtensionAPI) {
         return;
       }
 
+      if (subcommand === "stop") {
+        try {
+          await stopPiWeb(pi);
+          ctx.ui.notify("Stopped pi-web.", "success");
+        } catch (err) {
+          ctx.ui.notify(`Failed to stop pi-web: ${err}`, "error");
+        }
+        return;
+      }
+
+      if (subcommand === "restart") {
+        try {
+          await restartPiWeb(pi);
+          let restarted = false;
+          for (let i = 0; i < 10; i++) {
+            await new Promise((resolve) => setTimeout(resolve, 300));
+            if (await healthCheck(host, port)) {
+              restarted = true;
+              break;
+            }
+          }
+          const remoteURL = await detectTailscaleHttpsUrl(pi, port);
+          const lines = [restarted ? `Restarted pi-web at http://${host}:${port}` : "Restarted pi-web; still waiting for health check."];
+          if (remoteURL) lines.push(`remote: ${remoteURL}`);
+          ctx.ui.notify(lines.join("\n"), restarted ? "success" : "warning");
+        } catch (err) {
+          ctx.ui.notify(`Failed to restart pi-web: ${err}`, "error");
+        }
+        return;
+      }
+
       if (subcommand === "remote") {
         await showRemoteAccess(pi, ctx);
         return;
       }
 
+      if (subcommand === "update") {
+        try {
+          ctx.ui.notify("Updating pi-web package...", "info");
+          await pi.exec("pi", ["install", "npm:@ygncode/pi-web@beta"]);
+          try {
+            await restartPiWeb(pi);
+          } catch {
+            // Package update may still have succeeded even if the service is not installed/running.
+          }
+          ctx.ui.notify("pi-web updated. Reloading pi extensions...", "success");
+          await ctx.reload();
+          return;
+        } catch (err) {
+          ctx.ui.notify(`Failed to update pi-web: ${err}`, "error");
+        }
+        return;
+      }
+
       if (subcommand !== "status") {
-        ctx.ui.notify(`Unknown /pi-web command: ${subcommand}. Usage: /pi-web [status|version|path|start|remote|help]`, "warning");
+        ctx.ui.notify(`Unknown /pi-web command: ${subcommand}. Usage: /pi-web [status|version|path|start|stop|restart|remote|update|help]`, "warning");
         return;
       }
 
