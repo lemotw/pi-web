@@ -183,6 +183,19 @@ async function ensureQrCode(pi: ExtensionAPI, ctx: ExtensionCommandContext): Pro
   }
 }
 
+function showUrlWidget(ctx: ExtensionCommandContext, id: string, title: string, message: string, url: string): void {
+  if (!ctx.hasUI) return;
+  ctx.ui.setWidget(
+    id,
+    (_tui, _theme) => {
+      const container = new Container();
+      container.addChild(new Text(`${title}\n\n${message}\n\n${url}\n\nRun /web-close to dismiss this panel.`, 1, 1));
+      return container;
+    },
+    { placement: "belowEditor" }
+  );
+}
+
 function openBrowser(pi: ExtensionAPI, url: string): Promise<void> {
   let cmd: string;
   let args: string[];
@@ -231,21 +244,36 @@ export default function (pi: ExtensionAPI) {
         return;
       }
 
-      const { host, port } = detected;
+      const { host, port, tailscaleUrl } = detected;
       if (!(await ensurePiWebRunning(pi, host, port))) {
         ctx.ui.notify(`pi-web not responding on ${host}:${port}. Start it with: pi-web -o`, "error");
         return;
       }
 
       const sessionId = basename(sessionFile);
-      const url = withToken(`http://${host}:${port}/session?id=${encodeURIComponent(sessionId)}`);
+      const baseUrl = tailscaleUrl || `http://${host}:${port}`;
+      const url = withToken(`${baseUrl}/session?id=${encodeURIComponent(sessionId)}`);
+      showUrlWidget(
+        ctx,
+        "pi-web-url",
+        "pi-web session URL",
+        "If your browser did not open (for example, because pi is running over SSH), open this URL manually:",
+        url
+      );
 
       try {
         await openBrowser(pi, url);
-        ctx.ui.notify("Opened session in browser", "success");
+        ctx.ui.notify(`Opened session in browser. URL is shown below.`, "success");
       } catch {
-        ctx.ui.notify(`Failed to open browser. Visit ${url} manually.`, "warning");
+        ctx.ui.notify(`Failed to open browser. URL is shown below.`, "warning");
       }
+    },
+  });
+
+  pi.registerCommand("web-close", {
+    description: "Dismiss the pi-web URL panel",
+    handler: async (_args, ctx: ExtensionCommandContext) => {
+      if (ctx.hasUI) ctx.ui.setWidget("pi-web-url", undefined);
     },
   });
 
@@ -308,6 +336,13 @@ export default function (pi: ExtensionAPI) {
         );
         ctx.ui.notify("QR code shown below the editor. Make sure your phone is connected to Tailscale.", "info");
       } else {
+        showUrlWidget(
+          ctx,
+          "pi-web-mobile-qr",
+          "Mobile access via Tailscale",
+          "QR code unavailable. Make sure your phone is connected to Tailscale, then open this URL:",
+          url
+        );
         ctx.ui.notify(
           `QR code unavailable. Make sure your phone is connected to Tailscale, then open this URL: ${url}`,
           "warning"

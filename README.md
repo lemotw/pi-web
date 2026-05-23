@@ -112,6 +112,12 @@ By default, pi-web binds to `127.0.0.1`. If Tailscale is running with MagicDNS, 
 
 Leave pi-web listening locally, then use the printed Tailscale HTTPS URL from your phone or laptop on the tailnet.
 
+On Linux, allow your user to manage Tailscale before installing/running pi-web, otherwise `tailscale serve` may require sudo and auto-start can fail:
+
+```bash
+sudo tailscale set --operator=$USER
+```
+
 ```bash
 # 1. Start pi-web
 pi-web
@@ -155,8 +161,8 @@ Standalone shell installs still default to `/usr/local/bin/pi-web`; set `PI_WEB_
 
 Then restart pi (or run `/reload`), and use:
 
-- `/web` — open the current session in your default browser
-- `/mobile` — show a QR code for mobile access over Tailscale
+- `/web` — open the current session in your default browser and show the URL in the pi UI (`/web-close` dismisses it)
+- `/mobile` — show a QR code and URL for mobile access over Tailscale
 - `/refresh` — pull new messages written from mobile back into the terminal session
 
 To install only for a specific project (shared with your team via `.pi/settings.json`):
