@@ -74,10 +74,28 @@ function isTailscaleHost(host: string): boolean {
 async function healthCheck(host: string, port: string): Promise<boolean> {
   try {
     const res = await fetch(`http://${host}:${port}`, { signal: AbortSignal.timeout(1000) });
-    return res.ok;
+    // 401/403 means pi-web is running with auth enabled.
+    return res.ok || res.status === 401 || res.status === 403;
   } catch {
     return false;
   }
+}
+
+function readPiWebToken(): string | null {
+  try {
+    const raw = readFileSync(`${homedir()}/.config/pi-web/env`, "utf-8");
+    const match = raw.match(/^PI_WEB_TOKEN=(.*)$/m);
+    return match?.[1]?.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+function withToken(url: string): string {
+  const token = readPiWebToken();
+  if (!token) return url;
+  const separator = url.includes("?") ? "&" : "?";
+  return `${url}${separator}token=${encodeURIComponent(token)}`;
 }
 
 async function ensureQrCode(pi: ExtensionAPI, ctx: ExtensionCommandContext): Promise<boolean> {
@@ -168,7 +186,7 @@ export default function (pi: ExtensionAPI) {
       }
 
       const sessionId = basename(sessionFile);
-      const url = `http://${host}:${port}/session?id=${encodeURIComponent(sessionId)}`;
+      const url = withToken(`http://${host}:${port}/session?id=${encodeURIComponent(sessionId)}`);
 
       try {
         await openBrowser(pi, url);
@@ -211,7 +229,7 @@ export default function (pi: ExtensionAPI) {
       }
 
       const sessionId = basename(sessionFile);
-      const url = `http://${host}:${port}/session?id=${encodeURIComponent(sessionId)}`;
+      const url = withToken(`http://${host}:${port}/session?id=${encodeURIComponent(sessionId)}`);
 
       // Ensure qrcode is available (auto-install on first use)
       const hasQr = await ensureQrCode(pi, ctx);
