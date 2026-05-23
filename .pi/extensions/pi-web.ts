@@ -9,10 +9,11 @@ interface PiWebState {
   port: string;
   host: string;
   tailscale: boolean;
+  tailscaleUrl?: string;
   startedAt: string;
 }
 
-async function detectHostPort(pi: ExtensionAPI): Promise<{ host: string; port: string; tailscale: boolean } | null> {
+async function detectHostPort(pi: ExtensionAPI): Promise<{ host: string; port: string; tailscale: boolean; tailscaleUrl?: string } | null> {
   // 1. Try pidfile
   try {
     const path = `${homedir()}/.pi/agent/pi-web-state.json`;
@@ -26,7 +27,7 @@ async function detectHostPort(pi: ExtensionAPI): Promise<{ host: string; port: s
       // stale pidfile, fall through
     }
 
-    return { host: state.host, port: state.port, tailscale: state.tailscale };
+    return { host: state.host, port: state.port, tailscale: state.tailscale, tailscaleUrl: state.tailscaleUrl };
   } catch {
     // fall through
   }
@@ -251,7 +252,7 @@ export default function (pi: ExtensionAPI) {
         return;
       }
 
-      const { host, port, tailscale } = detected;
+      const { host, port, tailscale, tailscaleUrl } = detected;
       if (!(await ensurePiWebRunning(pi, host, port))) {
         ctx.ui.notify(`pi-web not responding on ${host}:${port}. Start it with: pi-web -o`, "error");
         return;
@@ -259,15 +260,15 @@ export default function (pi: ExtensionAPI) {
 
       if (!tailscale) {
         ctx.ui.notify(
-          "pi-web is not running on a Tailscale IP. " +
-            "Install Tailscale, then start with: PI_WEB_TOKEN=... pi-web --host $(tailscale ip -4)",
+          "Tailscale HTTPS is not available. Install/sign in to Tailscale and restart pi-web so it can run `tailscale serve`.",
           "error"
         );
         return;
       }
 
       const sessionId = basename(sessionFile);
-      const url = withToken(`http://${host}:${port}/session?id=${encodeURIComponent(sessionId)}`);
+      const baseUrl = tailscaleUrl || `http://${host}:${port}`;
+      const url = withToken(`${baseUrl}/session?id=${encodeURIComponent(sessionId)}`);
 
       // Ensure qrcode is available (auto-install on first use)
       const hasQr = await ensureQrCode(pi, ctx);

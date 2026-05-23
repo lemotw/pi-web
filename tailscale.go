@@ -5,25 +5,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
-	"runtime"
 	"strings"
 )
-
-func piWebCertDir() (string, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return "", err
-	}
-	if runtime.GOOS == "darwin" {
-		// Tailscale.app on macOS can be sandboxed/Privacy-restricted when writing
-		// into user home directories, including hidden dirs and Application Support.
-		// /tmp is writable by the Tailscale helper and the key is protected by the
-		// per-user 0700 directory created in ensureTailscaleCert.
-		return filepath.Join(os.TempDir(), fmt.Sprintf("pi-web-certs-%d", os.Getuid())), nil
-	}
-	return filepath.Join(home, ".pi", "agent", "certs"), nil
-}
 
 func tailscaleCLI() (string, error) {
 	if bin, err := exec.LookPath("tailscale"); err == nil {
@@ -47,8 +30,7 @@ func tailscaleCLI() (string, error) {
 
 // tailscaleSelfDNS returns the Tailscale MagicDNS name for this node
 // (e.g. "personal-laptop.tail9f98d.ts.net"). Returns an error if the
-// tailscale CLI is unavailable, the node is not connected, or HTTPS is
-// not enabled in the tailnet.
+// tailscale CLI is unavailable, the node is not connected, or MagicDNS is off.
 func tailscaleSelfDNS() (string, error) {
 	bin, err := tailscaleCLI()
 	if err != nil {
@@ -63,10 +45,6 @@ func tailscaleSelfDNS() (string, error) {
 		Self         struct {
 			DNSName string `json:"DNSName"`
 		} `json:"Self"`
-		CurrentTailnet struct {
-			MagicDNSEnabled bool   `json:"MagicDNSEnabled"`
-			MagicDNSSuffix  string `json:"MagicDNSSuffix"`
-		} `json:"CurrentTailnet"`
 	}
 	if err := json.Unmarshal(out, &status); err != nil {
 		return "", fmt.Errorf("parse tailscale status: %w", err)
@@ -81,50 +59,108 @@ func tailscaleSelfDNS() (string, error) {
 	return name, nil
 }
 
-// ensureTailscaleCert provisions a TLS certificate for hostname using the
-// `tailscale cert` command and returns paths to (cert, key). Files are cached
-// under ~/.pi/agent/certs/ and reused across runs; tailscale will refresh
-// them transparently when they near expiry.
-//
-// Requires Tailscale HTTPS to be enabled in the admin console
-// (https://login.tailscale.com/admin/dns) under "HTTPS Certificates".
-func ensureTailscaleCert(hostname string) (certPath, keyPath string, err error) {
-	certDir, err := piWebCertDir()
-	if err != nil {
-		return "", "", err
-	}
-	if err := os.MkdirAll(certDir, 0700); err != nil {
-		return "", "", err
-	}
-	certPath = filepath.Join(certDir, hostname+".crt")
-	keyPath = filepath.Join(certDir, hostname+".key")
+type serveRuleState int
 
+const (
+	serveRuleMissing serveRuleState = iota
+	serveRuleSame
+	serveRuleConflict
+)
+
+// configureTailscaleServe publishes the local HTTP server through Tailscale Serve.
+// Tailscale owns HTTPS/certs; pi-web keeps listening only on localhost.
+func configureTailscaleServe(port string) (string, bool, error) {
+	hostname, err := tailscaleSelfDNS()
+	if err != nil {
+		return "", false, err
+	}
 	bin, err := tailscaleCLI()
 	if err != nil {
-		return "", "", err
+		return "", false, err
+	}
+	target := "http://127.0.0.1:" + port
+	url := "https://" + hostname + ":" + port
+
+	state, err := tailscaleServeRuleState(bin, port, target)
+	if err != nil {
+		return "", false, err
+	}
+	switch state {
+	case serveRuleSame:
+		return url, true, nil
+	case serveRuleConflict:
+		return "", false, fmt.Errorf("tailscale HTTPS port %s is already configured for another service; not overwriting it. To replace it, run: tailscale serve --bg --https=%s %s", port, port, target)
 	}
 
-	certArg := certPath
-	keyArg := keyPath
-	if runtime.GOOS == "darwin" {
-		// Tailscale.app on macOS can reject absolute output paths with EPERM.
-		// Run from the cert directory and pass relative output names instead.
-		certArg = filepath.Base(certPath)
-		keyArg = filepath.Base(keyPath)
-	}
-
-	cmd := exec.Command(bin, "cert",
-		"--cert-file="+certArg,
-		"--key-file="+keyArg,
-		hostname,
-	)
-	if runtime.GOOS == "darwin" {
-		cmd.Dir = certDir
-	}
+	cmd := exec.Command(bin, "serve", "--bg", "--https="+port, target)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		return "", "", fmt.Errorf("tailscale cert %s failed: %w\n\nEnable HTTPS in the Tailscale admin console:\n  https://login.tailscale.com/admin/dns\nunder \"HTTPS Certificates\".", hostname, err)
+		return "", false, fmt.Errorf("tailscale serve failed: %w", err)
 	}
-	return certPath, keyPath, nil
+	return url, true, nil
+}
+
+func tailscaleServeRuleState(bin, port, target string) (serveRuleState, error) {
+	out, err := exec.Command(bin, "serve", "status", "--json").Output()
+	if err != nil {
+		return serveRuleMissing, fmt.Errorf("tailscale serve status failed: %w", err)
+	}
+	var status any
+	if err := json.Unmarshal(out, &status); err != nil {
+		return serveRuleMissing, fmt.Errorf("parse tailscale serve status: %w", err)
+	}
+	rule, ok := findJSONKey(status, port)
+	if !ok {
+		return serveRuleMissing, nil
+	}
+	strings := collectJSONStrings(rule)
+	for _, s := range strings {
+		if s == target {
+			return serveRuleSame, nil
+		}
+	}
+	return serveRuleConflict, nil
+}
+
+func findJSONKey(v any, key string) (any, bool) {
+	switch x := v.(type) {
+	case map[string]any:
+		if child, ok := x[key]; ok {
+			return child, true
+		}
+		for _, child := range x {
+			if found, ok := findJSONKey(child, key); ok {
+				return found, true
+			}
+		}
+	case []any:
+		for _, child := range x {
+			if found, ok := findJSONKey(child, key); ok {
+				return found, true
+			}
+		}
+	}
+	return nil, false
+}
+
+func collectJSONStrings(v any) []string {
+	var out []string
+	var walk func(any)
+	walk = func(x any) {
+		switch y := x.(type) {
+		case string:
+			out = append(out, y)
+		case map[string]any:
+			for _, child := range y {
+				walk(child)
+			}
+		case []any:
+			for _, child := range y {
+				walk(child)
+			}
+		}
+	}
+	walk(v)
+	return out
 }

@@ -18,7 +18,7 @@ This document traces the execution from `go run .` to the first HTTP request.
    │           │             │              │              │            │
    │           │─── chooseBindHost() ──────▶│              │            │
    │           │             │              │              │            │
-   │           │◀──── host, usedTailscale ──│              │            │
+   │           │◀─────────── host ──────────│              │            │
    │           │             │              │              │            │
    │           │─── os.Getenv(PI_WEB_TOKEN) │              │            │
    │           │             │              │              │            │
@@ -62,7 +62,7 @@ This document traces the execution from `go run .` to the first HTTP request.
 
 ```go
 port := flag.String("p", "31415", "port to listen on")
-hostOverride := flag.String("host", "", "host/IP to bind")
+hostOverride := flag.String("host", "", "host/IP to bind; defaults to 127.0.0.1")
 open := flag.Bool("o", false, "auto-open browser")
 insecure := flag.Bool("insecure", false, "allow non-loopback bind without PI_WEB_TOKEN")
 ```
@@ -83,8 +83,15 @@ Exits early if the user hasn't run `pi` yet (which creates this directory).
 
 Priority:
 1. `--host` flag (explicit override)
-2. Tailscale IP (detected via `100.x.x.x` or `fd7a:115c:a1e0::/48`)
-3. `127.0.0.1` (fallback)
+2. `127.0.0.1` (default)
+
+If no `--host` override is supplied and Tailscale is running, startup also runs:
+
+```bash
+tailscale serve --bg --https=<port> http://127.0.0.1:<port>
+```
+
+This gives the user a Tailscale HTTPS endpoint without making pi-web bind to a Tailscale interface or manage TLS certificates itself.
 
 ### 4. Auth Enforcement
 
@@ -148,11 +155,11 @@ Reads Vite manifest to discover the hashed filename of the index bundle.
 ### 8. Pidfile
 
 ```go
-writeStateFile(bindHost, port, usedTailscale)
+writeStateFile(bindHost, port, tailscaleServe, tailscaleURL)
 // → ~/.pi/agent/pi-web-state.json
 ```
 
-Contains PID, port, host, Tailscale flag, and start time. Cleaned up on shutdown.
+Contains PID, port, host, Tailscale Serve flag/URL, and start time. Cleaned up on shutdown.
 
 ### 9. Model Cache Warming
 

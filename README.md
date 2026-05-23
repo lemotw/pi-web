@@ -2,7 +2,7 @@
 
 Drive your [pi](https://pi.dev) coding agent from any browser on your network — laptop, phone, or tablet.
 
-pi-web is a local Go server that renders pi sessions in the browser using pi's own export UI, streams live updates as pi works, and lets you steer or start sessions from the same page. Bind it to your Tailscale IP and pi follows you off the desk.
+pi-web is a local Go server that renders pi sessions in the browser using pi's own export UI, streams live updates as pi works, and lets you steer or start sessions from the same page. It listens on localhost and, when Tailscale is available, publishes an HTTPS endpoint with Tailscale Serve.
 
 ## Features
 
@@ -13,7 +13,7 @@ pi-web is a local Go server that renders pi sessions in the browser using pi's o
 - In-browser model switching and thinking-level selector, per session
 - Per-session worker status (idle / running / error) with auto-recovery on crash
 - Multiple sessions run in parallel — kick off work in one, watch another stream
-- `PI_WEB_TOKEN` for safe Tailscale/LAN exposure — required by default for any non-loopback bind
+- `PI_WEB_TOKEN` for safe LAN exposure — required by default for any explicit non-loopback bind
 
 ### Reading sessions
 
@@ -103,21 +103,21 @@ pi-web -p 8080
 pi-web --host 127.0.0.1
 
 # Non-loopback bind requires a token — pi-web refuses to start otherwise
-PI_WEB_TOKEN=$(openssl rand -hex 16) pi-web --host 100.x.y.z
+PI_WEB_TOKEN=$(openssl rand -hex 16) pi-web --host 192.168.1.50
 ```
 
-By default, pi-web binds to your Tailscale IP when available, otherwise `127.0.0.1`. Any non-loopback bind requires `PI_WEB_TOKEN` to be set; pass `--insecure` to override (don't, on Tailscale).
+By default, pi-web binds to `127.0.0.1`. If Tailscale is running with MagicDNS, pi-web also runs `tailscale serve --bg --https=<port> http://127.0.0.1:<port>` and prints the HTTPS tailnet URL. Any explicit non-loopback bind requires `PI_WEB_TOKEN` to be set; pass `--insecure` to override for local testing.
 
 ## Remote access
 
-The default Tailscale bind is the point of the project: leave pi running on your desktop, then drive it from your phone on the couch or your laptop on the train.
+Leave pi-web listening locally, then use the printed Tailscale HTTPS URL from your phone or laptop on the tailnet.
 
 ```bash
-# 1. Start pi-web — it auto-detects your Tailscale IP
-PI_WEB_TOKEN=$(openssl rand -hex 16) pi-web
+# 1. Start pi-web
+pi-web
 
-# 2. From any other Tailscale-connected device, open the printed URL
-#    and paste the token once. The cookie persists.
+# 2. From any other Tailscale-connected device, open the printed
+#    "Tailscale HTTPS" URL.
 ```
 
 > By default, pi-web refuses to bind to a non-loopback address unless `PI_WEB_TOKEN` is set — anyone who can reach the bound address could otherwise view sessions and send instructions to pi. To override this guard for local-network testing, pass `--insecure`. **Don't use `--insecure` on Tailscale or any address reachable from outside your machine.**
@@ -149,7 +149,7 @@ This single command:
 - Sets up auto-start on login (launchd on macOS, systemd on Linux)
 - Registers the `/web`, `/mobile`, `/refresh` pi commands
 
-On Linux, auto-start is configured as a user systemd service at `~/.config/systemd/user/pi-web.service`. Its `ExecStart` points at `%h/.pi/agent/bin/pi-web`, so after install systemd starts and restarts the user-local binary. The installer also creates `~/.config/pi-web/env` with a generated `PI_WEB_TOKEN` when one is not already configured, because non-loopback/Tailscale binds require a token. If Tailscale is detected, auto-start is configured with `-pwa` so pi-web serves HTTPS using Tailscale certificates; set `PI_WEB_HTTPS=0` to disable or `PI_WEB_HTTPS=1` to force. If user systemd is unavailable, run it manually with `~/.pi/agent/bin/pi-web -o`.
+On Linux, auto-start is configured as a user systemd service at `~/.config/systemd/user/pi-web.service`. Its `ExecStart` points at `%h/.pi/agent/bin/pi-web`, so after install systemd starts and restarts the user-local binary. If Tailscale is available at runtime, pi-web publishes the localhost server with Tailscale Serve HTTPS. If user systemd is unavailable, run it manually with `~/.pi/agent/bin/pi-web -o`.
 
 Standalone shell installs still default to `/usr/local/bin/pi-web`; set `PI_WEB_INSTALL_DIR` to override either install location.
 

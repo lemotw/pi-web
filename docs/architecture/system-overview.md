@@ -85,13 +85,21 @@ pi-web is a local HTTP server that lets you browse and interact with your pi cod
 
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│   --host flag   │────▶│  detectTailscale│────▶│  127.0.0.1      │
-│   (override)    │     │  IP (100.x.x.x) │     │  (fallback)     │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
-         │                       │
-         ▼                       ▼
+│   --host flag   │──────────────────────▶│  127.0.0.1      │
+│   (override)    │                       │  (default)      │
+└─────────────────┘                       └─────────────────┘
+         │
+         ▼
    Non-loopback →  PI_WEB_TOKEN required  (or --insecure)
    Loopback     →  Auth optional
+
+When no --host override is supplied and Tailscale is running, pi-web also
+configures Tailscale Serve:
+
+    tailscale serve --bg --https=<port> http://127.0.0.1:<port>
+
+Tailscale owns HTTPS/certificates and exposes the app at the node's MagicDNS
+name, while pi-web itself continues listening only on localhost.
 ```
 
 ## Session Directory Layout
@@ -113,13 +121,14 @@ pi-web is a local HTTP server that lets you browse and interact with your pi cod
 
 1. Parse CLI flags (`-p`, `-host`, `-o`, `-insecure`)
 2. Validate sessions directory exists
-3. Determine bind host (flag → Tailscale → localhost)
-4. Enforce auth for non-loopback binds
+3. Determine bind host (flag → localhost)
+4. Enforce auth for explicit non-loopback binds
 5. Build `server.Deps` (renderers, cache, workers, auth)
 6. Create `Server` → starts file watcher + status watcher + sweeper
 7. Register routes on `http.ServeMux`
 8. Load Vite manifest and register static assets
-9. Write state file to `~/.pi/agent/pi-web-state.json` (with flock)
-10. Optionally open browser
-11. Warm models cache (async)
-12. Start `http.Server` with timeouts; graceful shutdown on `SIGINT`/`SIGTERM`
+9. Optionally configure Tailscale Serve HTTPS for localhost
+10. Write state file to `~/.pi/agent/pi-web-state.json` (with flock)
+11. Optionally open browser
+12. Warm models cache (async)
+13. Start `http.Server` with timeouts; graceful shutdown on `SIGINT`/`SIGTERM`

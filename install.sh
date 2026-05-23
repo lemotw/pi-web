@@ -193,34 +193,6 @@ install_binary() {
   return 0
 }
 
-# ── HTTPS / PWA auto-detection ──────────────────────────────────────
-should_enable_https() {
-  case "${PI_WEB_HTTPS:-auto}" in
-    1|true|yes|on) return 0 ;;
-    0|false|no|off) return 1 ;;
-  esac
-
-  local tailscale_bin=""
-  if command -v tailscale &>/dev/null; then
-    tailscale_bin="$(command -v tailscale)"
-  else
-    for candidate in \
-      "/Applications/Tailscale.app/Contents/MacOS/Tailscale" \
-      "/Applications/Tailscale.app/Contents/MacOS/tailscale" \
-      "/opt/homebrew/bin/tailscale" \
-      "/usr/local/bin/tailscale" \
-      "/usr/bin/tailscale"; do
-      if [[ -x "$candidate" ]]; then
-        tailscale_bin="$candidate"
-        break
-      fi
-    done
-  fi
-
-  [[ -n "$tailscale_bin" ]] || return 1
-  "$tailscale_bin" status --json 2>/dev/null | grep -q '"DNSName"[[:space:]]*:[[:space:]]*"[^"]' || return 1
-}
-
 # ── Fetch config file from repo (for standalone installs) ──────────
 fetch_config() {
   local file="$1"
@@ -256,12 +228,7 @@ setup_macos() {
     rm -f "$raw"
   fi
 
-  if should_enable_https; then
-    perl -0pi -e 's|(<string>31415</string>\s*</array>)|$1\n        <string>-pwa</string>|' "$generated"
-    info "HTTPS/PWA enabled for macOS auto-start via Tailscale certs"
-  else
-    info "HTTPS/PWA not enabled automatically (set PI_WEB_HTTPS=1 to force, PI_WEB_HTTPS=0 to disable)"
-  fi
+  info "pi-web will listen on localhost; if Tailscale is running, it will publish HTTPS with Tailscale Serve."
 
   # Pass the generated environment to launchd. This includes PI_WEB_TOKEN and
   # PATH so pi-web can find `pi` when serving browser chat requests.
@@ -326,11 +293,7 @@ setup_linux() {
   local generated_service
   generated_service="$(mktemp)"
   cp "$service_src" "$generated_service"
-  if should_enable_https; then
-    info "HTTPS/PWA available via Tailscale; start manually with -pwa if you want HTTPS."
-  else
-    info "HTTPS/PWA not enabled automatically (set PI_WEB_HTTPS=1 to force, PI_WEB_HTTPS=0 to disable)"
-  fi
+  info "pi-web will listen on localhost; if Tailscale is running, it will publish HTTPS with Tailscale Serve."
 
   # Check if service file changed
   if [[ -f "$service_dst" ]]; then

@@ -39,10 +39,9 @@ var liveScriptPath = "/static/assets/live.js"
 
 func main() {
 	port := flag.String("p", defaultPort, "port to listen on")
-	hostOverride := flag.String("host", "", "host/IP to bind; defaults to Tailscale IP when available, otherwise 127.0.0.1")
+	hostOverride := flag.String("host", "", "host/IP to bind; defaults to 127.0.0.1")
 	open := flag.Bool("o", false, "auto-open browser")
 	insecure := flag.Bool("insecure", false, "allow non-loopback bind without "+tokenEnvVar+" (DANGEROUS)")
-	pwa := flag.Bool("pwa", false, "serve HTTPS via a Tailscale-issued cert at https://<host>.<tailnet>.ts.net so the app is installable as a PWA")
 	showVersion := flag.Bool("version", false, "print version and exit")
 	flag.Parse()
 
@@ -57,32 +56,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	var (
-		tsHostname           string
-		certFile, keyFile    string
-	)
-	if *pwa {
-		name, err := tailscaleSelfDNS()
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "--pwa: %v\n", err)
-			os.Exit(1)
-		}
-		tsHostname = name
-		fmt.Printf("--pwa: provisioning Tailscale cert for %s ...\n", tsHostname)
-		c, k, err := ensureTailscaleCert(tsHostname)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "--pwa: %v\n", err)
-			os.Exit(1)
-		}
-		certFile, keyFile = c, k
-	}
-
-	bindHost, usedTailscale := chooseBindHost(*hostOverride, detectTailscaleIP)
+	bindHost := chooseBindHost(*hostOverride)
 	token := os.Getenv(tokenEnvVar)
-	// --pwa implies network access is gated by the tailnet, so the token
-	// requirement is relaxed the same way --insecure relaxes it. Users can
-	// still set PI_WEB_TOKEN for an additional layer.
-	tokenRequired := token == "" && !isLoopbackHost(bindHost) && !*insecure && !*pwa
+	tokenRequired := token == "" && !isLoopbackHost(bindHost) && !*insecure
 	if tokenRequired {
 		fmt.Fprintf(os.Stderr,
 			"refusing to bind %s without %s set: anyone reachable on this address could view sessions and drive pi.\n"+
@@ -101,11 +77,11 @@ func main() {
 		})
 	})
 	srv = server.New(server.Deps{
-		SessionsDir:   sessionsDir,
-		Auth:          authMiddleware,
-		ChatSender:    manager,
-		Cache:         sessions.NewCache(),
-		RenderIndex:   func(w io.Writer, ss []sessions.SessionSummary) error { return indexTmpl.Execute(w, ss) },
+		SessionsDir:         sessionsDir,
+		Auth:                authMiddleware,
+		ChatSender:          manager,
+		Cache:               sessions.NewCache(),
+		RenderIndex:         func(w io.Writer, ss []sessions.SessionSummary) error { return indexTmpl.Execute(w, ss) },
 		RenderLiveSession:   renderLiveSessionPage,
 		RenderExportSession: renderExportSessionPage,
 		Models: func(ctx context.Context) (json.RawMessage, error) {
@@ -136,18 +112,20 @@ func main() {
 	}
 
 	addr := net.JoinHostPort(bindHost, *port)
-	scheme := "http"
-	if *pwa {
-		scheme = "https"
+	url := fmt.Sprintf("http://%s", net.JoinHostPort(bindHost, *port))
+	var tailscaleURL string
+	var tailscaleServe bool
+	if *hostOverride == "" {
+		if tsURL, ok, err := configureTailscaleServe(*port); err == nil && ok {
+			tailscaleURL = tsURL
+			tailscaleServe = true
+		} else if err != nil {
+			fmt.Fprintf(os.Stderr, "Tailscale Serve unavailable: %v\n", err)
+		}
 	}
-	displayHost := bindHost
-	if *pwa && tsHostname != "" {
-		displayHost = tsHostname
-	}
-	url := fmt.Sprintf("%s://%s", scheme, net.JoinHostPort(displayHost, *port))
 	fmt.Printf("Pi Sessions Viewer -> %s\n", url)
-	if !usedTailscale && *hostOverride == "" {
-		fmt.Println("Tailscale IP not detected; using localhost.")
+	if tailscaleURL != "" {
+		fmt.Printf("Tailscale HTTPS -> %s\n", tailscaleURL)
 	}
 	fmt.Printf("Serving from: %s\n", sessionsDir)
 	if authMiddleware.Enabled() {
@@ -156,7 +134,7 @@ func main() {
 		fmt.Printf("Auth: disabled — set %s to require a token for access.\n", tokenEnvVar)
 	}
 
-	stateFilePath, err := writeStateFile(bindHost, *port, usedTailscale)
+	stateFilePath, err := writeStateFile(bindHost, *port, tailscaleServe, tailscaleURL)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		os.Exit(1)
@@ -196,13 +174,7 @@ func main() {
 		srv.Shutdown()
 	}()
 
-	var serveErr error
-	if *pwa {
-		fmt.Println("TLS: serving with Tailscale-issued certificate")
-		serveErr = httpServer.ListenAndServeTLS(certFile, keyFile)
-	} else {
-		serveErr = httpServer.ListenAndServe()
-	}
+	serveErr := httpServer.ListenAndServe()
 	if serveErr != nil && serveErr != http.ErrServerClosed {
 		fmt.Fprintf(os.Stderr, "server error: %v\n", serveErr)
 		os.Exit(1)
@@ -230,7 +202,7 @@ func openBrowser(url string) {
 // in effect. Closing it releases the lock.
 var stateFile *os.File
 
-func writeStateFile(host, port string, usedTailscale bool) (string, error) {
+func writeStateFile(host, port string, tailscale bool, tailscaleURL string) (string, error) {
 	home := os.Getenv("HOME")
 	if home == "" {
 		return "", fmt.Errorf("HOME not set")
@@ -249,11 +221,12 @@ func writeStateFile(host, port string, usedTailscale bool) (string, error) {
 		return "", err
 	}
 	data, err := json.Marshal(map[string]any{
-		"pid":       os.Getpid(),
-		"port":      port,
-		"host":      host,
-		"tailscale": usedTailscale,
-		"startedAt": time.Now().UTC().Format(time.RFC3339),
+		"pid":          os.Getpid(),
+		"port":         port,
+		"host":         host,
+		"tailscale":    tailscale,
+		"tailscaleUrl": tailscaleURL,
+		"startedAt":    time.Now().UTC().Format(time.RFC3339),
 	})
 	if err != nil {
 		_ = f.Close()
