@@ -12,7 +12,14 @@ set -euo pipefail
 # Updates are handled by re-running the same command.
 
 REPO="ygncode/pi-web"
-INSTALL_DIR="${PI_WEB_INSTALL_DIR:-/usr/local/bin}"
+if [[ -n "${PI_WEB_INSTALL_DIR:-}" ]]; then
+  INSTALL_DIR="$PI_WEB_INSTALL_DIR"
+elif [[ -n "${npm_package_name:-}" ]]; then
+  # pi installs npm packages non-interactively; avoid requiring sudo during npm postinstall.
+  INSTALL_DIR="${HOME}/.pi/agent/bin"
+else
+  INSTALL_DIR="/usr/local/bin"
+fi
 BINARY="$INSTALL_DIR/pi-web"
 SRC_DIR="$(cd "$(dirname "$0")" && pwd)"
 VERSION_FILE="${HOME}/.pi/agent/pi-web-version"
@@ -23,9 +30,9 @@ YELLOW='\033[1;33m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-info()  { echo -e "${GREEN}→${NC} $*"; }
-warn()  { echo -e "${YELLOW}⚠${NC} $*"; }
-err()   { echo -e "${RED}✗${NC} $*"; }
+info()  { echo -e "${GREEN}→${NC} $*" >&2; }
+warn()  { echo -e "${YELLOW}⚠${NC} $*" >&2; }
+err()   { echo -e "${RED}✗${NC} $*" >&2; }
 
 # ── Detect platform ─────────────────────────────────────────────────
 detect_platform() {
@@ -53,13 +60,22 @@ detect_platform() {
 
 # ── Check latest release tag ────────────────────────────────────────
 latest_tag() {
-  local url="https://api.github.com/repos/${REPO}/releases/latest"
-  local tag
+  local latest_url="https://api.github.com/repos/${REPO}/releases/latest"
+  local releases_url="https://api.github.com/repos/${REPO}/releases?per_page=1"
+  local tag=""
 
   if command -v curl &>/dev/null; then
-    tag="$(curl -fsS "$url" 2>/dev/null | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/')"
+    tag="$(curl -fsS "$latest_url" 2>/dev/null | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/' || true)"
+    if [[ -z "$tag" ]]; then
+      # /latest ignores prereleases. Fall back to the newest release of any type.
+      tag="$(curl -fsS "$releases_url" 2>/dev/null | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/' || true)"
+    fi
   elif command -v wget &>/dev/null; then
-    tag="$(wget -qO- "$url" 2>/dev/null | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/')"
+    tag="$(wget -qO- "$latest_url" 2>/dev/null | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/' || true)"
+    if [[ -z "$tag" ]]; then
+      # /latest ignores prereleases. Fall back to the newest release of any type.
+      tag="$(wget -qO- "$releases_url" 2>/dev/null | grep '"tag_name"' | head -1 | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/' || true)"
+    fi
   else
     err "Neither curl nor wget found."
     exit 1
@@ -76,7 +92,7 @@ latest_tag() {
 # ── Get installed version ───────────────────────────────────────────
 installed_version() {
   if [[ -x "$BINARY" ]]; then
-    "$BINARY" --version 2>/dev/null || true
+    "$BINARY" -version 2>/dev/null || true
   elif [[ -f "$VERSION_FILE" ]]; then
     # Binary not executable yet (e.g., partial install); fall back to version file
     cat "$VERSION_FILE"
@@ -118,7 +134,7 @@ download_binary() {
 
   local tmp
   tmp="$(mktemp -d)"
-  trap 'rm -rf "$tmp"' EXIT
+  trap "rm -rf '$tmp'" EXIT
 
   if command -v curl &>/dev/null; then
     curl -fsSL --progress-bar -o "${tmp}/pi-web" "$url"
@@ -160,6 +176,8 @@ install_binary() {
     pkill -f "${BINARY}" 2>/dev/null || true
     sleep 1
   fi
+
+  mkdir -p "$INSTALL_DIR"
 
   if [[ ! -w "$INSTALL_DIR" ]]; then
     info "Installing to ${INSTALL_DIR} (requires sudo)..."
@@ -259,11 +277,14 @@ setup_linux() {
 
   if [[ "$needs_reload" == "true" ]]; then
     cp "$service_src" "$service_dst"
-    systemctl --user daemon-reload
+    systemctl --user daemon-reload 2>/dev/null || {
+      warn "Could not reload user systemd; skipping auto-start setup."
+      return 0
+    }
     info "Linux auto-start updated (systemd user service)"
   fi
 
-  # Enable and restart
+  # Enable and restart when user systemd is available.
   systemctl --user enable pi-web.service 2>/dev/null || true
   systemctl --user restart pi-web.service 2>/dev/null || {
     # Service may not be running yet (first install)
