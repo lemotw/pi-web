@@ -81,6 +81,33 @@ async function healthCheck(host: string, port: string): Promise<boolean> {
   }
 }
 
+async function startPiWeb(pi: ExtensionAPI): Promise<void> {
+  if (process.platform === "win32") return;
+
+  const bundledBin = `${homedir()}/.pi/agent/bin/pi-web`;
+  await pi.exec("sh", [
+    "-lc",
+    `bin="${bundledBin}"; if [ ! -x "$bin" ]; then bin="$(command -v pi-web || true)"; fi; if [ -z "$bin" ]; then exit 127; fi; nohup "$bin" >/tmp/pi-web.log 2>&1 &`,
+  ]);
+}
+
+async function ensurePiWebRunning(pi: ExtensionAPI, host: string, port: string): Promise<boolean> {
+  if (await healthCheck(host, port)) return true;
+
+  try {
+    await startPiWeb(pi);
+  } catch {
+    return false;
+  }
+
+  for (let i = 0; i < 10; i++) {
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    if (await healthCheck(host, port)) return true;
+  }
+
+  return false;
+}
+
 function readPiWebToken(): string | null {
   try {
     const raw = readFileSync(`${homedir()}/.config/pi-web/env`, "utf-8");
@@ -180,7 +207,7 @@ export default function (pi: ExtensionAPI) {
       }
 
       const { host, port } = detected;
-      if (!(await healthCheck(host, port))) {
+      if (!(await ensurePiWebRunning(pi, host, port))) {
         ctx.ui.notify(`pi-web not responding on ${host}:${port}. Start it with: pi-web -o`, "error");
         return;
       }
@@ -214,7 +241,7 @@ export default function (pi: ExtensionAPI) {
       }
 
       const { host, port, tailscale } = detected;
-      if (!(await healthCheck(host, port))) {
+      if (!(await ensurePiWebRunning(pi, host, port))) {
         ctx.ui.notify(`pi-web not responding on ${host}:${port}. Start it with: pi-web -o`, "error");
         return;
       }
