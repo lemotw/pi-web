@@ -134,7 +134,6 @@ download_binary() {
 
   local tmp
   tmp="$(mktemp -d)"
-  trap "rm -rf '$tmp'" EXIT
 
   if command -v curl &>/dev/null; then
     curl -fsSL --progress-bar -o "${tmp}/pi-web" "$url"
