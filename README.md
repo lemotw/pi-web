@@ -33,15 +33,45 @@ pi-web is a local Go server that renders pi sessions in the browser using pi's o
 
 ## Install
 
+### Download binary (recommended)
+
+Pre-built binaries are attached to each [GitHub Release](https://github.com/ygncode/pi-web/releases).
+
 ```bash
-git clone https://github.com/setkyar/pi-web.git
+# macOS (Apple Silicon)
+curl -L -o pi-web https://github.com/ygncode/pi-web/releases/latest/download/pi-web-darwin-arm64
+chmod +x pi-web
+
+# macOS (Intel)
+curl -L -o pi-web https://github.com/ygncode/pi-web/releases/latest/download/pi-web-darwin-amd64
+chmod +x pi-web
+
+# Linux (amd64)
+curl -L -o pi-web https://github.com/ygncode/pi-web/releases/latest/download/pi-web-linux-amd64
+chmod +x pi-web
+
+# Linux (arm64)
+curl -L -o pi-web https://github.com/ygncode/pi-web/releases/latest/download/pi-web-linux-arm64
+chmod +x pi-web
+```
+
+Then move it to your PATH:
+
+```bash
+cp pi-web ~/.pi/agent/bin/
+# or system-wide:
+sudo cp pi-web /usr/local/bin/
+```
+
+### Build from source
+
+```bash
+git clone https://github.com/ygncode/pi-web.git
 cd pi-web
 make build   # builds the Vite bundle, then embeds it into the Go binary
 
-# optional: put it on PATH (binary is self-contained, runs from anywhere)
+# optional: put it on PATH
 cp pi-web ~/.pi/agent/bin/
-# or
-sudo cp pi-web /usr/local/bin/
 ```
 
 The frontend bundle is embedded via `//go:embed all:web/dist`, so `go build` needs
