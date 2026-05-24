@@ -30,6 +30,7 @@ import * as resumeButton from './live/resume-button.js';
 import * as newSessionButton from './live/new-session-button.js';
 import * as liveEvents from './live/live-events.js';
 import * as liveRenderer from './live/live-renderer.js';
+import * as mobileCommandPanel from './live/mobile-command-panel.js';
 export { buildSessionLookups, createSessionDataModel, decodeBase64JSON, getSessionSearchParams, loadSessionData, readSessionPayload } from './data/session-data.js';
 export { buildActivePathIds, buildTree, buildTreeNodeMap, buildTreePrefix, findNewestLeaf, flattenTree, getPath } from './tree/session-tree.js';
 export { createTreeRenderer } from './tree/tree-renderer.js';
@@ -230,6 +231,12 @@ export function runSessionApp({ target = window } = {}) {
     resumeButton,
     newSessionButton,
     cwd: dataModel.header?.cwd || ''
+  });
+
+  mobileCommandPanel.setupMobileCommandPanel({
+    documentImpl,
+    windowImpl: target,
+    setSidebarOpen: (open) => sidebarApi.setSidebarOpen(open, { documentImpl }),
   });
 
   // Initialize chat after live reload so the optimistic "message sent" event

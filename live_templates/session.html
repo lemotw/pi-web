@@ -62,6 +62,48 @@
     <button id="share-btn" class="session-action" title="Share session as GitHub Gist"><span>↗</span>Share</button>
   </div>
 
+  <div class="mobile-header">
+    <a href="/" class="mobile-header-back"><span>←</span> Sessions</a>
+    <button id="mobile-command-btn" class="mobile-header-actions" aria-label="Session actions">⋯</button>
+  </div>
+
+  <div id="mobile-command-backdrop" class="mobile-command-backdrop" style="display: none;"></div>
+  <div id="mobile-command-panel" class="mobile-command-panel" style="display: none;">
+    <div class="mobile-command-handle"></div>
+    <div class="mobile-command-title">Session Actions</div>
+    <div class="mobile-command-body">
+      <div class="mobile-command-section">
+        <div class="mobile-command-section-title">Appearance</div>
+        <button class="mobile-command-item" data-action="theme"><span class="mobile-command-icon">◐</span><span>Theme</span></button>
+      </div>
+      <div class="mobile-command-section">
+        <div class="mobile-command-section-title">Session</div>
+        <button class="mobile-command-item" data-action="rename"><span class="mobile-command-icon">✎</span><span>Rename</span></button>
+        <button class="mobile-command-item" data-action="share"><span class="mobile-command-icon">↗</span><span>Share</span></button>
+        <button class="mobile-command-item" data-action="new-session"><span class="mobile-command-icon">+</span><span>New Session</span></button>
+        <button class="mobile-command-item" data-action="fork"><span class="mobile-command-icon">⑂</span><span>Fork</span></button>
+        <button class="mobile-command-item" data-action="clone"><span class="mobile-command-icon">⎘</span><span>Clone</span></button>
+      </div>
+      <div class="mobile-command-section">
+        <div class="mobile-command-section-title">Development</div>
+        <button class="mobile-command-item" data-action="terminal"><span class="mobile-command-icon">$_</span><span>Copy to Terminal</span></button>
+        <button class="mobile-command-item" data-action="tree"><span class="mobile-command-icon">▤</span><span>Tree</span></button>
+        <button class="mobile-command-item" data-action="diff"><span class="mobile-command-icon">±</span><span>Diff</span></button>
+      </div>
+      <div class="mobile-command-section">
+        <div class="mobile-command-section-title">Insights</div>
+        <button class="mobile-command-item" data-action="model-usage"><span class="mobile-command-icon">◈</span><span>Model Usage</span></button>
+      </div>
+      <div class="mobile-command-section">
+        <div class="mobile-command-section-title">Preferences</div>
+        <button class="mobile-command-item mobile-command-item-toggle" data-action="notifications">
+          <span class="mobile-command-icon">◌</span><span>Notifications</span>
+          <span class="mobile-command-toggle" id="mobile-command-notify-status">OFF</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <button id="hamburger" title="Open sidebar"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="12" r="2.5"/><rect x="5" y="6" width="2" height="12"/><path d="M6 12h10c1 0 2 0 2-2V8"/></svg></button>
   <div id="sidebar-overlay"></div>
   <div id="app">

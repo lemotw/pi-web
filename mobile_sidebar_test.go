@@ -23,9 +23,10 @@ func TestMobileSidebarClosesWhenNavigatingTree(t *testing.T) {
 func TestMobileSessionActionsStayAtTopAndHideBehindSidebar(t *testing.T) {
 	checks := []string{
 		`class="session-actions"`,
-		"body.sidebar-open .session-actions",
 		"@media (max-width: 900px)",
-		"top: calc(10px + env(safe-area-inset-top));",
+		".mobile-header {",
+		"position: fixed;",
+		"top: 0;",
 	}
 	combined := liveSessionCss + exportHtml + exportJs + chatComposerHtmlForSession(sessions.Session{SessionSummary: sessions.SessionSummary{ID: "s.jsonl"}}) + renderLiveSessionPage(sessions.Session{SessionSummary: sessions.SessionSummary{ID: "s.jsonl"}})
 	for _, check := range checks {
@@ -33,28 +34,38 @@ func TestMobileSessionActionsStayAtTopAndHideBehindSidebar(t *testing.T) {
 			t.Fatalf("mobile action UI missing %q", check)
 		}
 	}
-	// Session actions should use top, not bottom positioning, in mobile breakpoint.
-	// The .hide-sidebar button legitimately uses bottom positioning — that's unrelated.
-	// Assert .session-actions inside a mobile media query does NOT have bottom:
+	// Mobile session actions should be hidden; the mobile header bar stays at top.
 	cssAfterMobile := liveSessionCss[strings.Index(liveSessionCss, "@media (max-width: 900px)"):]
 	sessionActionsIdx := strings.Index(cssAfterMobile, ".session-actions")
 	if sessionActionsIdx == -1 {
 		t.Fatalf("missing .session-actions in mobile media query")
 	}
-	// Find the closing brace of this .session-actions block
 	blockIdx := strings.Index(cssAfterMobile[sessionActionsIdx:], "}")
 	if blockIdx == -1 {
 		t.Fatalf("unclosed .session-actions block in mobile media query")
 	}
 	sessionActionsBlock := cssAfterMobile[sessionActionsIdx : sessionActionsIdx+blockIdx+1]
-	if strings.Contains(sessionActionsBlock, "bottom:") && !strings.Contains(sessionActionsBlock, "bottom: auto") {
-		t.Fatalf("mobile session actions should use top positioning, not bottom, to avoid overlapping chat composer")
+	if !strings.Contains(sessionActionsBlock, "display: none") {
+		t.Fatalf("mobile .session-actions should be hidden; replaced by mobile-header + command panel")
+	}
+	// The mobile header should use top positioning, not bottom.
+	mobileHeaderIdx := strings.Index(cssAfterMobile, ".mobile-header")
+	if mobileHeaderIdx == -1 {
+		t.Fatalf("missing .mobile-header in mobile media query")
+	}
+	headerBlockIdx := strings.Index(cssAfterMobile[mobileHeaderIdx:], "}")
+	if headerBlockIdx == -1 {
+		t.Fatalf("unclosed .mobile-header block in mobile media query")
+	}
+	mobileHeaderBlock := cssAfterMobile[mobileHeaderIdx : mobileHeaderIdx+headerBlockIdx+1]
+	if strings.Contains(mobileHeaderBlock, "\nbottom:") && !strings.Contains(mobileHeaderBlock, "\nbottom: auto") {
+		t.Fatalf("mobile header should use top positioning, not bottom, to avoid overlapping chat composer")
 	}
 }
 
 func TestMobileSessionActionsDoNotCoverHeaderToggleButtons(t *testing.T) {
 	checks := []string{
-		"padding: calc(var(--line-height) * 3) 16px calc(var(--pi-chat-composer-height, 0px) + var(--line-height));",
+		"padding: calc(44px + env(safe-area-inset-top) + var(--line-height))",
 		".header-toggle-btn",
 		"data-action=\"toggle-thinking\"",
 		"data-action=\"toggle-tools\"",
