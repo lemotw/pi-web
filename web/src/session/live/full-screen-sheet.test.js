@@ -91,6 +91,25 @@ const mockWindow = {
   requestAnimationFrame: vi.fn((fn) => fn()),
 };
 
+function createMockMobileWindow() {
+  const listeners = {};
+  const history = {
+    state: null,
+    pushState: vi.fn(function(state) { this.state = state; }),
+    back: vi.fn(function() { this.state = null; }),
+  };
+  return {
+    matchMedia: vi.fn(() => ({ matches: true })),
+    setTimeout: vi.fn((fn) => fn()),
+    requestAnimationFrame: vi.fn((fn) => fn()),
+    addEventListener: vi.fn((type, fn) => { listeners[type] = fn; }),
+    removeEventListener: vi.fn(),
+    history,
+    location: { href: 'http://example.test/session?id=abc' },
+    _listeners: listeners,
+  };
+}
+
 describe('showSheet', () => {
   it('appends a sheet to the document body', () => {
     const documentImpl = createMockDocument();
@@ -290,4 +309,86 @@ describe('showSheet', () => {
     const bodyEl = documentImpl._getBodyEl();
     expect(bodyEl.appendChild).toHaveBeenCalledWith(fakeNode);
   });
+
+  describe('mobile history close', () => {
+    it('pushes a same-url history entry for mobile sheets', () => {
+      const documentImpl = createMockDocument();
+      const windowImpl = createMockMobileWindow();
+      showSheet({
+        title: 'History',
+        renderBody: () => '',
+        documentImpl,
+        windowImpl,
+        requestAnimationFrameImpl: noopRaf,
+      });
+
+      expect(windowImpl.history.pushState).toHaveBeenCalledWith(
+        expect.objectContaining({ __piSheet: expect.stringMatching(/^pi-sheet:/) }),
+        '',
+        'http://example.test/session?id=abc'
+      );
+      expect(windowImpl.addEventListener).toHaveBeenCalledWith('popstate', expect.any(Function));
+    });
+
+    it('closes the sheet when browser back pops the sheet history entry', () => {
+      const documentImpl = createMockDocument();
+      const windowImpl = createMockMobileWindow();
+      const onClose = vi.fn();
+      showSheet({
+        title: 'Pop Close',
+        renderBody: () => '',
+        onClose,
+        documentImpl,
+        windowImpl,
+        requestAnimationFrameImpl: noopRaf,
+      });
+
+      windowImpl._listeners.popstate();
+
+      expect(onClose).toHaveBeenCalled();
+      expect(windowImpl.history.back).not.toHaveBeenCalled();
+      expect(windowImpl.removeEventListener).toHaveBeenCalledWith('popstate', expect.any(Function));
+    });
+
+    it('pops the synthetic history entry when closed by UI', () => {
+      const documentImpl = createMockDocument();
+      const windowImpl = createMockMobileWindow();
+      const sheet = showSheet({
+        title: 'UI Close',
+        renderBody: () => '',
+        documentImpl,
+        windowImpl,
+        requestAnimationFrameImpl: noopRaf,
+      });
+
+      sheet.close();
+
+      expect(windowImpl.history.back).toHaveBeenCalled();
+      expect(windowImpl.removeEventListener).toHaveBeenCalledWith('popstate', expect.any(Function));
+    });
+
+    it('does not touch history for desktop sheets', () => {
+      const documentImpl = createMockDocument();
+      const history = { pushState: vi.fn(), back: vi.fn(), state: null };
+      const windowImpl = {
+        ...mockWindow,
+        history,
+        location: { href: 'http://example.test/session?id=abc' },
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      };
+
+      showSheet({
+        title: 'Desktop',
+        renderBody: () => '',
+        documentImpl,
+        windowImpl,
+        requestAnimationFrameImpl: noopRaf,
+      });
+
+      expect(history.pushState).not.toHaveBeenCalled();
+      expect(windowImpl.addEventListener).not.toHaveBeenCalledWith('popstate', expect.any(Function));
+    });
+  });
+
 });

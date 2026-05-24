@@ -2,6 +2,9 @@
  * Full-Screen Sheet — a reusable panel that renders as a centered dialog on
  * desktop and a fullscreen bottom-sheet on mobile (≤ 900px).
  *
+ * On mobile, the sheet owns one synthetic history entry so browser back
+ * gestures close the sheet instead of leaving the session page.
+ *
  * Usage:
  *   const sheet = showSheet({
  *     title: 'Usage',
@@ -21,6 +24,34 @@ const REMOVE_DELAY = 300; // must match CSS transition duration
 function isMobile(windowImpl) {
   return typeof windowImpl.matchMedia === 'function'
     && windowImpl.matchMedia(`(max-width: ${SHEET_BREAKPOINT}px)`).matches;
+}
+
+function setupHistoryClose({ id, closeSheet, windowImpl }) {
+  const historyImpl = windowImpl?.history;
+  if (!historyImpl || typeof historyImpl.pushState !== 'function' || typeof historyImpl.back !== 'function') return null;
+  if (typeof windowImpl.addEventListener !== 'function' || typeof windowImpl.removeEventListener !== 'function') return null;
+
+  const marker = `pi-sheet:${id}`;
+  const currentState = historyImpl.state && typeof historyImpl.state === 'object' ? historyImpl.state : {};
+
+  try {
+    historyImpl.pushState({ ...currentState, __piSheet: marker }, '', windowImpl.location?.href);
+  } catch {
+    return null;
+  }
+
+  function onPopState() {
+    closeSheet({ skipHistory: true });
+  }
+
+  windowImpl.addEventListener('popstate', onPopState);
+
+  return ({ skipHistory = false } = {}) => {
+    windowImpl.removeEventListener('popstate', onPopState);
+    if (!skipHistory && historyImpl.state?.__piSheet === marker) {
+      try { historyImpl.back(); } catch { /* ignore */ }
+    }
+  };
 }
 
 function escapeForAttr(s) {
@@ -116,6 +147,8 @@ export function showSheet({
     throw new Error('showSheet failed to create required DOM nodes');
   }
 
+  let teardownHistory = null;
+
   // Render body content (string or Node)
   const bodyContent = renderBody({ close: () => closeSheet(), bodyEl });
   if (isNode(bodyContent)) {
@@ -164,11 +197,17 @@ export function showSheet({
 
   const setTimeoutImpl = windowImpl.setTimeout ?? setTimeout ?? ((fn) => fn());
 
+  // On mobile, browser back gestures should close the sheet, not leave the session.
+  if (mobile) {
+    teardownHistory = setupHistoryClose({ id, closeSheet: (opts) => closeSheet(opts), windowImpl });
+  }
+
   // Close logic
   let closed = false;
-  function closeSheet() {
+  function closeSheet({ skipHistory = false } = {}) {
     if (closed) return;
     closed = true;
+    if (teardownHistory) teardownHistory({ skipHistory });
     documentImpl.removeEventListener('keydown', onKey);
     documentImpl.removeEventListener('keydown', trapFocus);
     panel.classList.remove('open');
