@@ -211,12 +211,7 @@ export function runChatComposer({
     }
     updateSendEnabled();
 
-    // Keyboard hint label (hidden on touch via CSS).
-    const sendHint = document.getElementById('pi-chat-send-hint');
-    if (sendHint) {
-      sendHint.textContent = '↵';
-      sendHint.title = 'Press Enter to send · Shift+Enter for newline';
-    }
+
     const expandButton = document.getElementById('pi-chat-expand');
     const EXPAND_STORAGE_KEY = 'pi-chat:composer-expanded:' + (sessionId || 'default');
     function applyComposerExpanded(expanded) {

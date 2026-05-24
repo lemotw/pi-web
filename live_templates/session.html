@@ -23,59 +23,65 @@
     var STORAGE_KEY = 'pi-web-theme';
     function applyTheme(t){ document.documentElement.dataset.theme = t || 'dark'; }
     try{ applyTheme(localStorage.getItem(STORAGE_KEY)); }catch(e){ applyTheme('dark'); }
-    function updateBtn(){
-      var btn = document.getElementById('theme-toggle');
-      if(!btn) return;
-      var isDark = (document.documentElement.dataset.theme || 'dark') === 'dark';
-      var span = btn.querySelector('span');
-      if(span) span.textContent = isDark ? '☀' : '◐';
-      var meta = document.querySelector('meta[name="theme-color"]');
-      if(meta) meta.content = isDark ? '#0e0e13' : '#f8f8f8';
-    }
-    function toggleTheme(){
-      var current = document.documentElement.dataset.theme || 'dark';
-      var next = current === 'dark' ? 'light' : 'dark';
-      applyTheme(next);
-      try{ localStorage.setItem(STORAGE_KEY, next); }catch(e){}
-      updateBtn();
-    }
-    if(document.readyState === 'loading'){
-      document.addEventListener('DOMContentLoaded', function(){
-        updateBtn();
-        var btn = document.getElementById('theme-toggle');
-        if(btn) btn.addEventListener('click', toggleTheme);
-      });
-    } else {
-      updateBtn();
-      var btn = document.getElementById('theme-toggle');
-      if(btn) btn.addEventListener('click', toggleTheme);
-    }
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if(meta) meta.content = (document.documentElement.dataset.theme || 'dark') === 'dark' ? '#0e0e13' : '#f8f8f8';
   })();
   </script>
   <script>if('serviceWorker' in navigator && window.isSecureContext){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js',{scope:'/'}).catch(function(){});});}</script>
-  <div class="session-actions">
-    <a href="/" class="session-action" title="Back to sessions"><span>←</span>Sessions</a>
-    <button id="theme-toggle" class="session-action" title="Toggle light/dark theme"><span>◐</span>Theme</button>
-    <button id="notify-toggle" class="session-action" title="Notify when response is ready" aria-pressed="false"><span>◌</span>Notify</button>
-    <button id="resume-btn" class="session-action" title="Copy pi --session command to clipboard"><span>$_</span>Terminal</button>
-    <button id="new-btn" class="session-action" title="New Session"><span>+</span>Session</button>
-    <button id="share-btn" class="session-action" title="Share session as GitHub Gist"><span>↗</span>Share</button>
+
+  <!-- Hidden buttons for backward-compat JS handlers -->
+  <div style="display:none">
+    <button id="theme-toggle" title="Toggle light/dark theme">Theme</button>
+    <button id="notify-toggle" title="Notify when response is ready" aria-pressed="false">Notify</button>
+    <button id="resume-btn" title="Copy pi --session command to clipboard">Terminal</button>
+    <button id="new-btn" title="New Session">Session</button>
+    <button id="share-btn" title="Share session as GitHub Gist">Share</button>
   </div>
 
-  <div class="mobile-header">
-    <a href="/" class="mobile-header-back"><span>←</span> Sessions</a>
-    <button id="mobile-command-btn" class="mobile-header-actions" aria-label="Session actions">⋯</button>
+  <div class="session-header-bar">
+    <a href="/" class="session-header-back"><span>←</span> Sessions</a>
+    <span class="session-header-title" id="session-header-title">{{TITLE}}</span>
+    <button id="command-menu-btn" class="session-header-actions" aria-label="Session actions">⋯</button>
   </div>
 
+  <!-- Desktop popover menu -->
+  <div id="command-menu-popover" class="command-menu-popover" style="display: none;">
+    <div class="command-menu-body">
+      <div class="command-menu-section">
+        <div class="command-menu-section-title">Session</div>
+        <button class="command-menu-item" data-action="rename"><span class="command-menu-icon">✎</span>Rename</button>
+        <button class="command-menu-item" data-action="share"><span class="command-menu-icon">↗</span>Share</button>
+        <button class="command-menu-item" data-action="new-session"><span class="command-menu-icon">+</span>New Session</button>
+        <button class="command-menu-item" data-action="fork"><span class="command-menu-icon">⑂</span>Fork</button>
+        <button class="command-menu-item" data-action="clone"><span class="command-menu-icon">⎘</span>Clone</button>
+      </div>
+      <div class="command-menu-section">
+        <div class="command-menu-section-title">Development</div>
+        <button class="command-menu-item" data-action="terminal"><span class="command-menu-icon">$_</span>Copy to Terminal</button>
+        <button class="command-menu-item" data-action="tree"><span class="command-menu-icon">▤</span>Tree</button>
+        <button class="command-menu-item" data-action="diff"><span class="command-menu-icon">±</span>Diff</button>
+      </div>
+      <div class="command-menu-section">
+        <div class="command-menu-section-title">Insights</div>
+        <button class="command-menu-item" data-action="model-usage"><span class="command-menu-icon">◈</span>Model Usage</button>
+      </div>
+      <div class="command-menu-section">
+        <div class="command-menu-section-title">Preferences</div>
+        <button class="command-menu-item" data-action="theme"><span class="command-menu-icon">◐</span>Theme</button>
+        <button class="command-menu-item command-menu-item-toggle" data-action="notifications">
+          <span class="command-menu-icon">◌</span>Notifications
+          <span class="command-menu-toggle" id="command-menu-notify-status">OFF</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile bottom sheet -->
   <div id="mobile-command-backdrop" class="mobile-command-backdrop" style="display: none;"></div>
   <div id="mobile-command-panel" class="mobile-command-panel" style="display: none;">
     <div class="mobile-command-handle"></div>
     <div class="mobile-command-title">Session Actions</div>
     <div class="mobile-command-body">
-      <div class="mobile-command-section">
-        <div class="mobile-command-section-title">Appearance</div>
-        <button class="mobile-command-item" data-action="theme"><span class="mobile-command-icon">◐</span><span>Theme</span></button>
-      </div>
       <div class="mobile-command-section">
         <div class="mobile-command-section-title">Session</div>
         <button class="mobile-command-item" data-action="rename"><span class="mobile-command-icon">✎</span><span>Rename</span></button>
@@ -96,6 +102,7 @@
       </div>
       <div class="mobile-command-section">
         <div class="mobile-command-section-title">Preferences</div>
+        <button class="mobile-command-item" data-action="theme"><span class="mobile-command-icon">◐</span><span>Theme</span></button>
         <button class="mobile-command-item mobile-command-item-toggle" data-action="notifications">
           <span class="mobile-command-icon">◌</span><span>Notifications</span>
           <span class="mobile-command-toggle" id="mobile-command-notify-status">OFF</span>

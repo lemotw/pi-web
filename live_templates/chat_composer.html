@@ -28,25 +28,43 @@
             not
             .ChatAvailable}}disabled{{end}}
         >
-            <svg class="pi-chat-expand-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <path d="M5 5h6v2H7v4H5V5zm14 0v6h-2V7h-4V5h6zM5 13h2v4h4v2H5v-6zm14 0v6h-6v-2h4v-4h2z"/>
+            <svg
+                class="pi-chat-expand-icon"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                focusable="false"
+            >
+                <path
+                    d="M5 5h6v2H7v4H5V5zm14 0v6h-2V7h-4V5h6zM5 13h2v4h4v2H5v-6zm14 0v6h-6v-2h4v-4h2z"
+                />
             </svg>
-            <svg class="pi-chat-collapse-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <path d="M11 5v6H5V9h4V5h2zm8 4v2h-6V5h2v4h4zM5 13h6v6H9v-4H5v-2zm14 0v2h-4v4h-2v-6h6z"/>
+            <svg
+                class="pi-chat-collapse-icon"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                focusable="false"
+            >
+                <path
+                    d="M11 5v6H5V9h4V5h2zm8 4v2h-6V5h2v4h4zM5 13h6v6H9v-4H5v-2zm14 0v2h-4v4h-2v-6h6z"
+                />
             </svg>
         </button>
         {{if .Cwd}}
         <div class="pi-chat-toolbar pi-chat-cwd-bar">
-            <span class="pi-chat-cwd" title="Click to copy path" data-cwd="{{.Cwd}}">cwd: {{.Cwd}}</span>
+            <span
+                class="pi-chat-cwd"
+                title="Click to copy path"
+                data-cwd="{{.Cwd}}"
+                >cwd: {{.Cwd}}</span
+            >
         </div>
-        {{end}}
-        {{if not .ChatAvailable}}
+        {{end}} {{if not .ChatAvailable}}
         <div class="pi-chat-disabled-notice">{{.ChatDisabledReason}}</div>
         {{end}}
         <textarea
             id="pi-chat-message"
             name="message"
-            rows="2"
+            rows="1"
             placeholder="Continue this pi session…"
             {{if
             not
@@ -114,11 +132,15 @@
                     id="pi-chat-model-label"
                     class="pi-chat-model-label"
                     title="Switch model"
-                    {{if .ModelLabel}}{{else}}style="display: none"{{end}}
+                    {{if
+                    .ModelLabel}}{{else}}style="display: none"
+                    {{end}}
                     {{if
                     not
                     .ChatAvailable}}disabled{{end}}
-                >{{ .ModelLabel }}</button>
+                >
+                    {{ .ModelLabel }}
+                </button>
             </div>
             <div class="actions">
                 <button
@@ -134,11 +156,6 @@
                 >
                     Cancel
                 </button>
-                <span
-                    id="pi-chat-send-hint"
-                    class="pi-chat-send-hint"
-                    aria-hidden="true"
-                >↵</span>
                 <button
                     type="submit"
                     id="pi-chat-send"

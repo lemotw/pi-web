@@ -52,8 +52,8 @@
       display: flex;
       flex-direction: column;
       position: sticky;
-      top: 0;
-      height: 100vh;
+      top: 44px;
+      height: calc(100vh - 44px);
       border-right: 1px solid var(--dim);
     }
 
@@ -61,8 +61,8 @@
       width: var(--sidebar-resizer-width);
       flex-shrink: 0;
       position: sticky;
-      top: 0;
-      height: 100vh;
+      top: 44px;
+      height: calc(100vh - 44px);
       cursor: col-resize;
       touch-action: none;
       background: transparent;
@@ -100,6 +100,8 @@
     .sidebar-header {
       padding: 8px 12px;
       flex-shrink: 0;
+      background: var(--container-bg);
+      border-bottom: 1px solid var(--dim);
     }
 
     .sidebar-controls {
@@ -262,7 +264,7 @@
       flex: 1;
       min-width: 0;
       overflow-y: auto;
-      padding: var(--line-height) calc(var(--line-height) * 2);
+      padding: calc(44px + var(--line-height)) calc(var(--line-height) * 2) var(--line-height);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -441,51 +443,158 @@
       text-align: center;
     }
 
-    .session-actions {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      z-index: 101;
+    /* Session header bar (all screen sizes) */
+    .session-header-bar {
       display: flex;
-      flex-direction: column;
-      gap: 6px;
+      align-items: center;
+      justify-content: space-between;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 101;
+      height: 44px;
+      padding: 0 16px;
+      background: var(--container-bg);
+      border-bottom: 1px solid var(--dim);
     }
 
-    .session-action {
-      padding: 4px 10px;
-      font-size: 11px;
-      font-family: inherit;
-      background: var(--container-bg);
-      color: var(--muted);
-      border: 1px solid var(--dim);
-      border-radius: 3px;
-      text-decoration: none;
-      cursor: pointer;
-      text-align: center;
+    .session-header-back {
       display: inline-flex;
       align-items: center;
       gap: 4px;
-    }
-
-    .session-action span {
-      display: inline-block;
-      min-width: 1.5em;
-      text-align: center;
-    }
-
-    .session-action:hover {
       color: var(--text);
-      border-color: var(--borderMuted);
+      text-decoration: none;
+      font-size: 12px;
+      flex-shrink: 0;
     }
 
-    .session-action:active {
-      transform: scale(0.96);
+    .session-header-back span {
+      color: var(--muted);
+      font-size: 14px;
     }
 
-    .session-action.active {
+    .session-header-title {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 12px;
+      font-weight: 600;
       color: var(--text);
-      border-color: var(--accent);
-      background: color-mix(in srgb, var(--accent) 14%, var(--container-bg));
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 40vw;
+    }
+
+    .session-header-actions {
+      padding: 4px 10px;
+      font-size: 16px;
+      line-height: 1;
+      font-family: inherit;
+      background: transparent;
+      color: var(--muted);
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .session-header-actions:hover,
+    .session-header-actions:active {
+      color: var(--text);
+      background: var(--hover);
+    }
+
+    /* Desktop popover menu */
+    .command-menu-popover {
+      position: fixed;
+      top: 48px;
+      right: 12px;
+      z-index: 201;
+      min-width: 220px;
+      max-width: 280px;
+      max-height: calc(100vh - 60px);
+      overflow-y: auto;
+      background: var(--container-bg);
+      border: 1px solid var(--dim);
+      border-radius: 8px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      opacity: 0;
+      transform: translateY(-4px) scale(0.98);
+      transition: opacity 0.15s ease, transform 0.15s ease;
+      pointer-events: none;
+    }
+
+    .command-menu-popover.open {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+
+    .command-menu-body {
+      padding: 4px 0;
+    }
+
+    .command-menu-section + .command-menu-section {
+      border-top: 1px solid var(--dim);
+    }
+
+    .command-menu-section-title {
+      padding: 8px 14px 2px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    .command-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-family: inherit;
+      color: var(--text);
+      background: transparent;
+      border: none;
+      text-align: left;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+
+    .command-menu-item:hover {
+      background: var(--hover);
+    }
+
+    .command-menu-item .command-menu-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      color: var(--muted);
+      font-size: 11px;
+      flex-shrink: 0;
+    }
+
+    .command-menu-item-toggle {
+      justify-content: flex-start;
+    }
+
+    .command-menu-toggle {
+      margin-left: auto;
+      font-size: 10px;
+      padding: 1px 7px;
+      background: var(--dim);
+      color: var(--muted);
+      border-radius: 999px;
+      flex-shrink: 0;
+    }
+
+    .command-menu-toggle.on {
+      background: var(--accent);
+      color: var(--body-bg);
     }
 
     .working-dots::after {
@@ -1424,10 +1533,6 @@
         overscroll-behavior: contain;
       }
 
-      .session-actions {
-        display: none !important;
-      }
-
       #content > * {
         max-width: 100%;
       }
@@ -1445,51 +1550,16 @@
         flex-shrink: 0;
       }
 
-      .mobile-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 101;
-        height: 44px;
+      .session-header-bar {
         padding: env(safe-area-inset-top) 12px 0;
-        background: var(--container-bg);
-        border-bottom: 1px solid var(--dim);
       }
 
-      .mobile-header-back {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        color: var(--text);
-        text-decoration: none;
-        font-size: 14px;
+      .session-header-title {
+        max-width: 50vw;
       }
 
-      .mobile-header-back span {
-        color: var(--muted);
-        font-size: 16px;
-      }
-
-      .mobile-header-actions {
-        padding: 4px 10px;
-        font-size: 18px;
-        line-height: 1;
-        font-family: inherit;
-        background: transparent;
-        color: var(--muted);
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-      }
-
-      .mobile-header-actions:hover,
-      .mobile-header-actions:active {
-        color: var(--text);
-        background: var(--hover);
+      .command-menu-popover {
+        display: none !important;
       }
 
       .mobile-command-backdrop {
@@ -1618,7 +1688,7 @@
         color: var(--body-bg);
       }
 
-      body.sidebar-open .mobile-header {
+      body.sidebar-open .session-header-bar {
         display: none;
       }
     }
@@ -1843,24 +1913,7 @@
     .pi-chat-send:active:not(:disabled) { transform: translateY(1px); }
     .pi-chat-cancel { padding: 3px 9px; flex-shrink: 0; color: var(--warning); border-color: color-mix(in srgb, var(--warning) 55%, var(--dim)); }
 
-    .pi-chat-send-hint {
-      font-size: 10px;
-      color: var(--muted);
-      letter-spacing: 0.04em;
-      padding: 2px 6px;
-      border-radius: 4px;
-      background: color-mix(in srgb, var(--muted) 12%, transparent);
-      border: 1px solid color-mix(in srgb, var(--muted) 20%, transparent);
-      opacity: 0;
-      transition: opacity 0.2s;
-      user-select: none;
-      flex-shrink: 0;
-      white-space: nowrap;
-    }
-    .pi-chat-shell:focus-within .pi-chat-send-hint { opacity: 0.7; }
-    @media (hover: none) and (pointer: coarse) {
-      .pi-chat-send-hint { display: none; }
-    }
+
 
     .pi-chat-icon-button:hover, .pi-chat-remove:hover, .pi-chat-cancel:hover {
       color: var(--text);

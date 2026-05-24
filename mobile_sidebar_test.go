@@ -22,9 +22,9 @@ func TestMobileSidebarClosesWhenNavigatingTree(t *testing.T) {
 
 func TestMobileSessionActionsStayAtTopAndHideBehindSidebar(t *testing.T) {
 	checks := []string{
-		`class="session-actions"`,
+		`class="session-header-bar"`,
 		"@media (max-width: 900px)",
-		".mobile-header {",
+		".session-header-bar {",
 		"position: fixed;",
 		"top: 0;",
 	}
@@ -34,32 +34,19 @@ func TestMobileSessionActionsStayAtTopAndHideBehindSidebar(t *testing.T) {
 			t.Fatalf("mobile action UI missing %q", check)
 		}
 	}
-	// Mobile session actions should be hidden; the mobile header bar stays at top.
+	// The unified header bar should use top positioning, not bottom.
 	cssAfterMobile := liveSessionCss[strings.Index(liveSessionCss, "@media (max-width: 900px)"):]
-	sessionActionsIdx := strings.Index(cssAfterMobile, ".session-actions")
-	if sessionActionsIdx == -1 {
-		t.Fatalf("missing .session-actions in mobile media query")
+	headerIdx := strings.Index(cssAfterMobile, ".session-header-bar")
+	if headerIdx == -1 {
+		t.Fatalf("missing .session-header-bar in mobile media query")
 	}
-	blockIdx := strings.Index(cssAfterMobile[sessionActionsIdx:], "}")
+	blockIdx := strings.Index(cssAfterMobile[headerIdx:], "}")
 	if blockIdx == -1 {
-		t.Fatalf("unclosed .session-actions block in mobile media query")
+		t.Fatalf("unclosed .session-header-bar block in mobile media query")
 	}
-	sessionActionsBlock := cssAfterMobile[sessionActionsIdx : sessionActionsIdx+blockIdx+1]
-	if !strings.Contains(sessionActionsBlock, "display: none") {
-		t.Fatalf("mobile .session-actions should be hidden; replaced by mobile-header + command panel")
-	}
-	// The mobile header should use top positioning, not bottom.
-	mobileHeaderIdx := strings.Index(cssAfterMobile, ".mobile-header")
-	if mobileHeaderIdx == -1 {
-		t.Fatalf("missing .mobile-header in mobile media query")
-	}
-	headerBlockIdx := strings.Index(cssAfterMobile[mobileHeaderIdx:], "}")
-	if headerBlockIdx == -1 {
-		t.Fatalf("unclosed .mobile-header block in mobile media query")
-	}
-	mobileHeaderBlock := cssAfterMobile[mobileHeaderIdx : mobileHeaderIdx+headerBlockIdx+1]
-	if strings.Contains(mobileHeaderBlock, "\nbottom:") && !strings.Contains(mobileHeaderBlock, "\nbottom: auto") {
-		t.Fatalf("mobile header should use top positioning, not bottom, to avoid overlapping chat composer")
+	headerBlock := cssAfterMobile[headerIdx : headerIdx+blockIdx+1]
+	if strings.Contains(headerBlock, "\nbottom:") && !strings.Contains(headerBlock, "\nbottom: auto") {
+		t.Fatalf("mobile header bar should use top positioning, not bottom, to avoid overlapping chat composer")
 	}
 }
 
