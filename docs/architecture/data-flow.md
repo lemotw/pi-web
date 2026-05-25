@@ -156,7 +156,7 @@ Browser POST /api/rename-session?id=<id>
            └──▶ Return {"ok": true, "name": "New Name"}
 ```
 
-Rename is the only intentional pi-web write to a session JSONL file. It appends metadata history; it does not rewrite existing entries.
+Rename is the only intentional pi-web write to an existing session JSONL file. It appends metadata history; it does not rewrite existing entries. Creating a new session is the other direct write path, but it only creates a fresh JSONL file.
 
 ## Data Flow: Live Reload
 
@@ -213,13 +213,20 @@ Browser POST /api/new-session
            ▼
     server.handleNewSession
            │
-           ├──▶ Decode JSON body → extract path
+           ├──▶ Decode JSON body → extract path and optional sourceSessionId
+           │
+           ├──▶ If sourceSessionId is present, read current worker model/thinking state
            │
            ├──▶ Validate path (absolute, exists or create)
            │
            ├──▶ Encode project name → create directory under sessionsDir
            │
-           ├──▶ Generate UUID + timestamp → write header JSONL
+           ├──▶ Generate UUID + timestamp → write fresh JSONL file
+           │         ├──▶ session header entry
+           │         └──▶ implicit model_change / thinking_level_change entries when copied
+           │              from the source session. These entries include normal entry `id`
+           │              and `parentId` fields so `pi --mode rpc switch_session` restores
+           │              the same initial model/thinking state.
            │
            ├──▶ Pre-initialize chat worker (EnsureWorker)
            │         └──▶ So the session page can read default model/thinking level immediately

@@ -578,9 +578,13 @@ func CreateSessionFileWithSettings(sessionsDir, path string, settings InitialSet
 	var fileData []byte
 	fileData = append(fileData, data...)
 	fileData = append(fileData, '\n')
+	var parentID any
 	if settings.ModelProvider != "" && settings.ModelID != "" {
+		entryID := randomEntryID()
 		line, err := json.Marshal(map[string]any{
 			"type":      "model_change",
+			"id":        entryID,
+			"parentId":  parentID,
 			"timestamp": time.Now().UTC().Format(time.RFC3339Nano),
 			"provider":  settings.ModelProvider,
 			"modelId":   settings.ModelID,
@@ -591,10 +595,14 @@ func CreateSessionFileWithSettings(sessionsDir, path string, settings InitialSet
 		}
 		fileData = append(fileData, line...)
 		fileData = append(fileData, '\n')
+		parentID = entryID
 	}
 	if settings.ThinkingLevel != "" {
+		entryID := randomEntryID()
 		line, err := json.Marshal(map[string]any{
 			"type":          "thinking_level_change",
+			"id":            entryID,
+			"parentId":      parentID,
 			"timestamp":     time.Now().UTC().Format(time.RFC3339Nano),
 			"thinkingLevel": settings.ThinkingLevel,
 			"implicit":      true,
@@ -619,4 +627,12 @@ func randomUUID() string {
 	b[6] = (b[6] & 0x0f) | 0x40
 	b[8] = (b[8] & 0x3f) | 0x80
 	return fmt.Sprintf("%x-%x-%x-%x-%x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:16])
+}
+
+func randomEntryID() string {
+	b := make([]byte, 4)
+	if _, err := rand.Read(b); err != nil {
+		panic(err)
+	}
+	return fmt.Sprintf("%x", b)
 }
