@@ -84,9 +84,10 @@ func computeThemeVars() (dark, light string) {
 // data, themed CSS, and body attributes) used by both live and export renders.
 func prepareSessionPageData(session sessions.Session, cssTemplate string) (dataBase64, css, bodyAttrs string) {
 	leafID := ""
-	if len(session.Entries) > 0 {
-		if id, ok := session.Entries[len(session.Entries)-1]["id"].(string); ok {
+	for i := len(session.Entries) - 1; i >= 0; i-- {
+		if id, ok := session.Entries[i]["id"].(string); ok && id != "" {
 			leafID = id
+			break
 		}
 	}
 
@@ -127,7 +128,7 @@ func renderLiveSessionPage(session sessions.Session) string {
 	preload := `<link rel="modulepreload" href="` + scriptSrc + `">`
 
 	html := liveSessionHtml
-	html = strings.Replace(html, "{{TITLE}}", template.HTMLEscapeString(session.Name), 1)
+	html = strings.ReplaceAll(html, "{{TITLE}}", template.HTMLEscapeString(session.Name))
 	html = strings.Replace(html, "{{SESSION_PRELOAD}}", preload, 1)
 	html = strings.Replace(html, "{{CSS}}", css, 1)
 	html = strings.Replace(html, "{{BODY_ATTRS}}", bodyAttrs, 1)

@@ -189,6 +189,46 @@ func TestCreateSessionFileRejectsRelativePath(t *testing.T) {
 	}
 }
 
+func TestRenameSessionAppendsSessionInfo(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "s.jsonl")
+	content := `{"type":"session","name":"Old Name","timestamp":"2026-05-08T10:00:00Z"}` + "\n"
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	now := func() time.Time { return time.Date(2026, 5, 8, 10, 1, 2, 0, time.UTC) }
+	if err := RenameSession(path, " New Name ", now); err != nil {
+		t.Fatalf("RenameSession failed: %v", err)
+	}
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := string(data)
+	wantLine := `{"type":"session_info","timestamp":"2026-05-08T10:01:02Z","name":"New Name"}`
+	if !strings.Contains(got, wantLine+"\n") {
+		t.Fatalf("appended content = %q, want line %q", got, wantLine)
+	}
+	s, err := ParseSummary(path, "--proj--", "s.jsonl")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if s.Name != "New Name" {
+		t.Fatalf("Name = %q, want New Name", s.Name)
+	}
+}
+
+func TestRenameSessionRejectsEmptyName(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "s.jsonl")
+	if err := os.WriteFile(path, []byte(`{"type":"session"}`+"\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := RenameSession(path, "   ", nil); err == nil {
+		t.Fatal("expected error for empty name")
+	}
+}
+
 func TestParseSummaryUsesHeaderName(t *testing.T) {
 	tmp := t.TempDir()
 	path := filepath.Join(tmp, "s.jsonl")

@@ -21,6 +21,12 @@ describe('session tree helpers', () => {
     expect(roots[0].children[1].label).toBe('label');
   });
 
+  it('ignores metadata entries without ids', () => {
+    const roots = buildTree([...entries, { type: 'session_info', name: 'Renamed' }]);
+    const flat = flattenTree(roots, buildActivePathIds('leaf', byId()));
+    expect(flat.map((f) => f.node.entry.id)).toEqual(['root', 'new', 'leaf', 'old', 'orphan']);
+  });
+
   it('builds active path and path entries from leaf to root', () => {
     expect([...buildActivePathIds('leaf', byId())]).toEqual(['leaf', 'new', 'root']);
     expect(getPath('leaf', byId()).map((e) => e.id)).toEqual(['root', 'new', 'leaf']);

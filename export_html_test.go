@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"os"
 	"strings"
 	"testing"
@@ -103,6 +105,28 @@ func TestGenerateExportHtmlOmitsChatComposerForShare(t *testing.T) {
 	html := renderExportSessionPage(session)
 	if strings.Contains(html, `id="pi-chat-composer"`) {
 		t.Fatalf("chat composer should not be included in share export")
+	}
+}
+
+func TestPrepareSessionPageDataUsesLastEntryWithIDAsLeaf(t *testing.T) {
+	session := sessions.Session{Entries: []map[string]any{
+		{"id": "root"},
+		{"id": "leaf"},
+		{"type": "session_info", "name": "Renamed"},
+	}}
+	dataBase64, _, _ := prepareSessionPageData(session, liveSessionCss)
+	dataJSON, err := base64.StdEncoding.DecodeString(dataBase64)
+	if err != nil {
+		t.Fatalf("decode session data: %v", err)
+	}
+	var payload struct {
+		LeafID string `json:"leafId"`
+	}
+	if err := json.Unmarshal(dataJSON, &payload); err != nil {
+		t.Fatalf("unmarshal session data: %v", err)
+	}
+	if payload.LeafID != "leaf" {
+		t.Fatalf("leafId = %q, want leaf", payload.LeafID)
 	}
 }
 

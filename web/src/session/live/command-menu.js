@@ -1,4 +1,5 @@
 import { isDoneNotifyEnabled } from '../chat/done-notifier.js';
+import { showModelUsageModal } from './model-usage-modal.js';
 
 function applyTheme(windowImpl, next) {
   document.documentElement.dataset.theme = next || 'dark';
@@ -38,11 +39,37 @@ function isMobileLayout(windowImpl) {
   return windowImpl.matchMedia('(max-width: 900px)').matches;
 }
 
+function getSessionId(windowImpl) {
+  try {
+    return new URLSearchParams(windowImpl.location.search).get('id') || '';
+  } catch (_) {
+    return '';
+  }
+}
+
+async function renameSession({ name, sessionId, fetchImpl }) {
+  const response = await fetchImpl('/api/rename-session?id=' + encodeURIComponent(sessionId), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name }),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.error || 'rename failed');
+  }
+  return data;
+}
+
 export function setupCommandMenu({
   documentImpl = document,
   windowImpl = window,
   setSidebarOpen = null,
   setSidebarCollapsed = null,
+  getEntries = null,
+  escapeHtml = String,
+  formatTokens = String,
+  fetchImpl = fetch,
+  sessionId = getSessionId(windowImpl),
 } = {}) {
   const mobileBackdrop = documentImpl.getElementById('mobile-command-backdrop');
   const mobilePanel = documentImpl.getElementById('mobile-command-panel');
@@ -182,11 +209,13 @@ export function setupCommandMenu({
         break;
       }
       case 'model-usage': {
-        const header = documentImpl.getElementById('header-container');
-        if (header) {
-          header.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          header.classList.add('highlight');
-          windowImpl.setTimeout(() => header.classList.remove('highlight'), 2000);
+        if (getEntries) {
+          showModelUsageModal({
+            entries: getEntries(),
+            escapeHtml,
+            formatTokens,
+            documentImpl,
+          });
         }
         closeMenu();
         break;
@@ -195,11 +224,19 @@ export function setupCommandMenu({
         const titleEl = documentImpl.getElementById('session-header-title');
         const current = titleEl ? titleEl.textContent : '';
         const next = windowImpl.prompt('Rename session', current);
-        if (next && next.trim() && next.trim() !== current) {
-          if (titleEl) titleEl.textContent = next.trim();
-          showToast('Renamed', documentImpl, windowImpl);
-        }
+        const trimmed = next ? next.trim() : '';
         closeMenu();
+        if (!trimmed || trimmed === current) break;
+        renameSession({ name: trimmed, sessionId, fetchImpl })
+          .then((data) => {
+            const savedName = (data && data.name) || trimmed;
+            if (titleEl) titleEl.textContent = savedName;
+            documentImpl.title = savedName;
+            showToast('Renamed', documentImpl, windowImpl);
+          })
+          .catch(() => {
+            showToast('Rename failed', documentImpl, windowImpl);
+          });
         break;
       }
       case 'fork':

@@ -14,7 +14,7 @@ pi-web is a local HTTP server that lets you browse and interact with your pi cod
 | Styling | Custom CSS (dark theme) |
 | Live Updates | Server-Sent Events (SSE) |
 | Chat RPC | JSONL over stdin/stdout via `pi --mode rpc` |
-| Session Storage | JSONL files on disk |
+| Session Storage | JSONL files on disk; pi-web appends `session_info` for browser rename |
 | Auth | Token cookie/query/header (optional on localhost) |
 
 ## Component Diagram
@@ -47,6 +47,7 @@ pi-web is a local HTTP server that lets you browse and interact with your pi cod
 │   POST /api/chat/cancel → handleCancelChat                               │
 │   POST /api/set-model →  handleSetModel                                  │
 │   POST /api/set-thinking-level → handleSetThinkingLevel                  │
+│   POST /api/rename-session → handleRenameSession                         │
 │   GET  /api/models    →  handleAvailableModels                           │
 │   GET  /api/worker-status → handleWorkerStatus                           │
 │   POST /share         →  handleShare         (GitHub Gist)               │

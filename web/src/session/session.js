@@ -238,6 +238,9 @@ export function runSessionApp({ target = window } = {}) {
     windowImpl: target,
     setSidebarOpen: (open) => sidebarApi.setSidebarOpen(open, { documentImpl }),
     setSidebarCollapsed: (collapsed) => sidebarApi.setSidebarCollapsed(collapsed, { documentImpl }),
+    getEntries: () => dataModel.entries,
+    escapeHtml: sessionFormat.escapeHtml,
+    formatTokens: entryRenderer.formatTokens,
   });
 
   // Initialize chat after live reload so the optimistic "message sent" event

@@ -1,5 +1,16 @@
-import type { ExtensionAPI, ExtensionCommandContext, ExecOptions } from "@earendil-works/pi-coding-agent";
-import { Container, truncateToWidth, visibleWidth, type Focusable, type KeybindingsManager, type TUI } from "@earendil-works/pi-tui";
+import type {
+  ExtensionAPI,
+  ExtensionCommandContext,
+  ExecOptions,
+} from "@earendil-works/pi-coding-agent";
+import {
+  Container,
+  truncateToWidth,
+  visibleWidth,
+  type Focusable,
+  type KeybindingsManager,
+  type TUI,
+} from "@earendil-works/pi-tui";
 import { basename } from "node:path";
 import { constants as fsConstants, readFileSync, accessSync } from "node:fs";
 import { homedir } from "node:os";
@@ -13,7 +24,14 @@ interface PiWebState {
   startedAt: string;
 }
 
-async function detectHostPort(pi: ExtensionAPI): Promise<{ host: string; port: string; tailscale: boolean; tailscaleUrl?: string } | null> {
+async function detectHostPort(
+  pi: ExtensionAPI,
+): Promise<{
+  host: string;
+  port: string;
+  tailscale: boolean;
+  tailscaleUrl?: string;
+} | null> {
   // 1. Try pidfile
   try {
     const path = `${homedir()}/.pi/agent/pi-web-state.json`;
@@ -27,7 +45,12 @@ async function detectHostPort(pi: ExtensionAPI): Promise<{ host: string; port: s
       throw new Error("stale pi-web pidfile");
     }
 
-    return { host: state.host, port: state.port, tailscale: state.tailscale, tailscaleUrl: state.tailscaleUrl };
+    return {
+      host: state.host,
+      port: state.port,
+      tailscale: state.tailscale,
+      tailscaleUrl: state.tailscaleUrl,
+    };
   } catch {
     // fall through
   }
@@ -47,7 +70,7 @@ async function detectHostPort(pi: ExtensionAPI): Promise<{ host: string; port: s
             port = args[i + 1];
             i++;
           }
-          if ((args[i] === "--host") && args[i + 1]) {
+          if (args[i] === "--host" && args[i + 1]) {
             host = args[i + 1];
             i++;
           }
@@ -72,7 +95,10 @@ function isTailscaleHost(host: string): boolean {
   return ip.toLowerCase().startsWith("fd7a:115c:a1e0");
 }
 
-async function detectTailscaleHttpsUrl(pi: ExtensionAPI, port: string): Promise<string | null> {
+async function detectTailscaleHttpsUrl(
+  pi: ExtensionAPI,
+  port: string,
+): Promise<string | null> {
   try {
     const result = await pi.exec("tailscale", ["status", "--json"]);
     const status = JSON.parse(result.stdout);
@@ -87,7 +113,9 @@ async function detectTailscaleHttpsUrl(pi: ExtensionAPI, port: string): Promise<
 
 async function healthCheck(host: string, port: string): Promise<boolean> {
   try {
-    const res = await fetch(`http://${host}:${port}`, { signal: AbortSignal.timeout(1000) });
+    const res = await fetch(`http://${host}:${port}`, {
+      signal: AbortSignal.timeout(1000),
+    });
     // 401/403 means pi-web is running with auth enabled.
     return res.ok || res.status === 401 || res.status === 403;
   } catch {
@@ -109,7 +137,9 @@ async function startPiWeb(pi: ExtensionAPI): Promise<void> {
     return;
   }
 
-  throw new Error("auto-start is only supported on macOS launchd or Linux systemd user services");
+  throw new Error(
+    "auto-start is only supported on macOS launchd or Linux systemd user services",
+  );
 }
 
 async function stopPiWeb(pi: ExtensionAPI): Promise<void> {
@@ -126,7 +156,9 @@ async function stopPiWeb(pi: ExtensionAPI): Promise<void> {
     return;
   }
 
-  throw new Error("stop is only supported on macOS launchd or Linux systemd user services");
+  throw new Error(
+    "stop is only supported on macOS launchd or Linux systemd user services",
+  );
 }
 
 async function restartPiWeb(pi: ExtensionAPI): Promise<void> {
@@ -143,10 +175,16 @@ async function restartPiWeb(pi: ExtensionAPI): Promise<void> {
     return;
   }
 
-  throw new Error("restart is only supported on macOS launchd or Linux systemd user services");
+  throw new Error(
+    "restart is only supported on macOS launchd or Linux systemd user services",
+  );
 }
 
-async function ensurePiWebRunning(pi: ExtensionAPI, host: string, port: string): Promise<boolean> {
+async function ensurePiWebRunning(
+  pi: ExtensionAPI,
+  host: string,
+  port: string,
+): Promise<boolean> {
   if (await healthCheck(host, port)) return true;
 
   try {
@@ -182,12 +220,16 @@ function withToken(url: string): string {
 
 function normalizeCommandArgs(args: unknown): string[] {
   if (Array.isArray(args)) return args.map(String);
-  if (typeof args === "string") return args.trim() ? args.trim().split(/\s+/) : [];
+  if (typeof args === "string")
+    return args.trim() ? args.trim().split(/\s+/) : [];
   return [];
 }
 
 function findPiWebBinary(): string | null {
-  for (const path of [`${homedir()}/.pi/agent/bin/pi-web`, "/usr/local/bin/pi-web"]) {
+  for (const path of [
+    `${homedir()}/.pi/agent/bin/pi-web`,
+    "/usr/local/bin/pi-web",
+  ]) {
     try {
       accessSync(path, fsConstants.X_OK);
       return path;
@@ -211,7 +253,10 @@ async function getPiWebVersion(pi: ExtensionAPI, bin: string): Promise<string> {
   return "unknown";
 }
 
-async function ensureQrCode(pi: ExtensionAPI, ctx: ExtensionCommandContext): Promise<boolean> {
+async function ensureQrCode(
+  pi: ExtensionAPI,
+  ctx: ExtensionCommandContext,
+): Promise<boolean> {
   // Already available?
   try {
     await import("qrcode");
@@ -266,7 +311,7 @@ class UrlOverlay extends Container implements Focusable {
     private readonly message: string,
     private readonly url: string,
     private readonly onDismiss: () => void,
-    private readonly extraLines: string[] = []
+    private readonly extraLines: string[] = [],
   ) {
     super();
   }
@@ -280,7 +325,10 @@ class UrlOverlay extends Container implements Focusable {
   }
 
   handleInput(data: string): void {
-    if (this.keybindings.matches(data, "tui.select.cancel") || data === "\u001b") {
+    if (
+      this.keybindings.matches(data, "tui.select.cancel") ||
+      data === "\u001b"
+    ) {
       this.onDismiss();
     }
   }
@@ -294,7 +342,10 @@ class UrlOverlay extends Container implements Focusable {
   private borderLine(innerWidth: number, edge: "top" | "bottom"): string {
     const left = edge === "top" ? "┌" : "└";
     const right = edge === "top" ? "┐" : "┘";
-    return this.theme.fg("borderMuted", `${left}${"─".repeat(innerWidth)}${right}`);
+    return this.theme.fg(
+      "borderMuted",
+      `${left}${"─".repeat(innerWidth)}${right}`,
+    );
   }
 
   private wrapPlain(text: string, width: number): string[] {
@@ -317,7 +368,7 @@ class UrlOverlay extends Container implements Focusable {
 
   private wrapLong(text: string, width: number): string[] {
     const lines: string[] = [];
-    for (let rest = text; rest.length > 0;) {
+    for (let rest = text; rest.length > 0; ) {
       let end = Math.min(rest.length, width);
       while (end > 1 && visibleWidth(rest.slice(0, end)) > width) end--;
       lines.push(rest.slice(0, end));
@@ -328,19 +379,37 @@ class UrlOverlay extends Container implements Focusable {
 
   override render(width: number): string[] {
     const safeWidth = Math.max(40, width || 80);
-    const dialogWidth = Math.max(64, Math.min(safeWidth - 4, Math.floor(safeWidth * 0.86)));
+    const dialogWidth = Math.max(
+      64,
+      Math.min(safeWidth - 4, Math.floor(safeWidth * 0.86)),
+    );
     const innerWidth = Math.max(40, dialogWidth - 2);
     const urlLines = this.wrapLong(this.url, innerWidth);
 
     return [
       this.borderLine(innerWidth, "top"),
-      this.frameLine(this.theme.fg("accent", this.theme.bold(` ${this.title} `)), innerWidth),
-      this.frameLine(this.theme.fg("dim", "Esc closes · copy the URL below"), innerWidth),
+      this.frameLine(
+        this.theme.fg("accent", this.theme.bold(` ${this.title} `)),
+        innerWidth,
+      ),
+      this.frameLine(
+        this.theme.fg("dim", "Esc closes · copy the URL below"),
+        innerWidth,
+      ),
       this.theme.fg("borderMuted", `├${"─".repeat(innerWidth)}┤`),
-      ...this.wrapPlain(this.message, innerWidth).map((line) => this.frameLine(line, innerWidth)),
-      ...(this.extraLines.length ? [this.frameLine("", innerWidth), ...this.extraLines.map((line) => this.frameLine(line, innerWidth))] : []),
+      ...this.wrapPlain(this.message, innerWidth).map((line) =>
+        this.frameLine(line, innerWidth),
+      ),
+      ...(this.extraLines.length
+        ? [
+            this.frameLine("", innerWidth),
+            ...this.extraLines.map((line) => this.frameLine(line, innerWidth)),
+          ]
+        : []),
       this.frameLine("", innerWidth),
-      ...urlLines.map((line) => this.frameLine(this.theme.fg("success", line), innerWidth)),
+      ...urlLines.map((line) =>
+        this.frameLine(this.theme.fg("success", line), innerWidth),
+      ),
       this.theme.fg("borderMuted", `├${"─".repeat(innerWidth)}┤`),
       this.frameLine(this.theme.fg("dim", "Press Esc to close."), innerWidth),
       this.borderLine(innerWidth, "bottom"),
@@ -350,40 +419,60 @@ class UrlOverlay extends Container implements Focusable {
 
 let activeUrlOverlayClose: (() => void) | null = null;
 
-async function showUrlOverlay(ctx: ExtensionCommandContext, title: string, message: string, url: string, extraLines: string[] = []): Promise<void> {
+async function showUrlOverlay(
+  ctx: ExtensionCommandContext,
+  title: string,
+  message: string,
+  url: string,
+  extraLines: string[] = [],
+): Promise<void> {
   if (!ctx.hasUI) return;
   activeUrlOverlayClose?.();
 
   let closeOverlay: (() => void) | null = null;
   activeUrlOverlayClose = () => closeOverlay?.();
 
-  void ctx.ui.custom<void>(
-    async (tui, theme, keybindings, done) => {
-      closeOverlay = () => {
-        if (activeUrlOverlayClose) activeUrlOverlayClose = null;
-        done();
-      };
-      const overlay = new UrlOverlay(tui, theme, keybindings, title, message, url, closeOverlay, extraLines);
-      overlay.focused = true;
-      return overlay;
-    },
-    {
-      overlay: true,
-      overlayOptions: {
-        width: "94%",
-        minWidth: 72,
-        maxHeight: "92%",
-        anchor: "top-center",
-        margin: { top: 2, left: 2, right: 2 },
+  void ctx.ui
+    .custom<void>(
+      async (tui, theme, keybindings, done) => {
+        closeOverlay = () => {
+          if (activeUrlOverlayClose) activeUrlOverlayClose = null;
+          done();
+        };
+        const overlay = new UrlOverlay(
+          tui,
+          theme,
+          keybindings,
+          title,
+          message,
+          url,
+          closeOverlay,
+          extraLines,
+        );
+        overlay.focused = true;
+        return overlay;
       },
-      onHandle: (handle) => handle.focus(),
-    }
-  ).catch(() => {
-    if (activeUrlOverlayClose === closeOverlay) activeUrlOverlayClose = null;
-  });
+      {
+        overlay: true,
+        overlayOptions: {
+          width: "94%",
+          minWidth: 72,
+          maxHeight: "92%",
+          anchor: "top-center",
+          margin: { top: 2, left: 2, right: 2 },
+        },
+        onHandle: (handle) => handle.focus(),
+      },
+    )
+    .catch(() => {
+      if (activeUrlOverlayClose === closeOverlay) activeUrlOverlayClose = null;
+    });
 }
 
-async function showRemoteAccess(pi: ExtensionAPI, ctx: ExtensionCommandContext): Promise<void> {
+async function showRemoteAccess(
+  pi: ExtensionAPI,
+  ctx: ExtensionCommandContext,
+): Promise<void> {
   const sessionFile = ctx.sessionManager.getSessionFile();
   if (!sessionFile) {
     ctx.ui.notify("Cannot view an in-memory session.", "error");
@@ -392,28 +481,37 @@ async function showRemoteAccess(pi: ExtensionAPI, ctx: ExtensionCommandContext):
 
   const detected = await detectHostPort(pi);
   if (!detected) {
-    ctx.ui.notify("Could not detect pi-web server. Start it with: pi-web -o", "error");
+    ctx.ui.notify(
+      "Could not detect pi-web server. Start it with: pi-web -o",
+      "error",
+    );
     return;
   }
 
   const { host, port, tailscale, tailscaleUrl } = detected;
   if (!(await ensurePiWebRunning(pi, host, port))) {
-    ctx.ui.notify(`pi-web not responding on ${host}:${port}. Start it with: pi-web -o`, "error");
+    ctx.ui.notify(
+      `pi-web not responding on ${host}:${port}. Start it with: pi-web -o`,
+      "error",
+    );
     return;
   }
 
-  const detectedTailscaleUrl = tailscaleUrl || (await detectTailscaleHttpsUrl(pi, port));
+  const detectedTailscaleUrl =
+    tailscaleUrl || (await detectTailscaleHttpsUrl(pi, port));
   if (!tailscale && !detectedTailscaleUrl) {
     ctx.ui.notify(
       "Tailscale HTTPS is not available. Install/sign in to Tailscale and restart pi-web so it can run `tailscale serve`.",
-      "error"
+      "error",
     );
     return;
   }
 
   const sessionId = basename(sessionFile);
   const baseUrl = detectedTailscaleUrl || `http://${host}:${port}`;
-  const url = withToken(`${baseUrl}/session?id=${encodeURIComponent(sessionId)}`);
+  const url = withToken(
+    `${baseUrl}/session?id=${encodeURIComponent(sessionId)}`,
+  );
 
   const hasQr = await ensureQrCode(pi, ctx);
 
@@ -427,16 +525,22 @@ async function showRemoteAccess(pi: ExtensionAPI, ctx: ExtensionCommandContext):
         "Remote access via Tailscale",
         "Make sure your device is connected to Tailscale, then scan this QR code or open the URL:",
         url,
-        qrLines
+        qrLines,
       );
-      ctx.ui.notify("QR code shown. Make sure your device is connected to Tailscale.", "info");
+      ctx.ui.notify(
+        "QR code shown. Make sure your device is connected to Tailscale.",
+        "info",
+      );
     } catch (qrErr) {
-      ctx.ui.notify(`Failed to generate QR code: ${qrErr}. Open manually: ${url}`, "error");
+      ctx.ui.notify(
+        `Failed to generate QR code: ${qrErr}. Open manually: ${url}`,
+        "error",
+      );
       await showUrlOverlay(
         ctx,
         "Remote access via Tailscale",
         "QR code generation failed. Make sure your device is connected to Tailscale, then open this URL:",
-        url
+        url,
       );
     }
   } else {
@@ -444,11 +548,11 @@ async function showRemoteAccess(pi: ExtensionAPI, ctx: ExtensionCommandContext):
       ctx,
       "Remote access via Tailscale",
       "QR code unavailable. Make sure your device is connected to Tailscale, then open this URL:",
-      url
+      url,
     );
     ctx.ui.notify(
       `QR code unavailable. Make sure your device is connected to Tailscale, then open this URL: ${url}`,
-      "warning"
+      "warning",
     );
   }
 }
@@ -475,24 +579,44 @@ export default function (pi: ExtensionAPI) {
       const host = detected?.host || "127.0.0.1";
       const port = detected?.port || "31415";
       const running = await healthCheck(host, port);
-      const tailscaleUrl = detected?.tailscaleUrl || (running ? await detectTailscaleHttpsUrl(pi, port) : null);
+      const tailscaleUrl =
+        detected?.tailscaleUrl ||
+        (running ? await detectTailscaleHttpsUrl(pi, port) : null);
 
-      if (subcommand === "help" || subcommand === "--help" || subcommand === "-h") {
-        ctx.ui.notify("Usage: /pi-web [status|version|path|start|stop|restart|remote|update|help]", "info");
+      if (
+        subcommand === "help" ||
+        subcommand === "--help" ||
+        subcommand === "-h"
+      ) {
+        ctx.ui.notify(
+          "Usage: /pi-web [status|version|path|start|stop|restart|remote|update|help]",
+          "info",
+        );
         return;
       }
 
       if (subcommand === "path") {
-        ctx.ui.notify(bin ? `pi-web binary: ${bin}` : "pi-web binary not found in ~/.pi/agent/bin or /usr/local/bin", bin ? "info" : "warning");
+        ctx.ui.notify(
+          bin
+            ? `pi-web binary: ${bin}`
+            : "pi-web binary not found in ~/.pi/agent/bin or /usr/local/bin",
+          bin ? "info" : "warning",
+        );
         return;
       }
 
       if (subcommand === "version") {
         if (!bin) {
-          ctx.ui.notify("pi-web binary not found in ~/.pi/agent/bin or /usr/local/bin", "warning");
+          ctx.ui.notify(
+            "pi-web binary not found in ~/.pi/agent/bin or /usr/local/bin",
+            "warning",
+          );
           return;
         }
-        ctx.ui.notify(`pi-web version: ${await getPiWebVersion(pi, bin)}`, "info");
+        ctx.ui.notify(
+          `pi-web version: ${await getPiWebVersion(pi, bin)}`,
+          "info",
+        );
         return;
       }
 
@@ -514,7 +638,11 @@ export default function (pi: ExtensionAPI) {
             }
           }
           const remoteURL = await detectTailscaleHttpsUrl(pi, port);
-          const lines = [started ? `Started pi-web at http://${host}:${port}` : "Started pi-web; still waiting for health check."];
+          const lines = [
+            started
+              ? `Started pi-web at http://${host}:${port}`
+              : "Started pi-web; still waiting for health check.",
+          ];
           if (remoteURL) lines.push(`remote: ${remoteURL}`);
           ctx.ui.notify(lines.join("\n"), started ? "success" : "warning");
         } catch (err) {
@@ -545,7 +673,11 @@ export default function (pi: ExtensionAPI) {
             }
           }
           const remoteURL = await detectTailscaleHttpsUrl(pi, port);
-          const lines = [restarted ? `Restarted pi-web at http://${host}:${port}` : "Restarted pi-web; still waiting for health check."];
+          const lines = [
+            restarted
+              ? `Restarted pi-web at http://${host}:${port}`
+              : "Restarted pi-web; still waiting for health check.",
+          ];
           if (remoteURL) lines.push(`remote: ${remoteURL}`);
           ctx.ui.notify(lines.join("\n"), restarted ? "success" : "warning");
         } catch (err) {
@@ -568,7 +700,10 @@ export default function (pi: ExtensionAPI) {
           } catch {
             // Package update may still have succeeded even if the service is not installed/running.
           }
-          ctx.ui.notify("pi-web updated. Reloading pi extensions...", "success");
+          ctx.ui.notify(
+            "pi-web updated. Reloading pi extensions...",
+            "success",
+          );
           await ctx.reload();
           return;
         } catch (err) {
@@ -578,7 +713,10 @@ export default function (pi: ExtensionAPI) {
       }
 
       if (subcommand !== "status") {
-        ctx.ui.notify(`Unknown /pi-web command: ${subcommand}. Usage: /pi-web [status|version|path|start|stop|restart|remote|update|help]`, "warning");
+        ctx.ui.notify(
+          `Unknown /pi-web command: ${subcommand}. Usage: /pi-web [status|version|path|start|stop|restart|remote|update|help]`,
+          "warning",
+        );
         return;
       }
 
@@ -588,7 +726,8 @@ export default function (pi: ExtensionAPI) {
         `local: http://${host}:${port}`,
       ];
       if (tailscaleUrl) lines.push(`remote: ${tailscaleUrl}`);
-      if (detected?.tailscaleUrl && detected.tailscaleUrl !== tailscaleUrl) lines.push(`state remote: ${detected.tailscaleUrl}`);
+      if (detected?.tailscaleUrl && detected.tailscaleUrl !== tailscaleUrl)
+        lines.push(`state remote: ${detected.tailscaleUrl}`);
       ctx.ui.notify(lines.join("\n"), running ? "info" : "warning");
     },
   });
@@ -603,7 +742,7 @@ export default function (pi: ExtensionAPI) {
 
   // ── /refresh ──────────────────────────────────────────────────────
   pi.registerCommand("refresh", {
-    description: "Sync mobile-written messages back into this session",
+    description: "Sync pi-web-written messages back into this session",
     handler: async (_args, ctx: ExtensionCommandContext) => {
       const sessionFile = ctx.sessionManager.getSessionFile();
       if (!sessionFile) {
@@ -630,7 +769,10 @@ export default function (pi: ExtensionAPI) {
 
       if (fileCount > currentCount) {
         const delta = fileCount - currentCount;
-        ctx.ui.notify(`Mobile added ${delta} new message(s). Reloading session...`, "info");
+        ctx.ui.notify(
+          `Mobile added ${delta} new message(s). Reloading session...`,
+          "info",
+        );
         await ctx.switchSession(sessionFile);
       } else {
         ctx.ui.notify("Session is up to date.", "info");

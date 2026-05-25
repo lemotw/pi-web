@@ -111,6 +111,61 @@ func (s *Server) handleNewSession(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, 0, map[string]any{"ok": true, "id": id})
 }
 
+func (s *Server) handleRenameSession(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeJSONError(w, http.StatusMethodNotAllowed, "method not allowed")
+		return
+	}
+	var body struct {
+		Name string `json:"name"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		writeJSONError(w, http.StatusBadRequest, "invalid json body")
+		return
+	}
+	name := strings.TrimSpace(body.Name)
+	if name == "" {
+		writeJSONError(w, http.StatusBadRequest, "name is required")
+		return
+	}
+
+	id := r.URL.Query().Get("id")
+	var resolved sessions.ResolvedSession
+	var err error
+	if s.cache != nil {
+		resolved, err = s.cache.Resolve(s.sessionsDir, id)
+	} else {
+		resolved, err = sessions.ResolveByID(s.sessionsDir, id)
+	}
+	if err != nil {
+		switch {
+		case errors.Is(err, sessions.ErrInvalidSessionID):
+			writeJSONError(w, http.StatusBadRequest, "invalid session id")
+		case errors.Is(err, sessions.ErrSessionNotFound):
+			writeJSONError(w, http.StatusNotFound, "not found")
+		default:
+			writeJSONError(w, http.StatusInternalServerError, err.Error())
+		}
+		return
+	}
+
+	if err := sessions.RenameSession(resolved.Path, name, s.now); err != nil {
+		if errors.Is(err, sessions.ErrEmptySessionName) {
+			writeJSONError(w, http.StatusBadRequest, "name is required")
+			return
+		}
+		writeJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	if s.fileMod != nil {
+		if info, err := os.Stat(resolved.Path); err == nil {
+			s.recordModTime(resolved.Session.ID, info.ModTime())
+		}
+	}
+	s.broadcast(resolved.Session.ID, "reload")
+	writeJSON(w, 0, map[string]any{"ok": true, "name": name})
+}
+
 func (s *Server) handleRecentLocations(w http.ResponseWriter, r *http.Request) {
 	locations, err := sessions.ListRecentLocations(s.sessionsDir)
 	if err != nil {

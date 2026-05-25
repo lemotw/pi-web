@@ -2,11 +2,13 @@ export function buildTree(entries = [], labelMap = new Map()) {
   const nodeMap = new Map();
   const roots = [];
 
-  for (const entry of entries) {
+  const treeEntries = entries.filter((entry) => entry?.id);
+
+  for (const entry of treeEntries) {
     nodeMap.set(entry.id, { entry, children: [], label: labelMap.get(entry.id) });
   }
 
-  for (const entry of entries) {
+  for (const entry of treeEntries) {
     const node = nodeMap.get(entry.id);
     if (entry.parentId === null || entry.parentId === undefined || entry.parentId === entry.id) {
       roots.push(node);

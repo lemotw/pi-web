@@ -113,6 +113,12 @@ func TestSessionPageUsesViteModuleForInteractiveViewer(t *testing.T) {
 	if strings.Contains(html, "{{SESSION_SCRIPT}}") || strings.Contains(html, "{{JS}}") {
 		t.Fatal("session page still contains unreplaced script placeholders")
 	}
+	if strings.Contains(html, "{{TITLE}}") {
+		t.Fatal("session page still contains unreplaced title placeholder")
+	}
+	if !strings.Contains(html, `<span class="session-header-title" id="session-header-title">Session</span>`) {
+		t.Fatal("session header title was not rendered")
+	}
 }
 
 func TestStaticExportKeepsInlineSessionRenderer(t *testing.T) {

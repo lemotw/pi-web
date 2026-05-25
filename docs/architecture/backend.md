@@ -34,7 +34,7 @@ pi-web/
 │   │   ├── status_sweeper.go   # Periodic status revalidation
 │   │   └── status_watcher.go   # fsnotify on session-status/ dir
 │   ├── sessions/
-│   │   ├── session.go          # Session struct, ParseFile, LoadAll, CreateSessionFile
+│   │   ├── session.go          # Session struct, ParseFile, LoadAll, CreateSessionFile, RenameSession
 │   │   ├── cache.go            # Modtime-aware session cache
 │   │   └── lookup.go           # Resolve session by ID
 │   ├── share/
@@ -61,9 +61,10 @@ type Server struct {
     auth          *auth.Middleware
     shareRunner   shareCmdRunner  // overridable in tests
     now           func() time.Time
-    renderIndex   func(w io.Writer, summaries []sessions.SessionSummary) error
-    renderSession func(s sessions.Session, showButtons bool) string
-    models        func(ctx context.Context) (json.RawMessage, error)
+    renderIndex         func(w io.Writer, summaries []sessions.SessionSummary) error
+    renderLiveSession   func(s sessions.Session) string
+    renderExportSession func(s sessions.Session) string
+    models              func(ctx context.Context) (json.RawMessage, error)
     lastKnown     map[string]struct{} // sessions currently broadcast as running
     lastKnownMu   sync.Mutex
     stopCh        chan struct{}
@@ -80,8 +81,10 @@ The domain model for a session file.
 type Session struct {
     ID                 string
     Filename           string
+    SessionUUID        string
     Project            string
     LastActivity       string
+    Name               string
     MessageCount       int
     TokenTotal         int
     CostTotal          float64
@@ -148,6 +151,7 @@ type piRPCWorker struct {
 | `/share` | POST | `handleShare` | Create private GitHub Gist |
 | `/events` | GET | `handleEvents` | SSE stream |
 | `/api/new-session` | POST | `handleNewSession` | Create new session file |
+| `/api/rename-session` | POST | `handleRenameSession` | Append `session_info` rename metadata |
 | `/api/recent-locations` | GET | `handleRecentLocations` | List known project paths |
 
 | `/static/assets/index-*.js` | GET | — | Embedded Vite index bundle |

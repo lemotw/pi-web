@@ -24,7 +24,7 @@ This flow covers a user clicking the **Share** button on a session page, which c
      │             │              │─── deps.Resolve(id)│               │              │
      │             │              │   (find matching session)         │               │
      │             │              │                  │               │              │
-     │             │              │─── generateExportHtml(session, false)
+     │             │              │─── renderExportSessionPage(session)
      │             │              │                  │               │              │
      │             │              │                  │─── export/index.html│         │
      │             │              │                  │─── export/template.css│        │
@@ -91,10 +91,10 @@ If not logged in → `400` error: `"GitHub CLI not logged in. Run 'gh auth login
 The handler resolves the session by ID and then calls:
 
 ```go
-generateExportHtml(session, false)
+renderExportSessionPage(session)
 ```
 
-The `false` argument means **no buttons** (no back link, no share button, no chat composer) — the exported HTML is meant to be a clean, self-contained document.
+The export renderer omits live-only chrome (no back link, no share button, no chat composer) — the exported HTML is meant to be a clean, self-contained document.
 
 ### 5. Create Temporary File
 

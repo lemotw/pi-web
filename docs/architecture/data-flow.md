@@ -15,6 +15,7 @@ Sessions are stored as **JSONL** files (one JSON object per line):
 {"type":"session","version":3,"id":"uuid","timestamp":"2026-01-15T10:30:00Z","cwd":"/Users/me/project","name":"My Session"}
 {"type":"message","timestamp":"2026-01-15T10:30:01Z","message":{"role":"user","content":"Hello"}}
 {"type":"message","timestamp":"2026-01-15T10:30:05Z","message":{"role":"assistant","content":"Hi!"},"usage":{"totalTokens":42,"cost":{"total":0.0001}}}
+{"type":"session_info","timestamp":"2026-01-15T10:30:06Z","name":"Renamed Session"}
 {"type":"tool_call","timestamp":"2026-01-15T10:30:06Z","tool":"bash","command":"ls -la"}
 {"type":"tool_result","timestamp":"2026-01-15T10:30:07Z","tool":"bash","output":"..."}
 {"type":"branch_summary","timestamp":"2026-01-15T10:35:00Z","branch":"main","summary":"..."}
@@ -27,6 +28,7 @@ Sessions are stored as **JSONL** files (one JSON object per line):
 |--------|-------------|
 | `session` | Header metadata (cwd, name, version, id) |
 | `message` | User or assistant message with optional `usage` and `cost` |
+| `session_info` | Session metadata update; latest `name` is used as display title |
 | `tool_call` | Agent invoked a tool |
 | `tool_result` | Tool execution result |
 | `bash` / `bash_output` | Shell command and its output |
@@ -51,15 +53,15 @@ File on disk
      ▼
 sessions.ParseFile(path, dirName, fileName)
      │
-     ├──▶ os.ReadFile → string
-     │
-     ├──▶ strings.Split by "\n"
+     ├──▶ stream file line-by-line
      │
      ├──▶ json.Unmarshal each line
      │        ├──▶ type=="session" → sess.Header
      │        ├──▶ type=="message" → increment MessageCount, sum tokens/cost
+     │        ├──▶ type=="session_info" → latest rename/title metadata
      │        └──▶ all types → append to Entries
      │
+     ├──▶ Name = latest session_info.name, else session.name, else first user text, else filename
      ├──▶ LastActivity = latest timestamp (or file modtime fallback)
      │
      └──▶ ChatAvailable = cwd still exists?
@@ -92,14 +94,14 @@ Browser GET /session?id=<id>
            ▼
     server.handleSession
            │
-           ├──▶ sessions.ResolveByID → find file path
-           │         └──▶ walk project dirs, match filename
+           ├──▶ sessions.Cache.Resolve → find file path + parse/cache by modtime
            │
-           ├──▶ sessions.ParseFile → Session struct
+           ├──▶ sessions.ParseFile → Session struct when cache is stale
            │
-           ├──▶ generateExportHtml(session, true)
+           ├──▶ renderLiveSessionPage(session)
            │         ├──▶ marshal session data → base64
-           │         ├──▶ inject CSS/JS/templates
+           │         ├──▶ inject CSS/live template/Vite module
+           │         ├──▶ replace {{TITLE}} with session.Name
            │         └──▶ inject chat composer HTML
            │
            └──▶ Write HTML response
@@ -136,6 +138,25 @@ Browser POST /api/chat?id=<id>
            │
            └──▶ Return {"ok": true, "status": "accepted"}
 ```
+
+## Data Flow: Rename Session
+
+```
+Browser POST /api/rename-session?id=<id>
+           │
+           ▼
+    server.handleRenameSession
+           │
+           ├──▶ Decode JSON body → {"name":"New Name"}
+           ├──▶ Resolve session ID → filesystem path
+           ├──▶ sessions.RenameSession(path, name, now)
+           │         └──▶ Append JSONL line: {"type":"session_info","timestamp":"...","name":"New Name"}
+           ├──▶ record modtime + broadcast "reload" to session SSE clients
+           │
+           └──▶ Return {"ok": true, "name": "New Name"}
+```
+
+Rename is the only intentional pi-web write to a session JSONL file. It appends metadata history; it does not rewrite existing entries.
 
 ## Data Flow: Live Reload
 
@@ -175,7 +196,7 @@ Browser POST /share?id=<id>
            │
            ├──▶ deps.Resolve(id) → find matching session
            │
-           ├──▶ generateExportHtml(session, false)  (no buttons)
+           ├──▶ renderExportSessionPage(session)  (no live chrome)
            │
            ├──▶ Write to temp file
            │

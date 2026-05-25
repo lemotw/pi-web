@@ -1,9 +1,13 @@
 import { isDoneNotifyEnabled } from '../chat/done-notifier.js';
+import { showModelUsageModal } from './model-usage-modal.js';
 
 export function setupMobileCommandPanel({
   documentImpl = document,
   windowImpl = window,
   setSidebarOpen = null,
+  getEntries = null,
+  escapeHtml = String,
+  formatTokens = String,
 } = {}) {
   const backdrop = documentImpl.getElementById('mobile-command-backdrop');
   const panel = documentImpl.getElementById('mobile-command-panel');
@@ -110,11 +114,13 @@ export function setupMobileCommandPanel({
         break;
       }
       case 'model-usage': {
-        const header = documentImpl.getElementById('header-container');
-        if (header) {
-          header.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          header.classList.add('highlight');
-          windowImpl.setTimeout(() => header.classList.remove('highlight'), 2000);
+        if (getEntries) {
+          showModelUsageModal({
+            entries: getEntries(),
+            escapeHtml,
+            formatTokens,
+            documentImpl,
+          });
         }
         closePanel();
         break;

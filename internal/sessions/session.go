@@ -271,6 +271,43 @@ func truncate(s string, n int) string {
 	return string(runes[:n]) + "…"
 }
 
+var ErrEmptySessionName = errors.New("session name is empty")
+
+// RenameSession persists a display-name change by appending a session_info
+// entry. Parsers already treat the latest session_info.name as authoritative,
+// so this preserves JSONL history instead of rewriting existing entries.
+func RenameSession(path, name string, now func() time.Time) error {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return ErrEmptySessionName
+	}
+	if now == nil {
+		now = time.Now
+	}
+
+	entry := struct {
+		Type      string `json:"type"`
+		Timestamp string `json:"timestamp"`
+		Name      string `json:"name"`
+	}{
+		Type:      "session_info",
+		Timestamp: now().UTC().Format(time.RFC3339),
+		Name:      name,
+	}
+	data, err := json.Marshal(entry)
+	if err != nil {
+		return err
+	}
+
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_APPEND, 0)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	_, err = f.Write(append(data, '\n'))
+	return err
+}
+
 // ParseFile parses path in a single pass, collecting both the SessionSummary
 // fields and the full Entries slice. This avoids the double-read that would
 // result from calling ParseSummary followed by os.ReadFile.

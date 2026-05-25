@@ -118,9 +118,10 @@ srv := server.New(server.Deps{
         })
     }),
     Cache:         sessions.NewCache(),
-    RenderIndex:   func(w io.Writer, ss []sessions.SessionSummary) error { … },
-    RenderSession: generateExportHtml,
-    Models:        func(ctx context.Context) (json.RawMessage, error) { … },
+    RenderIndex:         func(w io.Writer, ss []sessions.SessionSummary) error { … },
+    RenderLiveSession:   renderLiveSessionPage,
+    RenderExportSession: renderExportSessionPage,
+    Models:              func(ctx context.Context) (json.RawMessage, error) { … },
 })
 ```
 

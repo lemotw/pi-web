@@ -1,0 +1,69 @@
+package server
+
+import (
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+	"time"
+
+	"pi-web/internal/sessions"
+)
+
+func TestHandleRenameSessionAppendsSessionInfo(t *testing.T) {
+	root := t.TempDir()
+	writeSessionFile(t, root, "test-project", "session.jsonl")
+	s := &Server{
+		sessionsDir: root,
+		cache:       sessions.NewCache(),
+		now:         func() time.Time { return time.Date(2026, 5, 8, 10, 1, 2, 0, time.UTC) },
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/api/rename-session?id=session.jsonl", strings.NewReader(`{"name":"New Name"}`))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	s.handleRenameSession(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("status = %d, body = %s", w.Code, w.Body.String())
+	}
+	var payload map[string]any
+	if err := json.Unmarshal(w.Body.Bytes(), &payload); err != nil {
+		t.Fatal(err)
+	}
+	if payload["ok"] != true || payload["name"] != "New Name" {
+		t.Fatalf("payload = %#v", payload)
+	}
+
+	resolved, err := sessions.ResolveByID(root, "session.jsonl")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resolved.Session.Name != "New Name" {
+		t.Fatalf("session name = %q, want New Name", resolved.Session.Name)
+	}
+}
+
+func TestHandleRenameSessionRejectsEmptyName(t *testing.T) {
+	root := t.TempDir()
+	writeSessionFile(t, root, "test-project", "session.jsonl")
+	s := &Server{sessionsDir: root, cache: sessions.NewCache()}
+
+	req := httptest.NewRequest(http.MethodPost, "/api/rename-session?id=session.jsonl", strings.NewReader(`{"name":"   "}`))
+	w := httptest.NewRecorder()
+	s.handleRenameSession(w, req)
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d, want 400", w.Code)
+	}
+}
+
+func TestHandleRenameSessionRejectsMissingSession(t *testing.T) {
+	s := &Server{sessionsDir: t.TempDir(), cache: sessions.NewCache()}
+	req := httptest.NewRequest(http.MethodPost, "/api/rename-session?id=missing.jsonl", strings.NewReader(`{"name":"New"}`))
+	w := httptest.NewRecorder()
+	s.handleRenameSession(w, req)
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("status = %d, want 404", w.Code)
+	}
+}
