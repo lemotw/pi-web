@@ -14,6 +14,7 @@
 <meta name="apple-mobile-web-app-title" content="Pi Sessions">
 <link rel="stylesheet" href="/index.css">
 <link rel="stylesheet" href="/menu.css">
+<link rel="stylesheet" href="/palette.css">
 </head>
 <body>
 <script>
@@ -68,15 +69,7 @@
 
 {{ homeMenu }}
 
-<div class="command-palette-overlay" id="commandPalette" aria-hidden="true">
-  <div class="command-palette" role="dialog" aria-modal="true" aria-label="Search sessions">
-    <input type="text" id="search" placeholder="Search sessions..." autocomplete="off">
-    <div class="palette-results" data-palette-results></div>
-    <div class="palette-section-title">Actions</div>
-    <button class="palette-action" type="button" data-new-session-btn>New session</button>
-    <button class="palette-action muted" type="button">Import session</button>
-  </div>
-</div>
+{{ paletteHTML }}
 <div class="content" data-sessions-content>
   {{ $currentProject := "" }}
   {{ range . }}

@@ -88,6 +88,9 @@ func sessionMenuHTML(id, class, bodyClass, itemClass, toggleID, themeIconClass, 
 		Sections: []liveMenuSection{
 			{Title: "Session", Items: []liveMenuItem{
 				{Label: "New Session", Attrs: `data-action="new-session"`},
+				{Label: "Search Sessions", Suffix: template.HTML("<kbd>⌘K</kbd>"), Attrs: `data-action="list-sessions"`},
+			}},
+			{Items: []liveMenuItem{
 				{Label: "Rename", Attrs: `data-action="rename"`},
 				{Label: "Share", Attrs: `data-action="share"`},
 				{Label: "Fork", Attrs: `data-action="fork"`},
@@ -99,7 +102,7 @@ func sessionMenuHTML(id, class, bodyClass, itemClass, toggleID, themeIconClass, 
 			}},
 			{Title: "Development", Items: []liveMenuItem{
 				{Label: "Resume via Terminal", Attrs: `data-action="terminal"`},
-				{Label: "Tree", Attrs: `data-action="tree"`},
+				{Label: "Tree", Suffix: template.HTML("<kbd>⌘B</kbd>"), Attrs: `data-action="tree"`},
 				{Label: "Diff", Attrs: `data-action="diff"`},
 			}},
 			{Title: "Insights", Items: []liveMenuItem{

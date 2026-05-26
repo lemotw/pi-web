@@ -53,8 +53,6 @@ func TestHomePageNewSessionEntryPointsExist(t *testing.T) {
 	}
 	html := buf.String()
 	htmlChecks := []string{
-		`id="commandPalette"`,
-		`id="web-menu"`,
 		`data-new-session-btn`,
 		`New Session`,
 		`New session`,
@@ -64,12 +62,22 @@ func TestHomePageNewSessionEntryPointsExist(t *testing.T) {
 			t.Fatalf("home new-session entry point missing %q", check)
 		}
 	}
+	// palette is rendered via {{ paletteHTML }} — check rendered output
+	paletteChecks := []string{
+		`id="commandPalette"`,
+		`id="web-menu"`,
+	}
+	for _, check := range paletteChecks {
+		if !strings.Contains(html, check) {
+			t.Fatalf("home palette/menu entry point missing %q", check)
+		}
+	}
+	css := indexCSS + "\n" + menuCSS + "\n" + paletteCSS
 	cssChecks := []string{
 		".command-palette-overlay {",
 		".web-menu {",
 		".palette-action",
 	}
-	css := indexCSS + "\n" + menuCSS
 	for _, check := range cssChecks {
 		if !strings.Contains(css, check) {
 			t.Fatalf("home new-session entry point CSS missing %q", check)
@@ -78,6 +86,11 @@ func TestHomePageNewSessionEntryPointsExist(t *testing.T) {
 }
 
 func TestCommandPaletteSearchExists(t *testing.T) {
+	var buf bytes.Buffer
+	if err := indexTmpl.Execute(&buf, []sessions.Session{}); err != nil {
+		t.Fatalf("failed to render index template: %v", err)
+	}
+	html := buf.String()
 	checks := []string{
 		`id="open-search"`,
 		`id="search"`,
@@ -85,8 +98,8 @@ func TestCommandPaletteSearchExists(t *testing.T) {
 		`⌘K`,
 	}
 	for _, check := range checks {
-		if !strings.Contains(indexTmpl.Tree.Root.String(), check) {
-			t.Fatalf("index template missing %q", check)
+		if !strings.Contains(html, check) {
+			t.Fatalf("index template rendered output missing %q", check)
 		}
 	}
 }

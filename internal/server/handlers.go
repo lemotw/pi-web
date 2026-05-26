@@ -149,6 +149,18 @@ func (s *Server) handleApiSessions(w http.ResponseWriter, r *http.Request) {
 		writeJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
+
+	project := r.URL.Query().Get("project")
+	if project != "" {
+		filtered := make([]sessions.SessionSummary, 0, len(summaries))
+		for _, sum := range summaries {
+			if sum.Project == project {
+				filtered = append(filtered, sum)
+			}
+		}
+		summaries = filtered
+	}
+
 	writeJSON(w, 0, map[string]any{"sessions": summaries})
 }
 

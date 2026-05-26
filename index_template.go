@@ -51,6 +51,14 @@ var funcMap = template.FuncMap{
 		return template.HTML(`<link rel="modulepreload" href="` + template.HTMLEscapeString(indexScriptPath) + `">`)
 	},
 	"homeMenu": homeMenuHTML,
+	"paletteHTML": func() template.HTML {
+		return renderPalette(paletteData{
+			ID:       "commandPalette",
+			Label:    "Search sessions",
+			SearchID: "search",
+			Actions:  true,
+		})
+	},
 }
 
 var indexTmpl = template.Must(template.New("index").Funcs(funcMap).Parse(indexTmplStr))

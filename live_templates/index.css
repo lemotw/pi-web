@@ -327,93 +327,6 @@ a { color: inherit; }
 }
 .empty-state h3 { color: var(--text); font-size: 14px; margin-bottom: 6px; }
 
-.palette-action {
-    width: 100%;
-    border: 0;
-    background: transparent;
-    color: var(--text-soft);
-    text-decoration: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 10px;
-    text-align: left;
-    font-size: 13px;
-}
-.palette-action:hover,
-.palette-result:hover,
-.palette-result:focus-visible {
-    background: var(--surface-2);
-    color: var(--text);
-    outline: none;
-}
-.palette-action.muted { color: var(--muted); }
-
-.command-palette-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    z-index: 60;
-    background: rgba(0, 0, 0, 0.28);
-    padding: 14vh 16px 16px;
-}
-.command-palette-overlay.open { display: block; }
-.command-palette {
-    width: min(520px, 100%);
-    margin: 0 auto;
-    background: var(--surface);
-    border: 1px solid var(--dim);
-    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.42);
-}
-.command-palette input {
-    width: 100%;
-    height: 48px;
-    border: 0;
-    border-bottom: 1px solid var(--dim);
-    background: transparent;
-    color: var(--text);
-    padding: 0 14px;
-    outline: none;
-}
-.command-palette input::placeholder { color: var(--muted); }
-.palette-results { padding: 6px; max-height: 278px; overflow: auto; }
-.palette-result {
-    width: 100%;
-    border: 0;
-    background: transparent;
-    color: var(--text-soft);
-    cursor: pointer;
-    padding: 8px 10px;
-    text-align: left;
-    display: block;
-}
-.palette-result-title {
-    display: block;
-    color: var(--text);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-.palette-result-meta {
-    display: block;
-    margin-top: 2px;
-    color: var(--muted);
-    font-size: 11px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-.palette-empty { padding: 10px; color: var(--muted); }
-.palette-section-title {
-    border-top: 1px solid var(--dim);
-    padding: 10px 16px 4px;
-    color: var(--muted);
-    font-size: 11px;
-}
-.command-palette .palette-action { padding: 8px 16px; }
-.command-palette .palette-action:last-child { margin-bottom: 8px; }
-
 .modal-overlay {
     display: none;
     position: fixed;
@@ -485,5 +398,4 @@ a { color: inherit; }
     .session-grid { grid-template-columns: 1fr; }
     .nav-search-btn { min-width: auto; }
     .nav-search-btn kbd { display: none; }
-    .command-palette-overlay { padding-top: 10vh; }
 }

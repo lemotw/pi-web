@@ -76,7 +76,15 @@ func TestIndexTemplateLoadedFromEmbeddedFile(t *testing.T) {
 	if indexTmplStr == "" {
 		t.Fatal("indexTmplStr is empty; live_templates/index.html was not embedded")
 	}
-	rendered := indexTmpl.Tree.Root.String()
+	var buf bytes.Buffer
+	// Render with sessions so session-card markers appear in output
+	data := []sessions.Session{{SessionSummary: sessions.SessionSummary{
+		ID: "s.jsonl", Project: "/tmp", LastActivity: "2026-01-01T00:00:00Z", ChatAvailable: true,
+	}}}
+	if err := indexTmpl.Execute(&buf, data); err != nil {
+		t.Fatalf("failed to render index template: %v", err)
+	}
+	rendered := buf.String()
 	for _, marker := range []string{
 		`id="commandPalette"`,
 		`id="modalOverlay"`,
@@ -111,6 +119,7 @@ func TestRenderedSessionPagesReplaceKnownPlaceholders(t *testing.T) {
 		"{{CHAT_COMPOSER}}", "{{THEME_VARS_DARK}}", "{{THEME_VARS_LIGHT}}",
 		"{{BODY_BG}}", "{{CONTAINER_BG}}", "{{INFO_BG}}",
 		"{{BODY_BG_LIGHT}}", "{{CONTAINER_BG_LIGHT}}", "{{INFO_BG_LIGHT}}",
+		"{{SESSION_PALETTE}}",
 	}
 	for name, html := range map[string]string{
 		"live":   renderLiveSessionPage(session),

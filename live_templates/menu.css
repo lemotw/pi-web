@@ -110,6 +110,15 @@
     flex-shrink: 0;
 }
 
+.command-menu-item kbd,
+.mobile-command-item kbd {
+    margin-left: auto;
+    font-size: 10px;
+    color: var(--pi-menu-muted-color);
+    font-family: inherit;
+    flex-shrink: 0;
+}
+
 .command-menu-toggle.on,
 .mobile-command-toggle.on,
 #index-notify-status.on {

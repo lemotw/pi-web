@@ -29,6 +29,9 @@ var indexCSS string
 //go:embed live_templates/menu.css
 var menuCSS string
 
+//go:embed live_templates/palette.css
+var paletteCSS string
+
 // registerPWAHandlers serves the manifest, service worker, and icons.
 // Routes are registered without auth: a manifest/icon leaks nothing
 // sensitive, and the service worker must be reachable for installability
@@ -75,5 +78,10 @@ func registerPWAHandlers(mux *http.ServeMux) {
 		w.Header().Set("Content-Type", "text/css; charset=utf-8")
 		w.Header().Set("Cache-Control", "no-cache")
 		_, _ = w.Write([]byte(menuCSS))
+	})
+	mux.HandleFunc("/palette.css", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/css; charset=utf-8")
+		w.Header().Set("Cache-Control", "no-cache")
+		_, _ = w.Write([]byte(paletteCSS))
 	})
 }

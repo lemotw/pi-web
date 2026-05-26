@@ -31,6 +31,7 @@ import * as newSessionButton from './live/new-session-button.js';
 import * as liveEvents from './live/live-events.js';
 import * as liveRenderer from './live/live-renderer.js';
 import { setupCommandMenu } from './live/command-menu.js';
+import { setupListSessionsPalette } from './live/list-sessions-palette.js';
 export { buildSessionLookups, createSessionDataModel, decodeBase64JSON, getSessionSearchParams, loadSessionData, readSessionPayload } from './data/session-data.js';
 export { buildActivePathIds, buildTree, buildTreeNodeMap, buildTreePrefix, findNewestLeaf, flattenTree, getPath } from './tree/session-tree.js';
 export { createTreeRenderer } from './tree/tree-renderer.js';
@@ -289,6 +290,35 @@ export function runSessionApp({ target = window } = {}) {
     getLeafId: () => currentLeafId,
     escapeHtml: sessionFormat.escapeHtml,
     formatTokens: entryRenderer.formatTokens,
+  });
+
+  // Set up session list palette (Cmd+K / "List Sessions" menu item)
+  setupCommandMenu._palette = setupListSessionsPalette({
+    documentImpl,
+    windowImpl: target,
+  });
+
+  // Cmd+K keyboard shortcut for session list palette
+  target.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      if (setupCommandMenu._palette) setupCommandMenu._palette.open();
+    }
+  });
+
+  // Cmd+B keyboard shortcut to toggle sidebar/tree
+  target.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'b') {
+      e.preventDefault();
+      const sidebar = documentImpl.getElementById('sidebar');
+      if (target.matchMedia('(max-width: 900px)').matches) {
+        const isOpen = sidebar?.classList.contains('open');
+        sidebarApi.setSidebarOpen(!isOpen, { documentImpl });
+      } else {
+        const isCollapsed = documentImpl.body?.classList.contains('sidebar-collapsed');
+        sidebarApi.setSidebarCollapsed(!isCollapsed, { documentImpl });
+      }
+    }
   });
 
   // Initialize chat after live reload so the optimistic "message sent" event

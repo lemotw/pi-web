@@ -21,6 +21,9 @@ var liveSessionCss string
 //go:embed live_templates/menu.css
 var liveMenuCss string
 
+//go:embed live_templates/palette.css
+var livePaletteCss string
+
 //go:embed live_templates/chat_composer.html
 var chatComposerTmplStr string
 
@@ -133,7 +136,7 @@ func prepareSessionPageData(session sessions.Session, cssTemplate string) (dataB
 // renderLiveSessionPage renders the interactive session viewer served at
 // /session. It loads the Vite-built session module and includes the chat composer.
 func renderLiveSessionPage(session sessions.Session) string {
-	dataBase64, css, bodyAttrs := prepareSessionPageData(session, liveSessionCss+"\n"+liveMenuCss)
+	dataBase64, css, bodyAttrs := prepareSessionPageData(session, liveSessionCss+"\n"+liveMenuCss+"\n"+livePaletteCss)
 
 	scriptSrc := template.HTMLEscapeString(sessionScriptPath)
 	preload := `<link rel="modulepreload" href="` + scriptSrc + `">`
@@ -145,6 +148,12 @@ func renderLiveSessionPage(session sessions.Session) string {
 	html = replaceRequired(html, "{{BODY_ATTRS}}", bodyAttrs)
 	html = replaceRequired(html, "{{SESSION_COMMAND_MENU}}", string(sessionDesktopMenuHTML()))
 	html = replaceRequired(html, "{{MOBILE_COMMAND_MENU}}", string(sessionMobileMenuHTML()))
+	html = replaceRequired(html, "{{SESSION_PALETTE}}", string(renderPalette(paletteData{
+		ID:       "sessionPalette",
+		Label:    "List sessions",
+		SearchID: "session-palette-search",
+		Actions:  false,
+	})))
 	html = replaceRequired(html, "{{SESSION_DATA}}", dataBase64)
 	html = replaceRequired(html, "{{SESSION_SCRIPT}}", `<script type="module" src="`+scriptSrc+`"></script>`)
 	html = replaceRequired(html, "{{FIRST_MESSAGE_STUB}}", firstMessageStub(session))

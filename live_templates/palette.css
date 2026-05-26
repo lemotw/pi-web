@@ -1,0 +1,106 @@
+/* ── Palette variables (mirror index.css values so this works standalone) ── */
+:root, [data-theme="dark"] {
+    --palette-surface: #15151b;
+    --palette-surface-2: #191920;
+    --palette-text-soft: #b7bbc4;
+}
+[data-theme="light"] {
+    --palette-surface: #ffffff;
+    --palette-surface-2: #f1f0ec;
+    --palette-text-soft: #3f4650;
+}
+
+/* ── Palette overlay ── */
+.command-palette-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background: rgba(0, 0, 0, 0.28);
+    padding: 14vh 16px 16px;
+}
+.command-palette-overlay.open { display: block; }
+.command-palette {
+    width: min(520px, 100%);
+    margin: 0 auto;
+    background: var(--palette-surface);
+    border: 1px solid var(--dim);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.42);
+}
+.command-palette input {
+    width: 100%;
+    height: 48px;
+    border: 0;
+    border-bottom: 1px solid var(--dim);
+    background: transparent;
+    color: var(--text);
+    padding: 0 14px;
+    outline: none;
+}
+.command-palette input::placeholder { color: var(--muted); }
+.palette-results { padding: 6px; max-height: 278px; overflow: auto; }
+.palette-result {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: var(--palette-text-soft);
+    cursor: pointer;
+    padding: 8px 10px;
+    text-align: left;
+    display: block;
+}
+.palette-result:hover,
+.palette-result:focus-visible {
+    background: var(--palette-surface-2);
+    color: var(--text);
+    outline: none;
+}
+.palette-result-title {
+    display: block;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.palette-result-meta {
+    display: block;
+    margin-top: 2px;
+    color: var(--muted);
+    font-size: 11px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.palette-empty { padding: 10px; color: var(--muted); }
+.palette-section-title {
+    border-top: 1px solid var(--dim);
+    padding: 10px 16px 4px;
+    color: var(--muted);
+    font-size: 11px;
+}
+.palette-action {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: var(--palette-text-soft);
+    text-decoration: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    text-align: left;
+    font-size: 13px;
+}
+.palette-action:hover {
+    background: var(--palette-surface-2);
+    color: var(--text);
+    outline: none;
+}
+.palette-action.muted { color: var(--muted); }
+.command-palette .palette-action { padding: 8px 16px; }
+.command-palette .palette-action:last-child { margin-bottom: 8px; }
+
+@media (max-width: 700px) {
+    .command-palette-overlay { padding-top: 10vh; }
+}

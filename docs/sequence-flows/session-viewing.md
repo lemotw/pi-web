@@ -157,6 +157,26 @@ Content-Type: application/json
 
 The server validates the name, resolves the session path, and appends a `session_info` JSONL line. Parsers use the latest `session_info.name` as `Session.Name`, so the rename survives reloads and appears on both detail and index pages after refresh/live reload. `/api/session` includes this computed `name`, allowing connected detail pages to update their header/title immediately on the next SSE reload without a manual browser refresh.
 
+## Command Menu & Keyboard Shortcuts
+
+The session detail page has a `⋯` menu button (top-right) and supports keyboard shortcuts:
+
+| Shortcut | Action | Description |
+|----------|--------|-------------|
+| `⌘K` / `Ctrl+K` | Search Sessions | Opens a palette that lists sessions from the same working directory (fetches `GET /api/sessions?project=<cwd>`). Type to filter by name, click or press Enter to navigate. |
+| `⌘B` / `Ctrl+B` | Toggle Tree | Shows/hides the session tree sidebar (mobile: opens sidebar panel; desktop: uncollapses sidebar). |
+| `Escape` | Close | Closes any open overlay (menu, palette, modal). |
+
+The command menu (`⋯`) is organized into sections:
+
+- **Session** — Search Sessions (`⌘K`), New Session
+- *(divider)* — Rename, Share, Fork, Clone
+- **Preferences** — Appearance, Notifications
+- **Development** — Resume via Terminal, Tree (`⌘B`), Diff
+- **Insights** — Model Usage
+
+The **Search Sessions** palette reuses the same CSS and palette template as the home page's `⌘K` palette. It filters server-side by `?project=` (the current session's working directory), then applies client-side text filtering with a 100ms debounce.
+
 ## Caching Behavior
 
 Single-session views (`/session`, `/api/session`) use `sessions.Cache.Resolve`, which caches parsed full sessions by file modtime. When the JSONL file changes, including after rename, the new modtime causes a re-parse.

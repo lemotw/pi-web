@@ -1,6 +1,7 @@
 import { isDoneNotifyEnabled } from '../chat/done-notifier.js';
 import { showModelUsageModal } from './model-usage-modal.js';
 import { showForkModal } from './fork-modal.js';
+import { setupListSessionsPalette } from './list-sessions-palette.js';
 
 function chatUrl(path, sessionId) {
   return `${path}?id=${encodeURIComponent(sessionId)}`;
@@ -203,6 +204,14 @@ export function setupCommandMenu({
       case 'share': {
         clickHiddenButton('share-btn', documentImpl);
         closeMenu();
+        break;
+      }
+      case 'list-sessions': {
+        closeMenu();
+        // The palette is set up by session.js — use the module-level reference
+        if (setupCommandMenu._palette) {
+          setupCommandMenu._palette.open();
+        }
         break;
       }
       case 'new-session': {
