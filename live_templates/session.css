@@ -1548,7 +1548,7 @@
       box-sizing: border-box;
       display: block;
       padding: 10px 14px calc(12px + env(safe-area-inset-bottom));
-      background: var(--container-bg);
+      background: var(--body-bg);
       border-top: 1px solid color-mix(in srgb, var(--dim) 55%, transparent);
     }
 
@@ -1558,7 +1558,7 @@
       min-width: 0;
       box-sizing: border-box;
       overflow: visible;
-      background: var(--container-bg);
+      background: var(--body-bg);
       border: 1px solid var(--dim);
       border-radius: 6px;
       position: relative;
