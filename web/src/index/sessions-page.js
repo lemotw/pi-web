@@ -75,7 +75,7 @@ function renderSessionsList(sessions = [], root = document) {
       <button class="project-toggle" type="button" aria-expanded="true">
         <svg class="project-chevron" viewBox="0 0 12 12" aria-hidden="true"><path fill="currentColor" d="M3 4 L9 4 L6 8 Z"/></svg>
         <span class="project-name">${group.project.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;')}</span>
-        <span class="project-count" data-project-count data-running="0">${group.sessions.length}</span>
+        <span class="project-count" data-project-count data-running="0" data-total="${group.sessions.length}">${group.sessions.length} sessions</span>
       </button>
       <div class="session-grid">${group.sessions.map(renderSessionCard).join('')}</div>
     </div>`).join('');

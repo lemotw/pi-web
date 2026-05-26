@@ -78,7 +78,7 @@ func TestIndexTemplateLoadedFromEmbeddedFile(t *testing.T) {
 	}
 	rendered := indexTmpl.Tree.Root.String()
 	for _, marker := range []string{
-		`id="newSessionBtn"`,
+		`id="commandPalette"`,
 		`id="modalOverlay"`,
 		`session-running-loader`,
 	} {

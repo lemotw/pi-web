@@ -24,7 +24,8 @@
     var btn = document.getElementById('theme-toggle');
     if(!btn) return;
     var isDark = (document.documentElement.dataset.theme || 'dark') === 'dark';
-    btn.innerHTML = '<span>' + (isDark ? '☀' : '◐') + '</span>';
+    var icon = btn.querySelector('[data-theme-icon]');
+    if(icon) icon.textContent = isDark ? '☀' : '◐';
     var meta = document.querySelector('meta[name="theme-color"]');
     if(meta) meta.content = isDark ? '#0e0e13' : '#f8f8f8';
   }
@@ -53,21 +54,42 @@
     <div class="header-top">
       <h1><span class="pi-logo-mark" aria-hidden="true"></span><span>Pi Sessions</span></h1>
       <div class="header-actions">
-        <span class="stat-running" data-running-stat><span data-running-count>0</span><span class="stat-running-label"> active</span></span>
-        <button id="theme-toggle" class="new-session-btn" title="Toggle light/dark theme" style="font-size:14px;"><span>◐</span></button>
-        <button class="new-session-btn new-session-btn-desktop" data-new-session-btn title="Start new session">+</button>
+        <button class="nav-search-btn" id="open-search" type="button" aria-haspopup="dialog" aria-controls="commandPalette"><span>Search</span><kbd>⌘K</kbd></button>
+        <button class="nav-menu-btn" id="web-menu-btn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="web-menu">⋯</button>
       </div>
     </div>
-    <div class="search-box">
-      <input type="text" id="search" placeholder="Search sessions...">
-    </div>
-    <div class="stats-bar">
+    <div class="workspace-summary">
       <span>{{ len . }} sessions</span>
-      <span class="stat-running" id="statRunning" data-running-stat><span data-running-count>0</span><span class="stat-running-label"> active</span></span>
+      <span class="stat-running" id="statRunning" data-running-stat><span class="status-dot" aria-hidden="true"></span><span data-running-count>0</span><span class="stat-running-label"> active</span></span>
     </div>
   </div>
 </div>
-<button class="new-session-btn new-session-btn-mobile" id="newSessionBtn" data-new-session-btn title="Start new session">+</button>
+
+<div class="web-menu" id="web-menu" role="menu" aria-labelledby="web-menu-btn" hidden>
+  <button class="web-menu-item" type="button" data-new-session-btn role="menuitem">New Session</button>
+  <button class="web-menu-item muted" type="button" role="menuitem">Import Session</button>
+  <div class="web-menu-separator"></div>
+  <button class="web-menu-item" id="theme-toggle" type="button" role="menuitem"><span>Appearance</span><span data-theme-icon>◐</span></button>
+  <button class="web-menu-item muted" type="button" role="menuitem"><span>Notifications</span><span>›</span></button>
+  <div class="web-menu-separator"></div>
+  <button class="web-menu-item muted" type="button" role="menuitem">Active Sessions</button>
+  <button class="web-menu-item muted" type="button" role="menuitem">Archived Sessions</button>
+  <div class="web-menu-separator"></div>
+  <a class="web-menu-item" href="https://github.com/earendil-works/pi-coding-agent" target="_blank" rel="noreferrer" role="menuitem">Documentation</a>
+  <a class="web-menu-item" href="https://github.com/earendil-works/pi-coding-agent" target="_blank" rel="noreferrer" role="menuitem">GitHub</a>
+  <div class="web-menu-separator"></div>
+  <button class="web-menu-item muted" type="button" role="menuitem"><span>Settings</span><span>›</span></button>
+</div>
+
+<div class="command-palette-overlay" id="commandPalette" aria-hidden="true">
+  <div class="command-palette" role="dialog" aria-modal="true" aria-label="Search sessions">
+    <input type="text" id="search" placeholder="Search sessions..." autocomplete="off">
+    <div class="palette-results" data-palette-results></div>
+    <div class="palette-section-title">Actions</div>
+    <button class="palette-action" type="button" data-new-session-btn>New session</button>
+    <button class="palette-action muted" type="button">Import session</button>
+  </div>
+</div>
 <div class="content" data-sessions-content>
   {{ $currentProject := "" }}
   {{ range . }}
@@ -162,7 +184,10 @@
       var toggle = group.querySelector('.project-toggle');
       var countEl = group.querySelector('[data-project-count]');
       var total = group.querySelectorAll('.session-card').length;
-      if (countEl) countEl.textContent = String(total);
+      if (countEl) {
+        countEl.dataset.total = String(total);
+        countEl.textContent = total + ' sessions';
+      }
       if (collapsed[project]) {
         group.classList.add('collapsed');
         if (toggle) toggle.setAttribute('aria-expanded', 'false');
@@ -185,7 +210,11 @@
       var running = group.querySelectorAll('.session-card--running').length;
       total += running;
       var countEl = group.querySelector('[data-project-count]');
-      if (countEl) countEl.setAttribute('data-running', String(running));
+      if (countEl) {
+        countEl.setAttribute('data-running', String(running));
+        var total = countEl.dataset.total || String(group.querySelectorAll('.session-card').length);
+        countEl.textContent = running > 0 ? '(' + running + ' active)' : total + ' sessions';
+      }
     });
     document.querySelectorAll('[data-running-count]').forEach(function(countEl) {
       countEl.textContent = String(total);

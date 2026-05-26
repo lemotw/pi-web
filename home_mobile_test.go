@@ -18,67 +18,63 @@ func TestHomePageMobilePreventsHorizontalOverflow(t *testing.T) {
 	}
 }
 
-func TestHomePageRunningCountHasDesktopAndMobilePlacements(t *testing.T) {
+func TestHomePageRunningCountHasWorkspaceSummary(t *testing.T) {
 	html := indexTmpl.Tree.Root.String()
 	htmlChecks := []string{
-		`<div class="header-top">`,
-		`<span class="stat-running" data-running-stat><span data-running-count>0</span><span class="stat-running-label"> active</span></span>`,
-		`<span class="stat-running" id="statRunning" data-running-stat><span data-running-count>0</span><span class="stat-running-label"> active</span></span>`,
+		`<div class="workspace-summary">`,
+		`<span class="stat-running" id="statRunning" data-running-stat>`,
 		"document.querySelectorAll('[data-running-count]')",
 		"document.querySelectorAll('[data-running-stat]')",
 	}
 	for _, check := range htmlChecks {
 		if !strings.Contains(html, check) {
-			t.Fatalf("home running-count responsive UI missing %q", check)
+			t.Fatalf("home running-count workspace UI missing %q", check)
 		}
 	}
 	cssChecks := []string{
-		".stats-bar .stat-running.visible {",
-		"display: inline-flex;",
-		"display: none;",
-		".header-top .stat-running.visible {",
+		".workspace-summary {",
+		".stat-running.visible { display: inline-flex; }",
+		".status-dot {",
 	}
 	for _, check := range cssChecks {
 		if !strings.Contains(indexCSS, check) {
-			t.Fatalf("home running-count responsive CSS missing %q", check)
+			t.Fatalf("home running-count workspace CSS missing %q", check)
 		}
 	}
 }
 
-func TestHomePageNewSessionButtonHasDesktopAndMobilePlacements(t *testing.T) {
+func TestHomePageNewSessionEntryPointsExist(t *testing.T) {
 	html := indexTmpl.Tree.Root.String()
 	htmlChecks := []string{
-		`class="new-session-btn new-session-btn-desktop" data-new-session-btn`,
-		`class="new-session-btn new-session-btn-mobile" id="newSessionBtn" data-new-session-btn`,
+		`id="commandPalette"`,
+		`id="web-menu"`,
+		`data-new-session-btn`,
+		`New Session`,
+		`New session`,
 	}
 	for _, check := range htmlChecks {
 		if !strings.Contains(html, check) {
-			t.Fatalf("home responsive new-session button HTML missing %q", check)
+			t.Fatalf("home new-session entry point missing %q", check)
 		}
 	}
 	cssChecks := []string{
-		".new-session-btn-mobile {",
-		"display: none;",
-		".new-session-btn-desktop {",
-		"position: fixed;",
-		"bottom: calc(18px + env(safe-area-inset-bottom));",
-		"right: calc(18px + env(safe-area-inset-right));",
-		".content {",
-		"padding: 20px 16px calc(92px + env(safe-area-inset-bottom));",
+		".command-palette-overlay {",
+		".web-menu {",
+		".palette-action",
 	}
 	for _, check := range cssChecks {
 		if !strings.Contains(indexCSS, check) {
-			t.Fatalf("home responsive new-session button CSS missing %q", check)
+			t.Fatalf("home new-session entry point CSS missing %q", check)
 		}
 	}
 }
 
-func TestNewSessionButtonExists(t *testing.T) {
+func TestCommandPaletteSearchExists(t *testing.T) {
 	checks := []string{
-		`id="newSessionBtn"`,
-		`new-session-btn`,
-		`title="Start new session"`,
-		`+`,
+		`id="open-search"`,
+		`id="search"`,
+		`Search sessions...`,
+		`⌘K`,
 	}
 	for _, check := range checks {
 		if !strings.Contains(indexTmpl.Tree.Root.String(), check) {

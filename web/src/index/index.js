@@ -23,6 +23,11 @@ export function runIndexPage({
   });
 
   const searchInput = documentImpl.getElementById('search');
+  const openSearchBtn = documentImpl.getElementById('open-search');
+  const paletteOverlay = documentImpl.getElementById('commandPalette');
+  const paletteResults = documentImpl.querySelector('[data-palette-results]');
+  const menuBtn = documentImpl.getElementById('web-menu-btn');
+  const webMenu = documentImpl.getElementById('web-menu');
   const modalOverlay = documentImpl.getElementById('modalOverlay');
   const newSessionBtns = Array.from(documentImpl.querySelectorAll('[data-new-session-btn]'));
   const cancelBtn = documentImpl.getElementById('cancelBtn');
@@ -32,6 +37,8 @@ export function runIndexPage({
   const modalError = documentImpl.getElementById('modalError');
 
   function showModal() {
+    closePalette();
+    closeMenu();
     if (modalOverlay) modalOverlay.classList.add('open');
   }
 
@@ -40,12 +47,93 @@ export function runIndexPage({
     page.modal = false;
   }
 
+  function closeMenu() {
+    if (webMenu) webMenu.hidden = true;
+    if (menuBtn) menuBtn.setAttribute('aria-expanded', 'false');
+  }
+
+  function toggleMenu() {
+    if (!webMenu || !menuBtn) return;
+    const willOpen = webMenu.hidden;
+    webMenu.hidden = !willOpen;
+    menuBtn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+  }
+
+  function visibleSessionCards() {
+    return Array.from(documentImpl.querySelectorAll('.session-card[data-session-id]:not(.hidden)'));
+  }
+
+  function updatePaletteResults() {
+    if (!paletteResults) return;
+    const cards = visibleSessionCards().slice(0, 8);
+    if (cards.length === 0) {
+      paletteResults.innerHTML = '<div class="palette-empty">No sessions found</div>';
+      return;
+    }
+    paletteResults.innerHTML = '';
+    for (const card of cards) {
+      const btn = documentImpl.createElement('button');
+      btn.type = 'button';
+      btn.className = 'palette-result';
+      const title = card.querySelector('.session-title')?.textContent?.trim() || card.dataset.sessionId || 'Session';
+      const meta = card.querySelector('[data-session-model]')?.textContent?.trim()
+        || card.querySelector('.session-time')?.textContent?.trim()
+        || '';
+      btn.innerHTML = `<span class="palette-result-title"></span><span class="palette-result-meta"></span>`;
+      btn.querySelector('.palette-result-title').textContent = title;
+      btn.querySelector('.palette-result-meta').textContent = meta;
+      btn.addEventListener('click', () => {
+        const href = card.getAttribute('href');
+        if (href) windowImpl.location.href = href;
+      });
+      paletteResults.appendChild(btn);
+    }
+  }
+
+  function openPalette() {
+    closeMenu();
+    if (!paletteOverlay) return;
+    paletteOverlay.classList.add('open');
+    paletteOverlay.setAttribute('aria-hidden', 'false');
+    updatePaletteResults();
+    if (searchInput) searchInput.focus();
+  }
+
+  function closePalette() {
+    if (!paletteOverlay) return;
+    paletteOverlay.classList.remove('open');
+    paletteOverlay.setAttribute('aria-hidden', 'true');
+  }
+
   if (searchInput) {
     const debouncedFilter = debounce(() => {
       page.query = searchInput.value;
       page.filter();
+      updatePaletteResults();
     }, 50);
     searchInput.addEventListener('input', debouncedFilter);
+  }
+
+  if (openSearchBtn) {
+    openSearchBtn.addEventListener('click', openPalette);
+  }
+
+  if (paletteOverlay) {
+    paletteOverlay.addEventListener('click', (e) => {
+      if (e.target === paletteOverlay) closePalette();
+    });
+  }
+
+  if (menuBtn) {
+    menuBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleMenu();
+    });
+  }
+
+  if (webMenu) {
+    webMenu.addEventListener('click', (e) => e.stopPropagation());
+    windowImpl.addEventListener('click', closeMenu);
   }
 
   async function openNewSessionModal() {
@@ -86,8 +174,15 @@ export function runIndexPage({
   }
 
   windowImpl.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && page.modal) {
-      hideModal();
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      openPalette();
+      return;
+    }
+    if (e.key === 'Escape') {
+      if (paletteOverlay?.classList.contains('open')) closePalette();
+      else if (webMenu && !webMenu.hidden) closeMenu();
+      else if (page.modal) hideModal();
     }
   });
 
@@ -124,6 +219,7 @@ export function runIndexPage({
   }
 
   page.filter();
+  updatePaletteResults();
   page.subscribe();
 }
 
