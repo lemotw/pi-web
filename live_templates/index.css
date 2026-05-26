@@ -32,6 +32,35 @@
     --glow: 0 0 30px color-mix(in srgb, var(--border-accent) 12%, transparent);
     --line-height: 1.5;
 }
+@view-transition {
+    navigation: auto;
+}
+
+::view-transition-old(root) {
+    animation: pi-page-out 0.16s ease both;
+}
+
+::view-transition-new(root) {
+    animation: pi-page-in 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes pi-page-out {
+    from { opacity: 1; transform: translateY(0); }
+    to { opacity: 0; transform: translateY(-6px); }
+}
+
+@keyframes pi-page-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+        animation: none;
+    }
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -138,10 +167,14 @@ body > * {
     align-items: center;
     gap: 10px;
 }
-.header h1 svg {
+.header h1 .pi-logo-mark {
     width: 24px;
     height: 24px;
     flex-shrink: 0;
+    display: inline-block;
+    background: var(--text);
+    -webkit-mask: url("/pi-logo.svg") center / contain no-repeat;
+    mask: url("/pi-logo.svg") center / contain no-repeat;
     filter: drop-shadow(
         0 0 8px color-mix(in srgb, var(--border-accent) 50%, transparent)
     );
@@ -334,10 +367,13 @@ body > * {
     min-width: 0;
 }
 .session-card {
+    display: block;
     position: relative;
     overflow: hidden;
     border: 1px solid var(--dim);
     padding: 14px 16px;
+    color: inherit;
+    text-decoration: none;
     cursor: pointer;
     transition:
         border-color 0.18s,

@@ -14,6 +14,35 @@
       --hover: color-mix(in srgb, var(--selectedBg) 50%, transparent);
     }
 
+    @view-transition {
+      navigation: auto;
+    }
+
+    ::view-transition-old(root) {
+      animation: pi-page-out 0.16s ease both;
+    }
+
+    ::view-transition-new(root) {
+      animation: pi-page-in 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    @keyframes pi-page-out {
+      from { opacity: 1; transform: translateY(0); }
+      to { opacity: 0; transform: translateY(-6px); }
+    }
+
+    @keyframes pi-page-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      ::view-transition-old(root),
+      ::view-transition-new(root) {
+        animation: none;
+      }
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {

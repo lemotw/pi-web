@@ -40,7 +40,7 @@ export function renderSessionCard(session = {}) {
   const modelLabel = sessionModelLabel({ model: session.model || session.Model, modelProvider: session.modelProvider || session.ModelProvider });
   const search = sessionSearchText({ ...session, id, name, project, model: session.model || session.Model, modelProvider: session.modelProvider || session.ModelProvider });
   return `
-    <div class="session-card" data-id="${escapeHtml(id)}" data-session-id="${escapeHtml(id)}" data-search="${escapeHtml(search)}" onclick="window.location='/session?id=${encodeURIComponent(id)}'">
+    <a class="session-card" href="/session?id=${encodeURIComponent(id)}" data-id="${escapeHtml(id)}" data-session-id="${escapeHtml(id)}" data-search="${escapeHtml(search)}">
       <div class="session-title-row">
         <div class="session-title">${escapeHtml(name)}</div>
         <div class="session-card-flags">
@@ -54,5 +54,5 @@ export function renderSessionCard(session = {}) {
         <span class="session-time" data-timestamp="${escapeHtml(lastActivity)}" title="${escapeHtml(lastActivity)}">${escapeHtml(formatRelativeTime(lastActivity))}</span>
         <span class="session-run-model" data-running-model></span>
       </div>
-    </div>`;
+    </a>`;
 }

@@ -17,6 +17,9 @@ var iconSVG string
 //go:embed live_templates/icon-maskable.svg
 var iconMaskableSVG string
 
+//go:embed live_templates/pi-logo.svg
+var piLogoSVG string
+
 //go:embed live_templates/done.mp3
 var doneMP3 []byte
 
@@ -49,6 +52,11 @@ func registerPWAHandlers(mux *http.ServeMux) {
 		w.Header().Set("Content-Type", "image/svg+xml")
 		w.Header().Set("Cache-Control", "public, max-age=86400")
 		_, _ = w.Write([]byte(iconMaskableSVG))
+	})
+	mux.HandleFunc("/pi-logo.svg", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "image/svg+xml")
+		w.Header().Set("Cache-Control", "public, max-age=86400")
+		_, _ = w.Write([]byte(piLogoSVG))
 	})
 	mux.HandleFunc("/done.mp3", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "audio/mpeg")

@@ -34,16 +34,25 @@ export function createStatusEvents({
   onMessage = () => {}
 } = {}) {
   let stream = null;
-  let unloadHandler = null;
+  let pagehideHandler = null;
+  let pageshowHandler = null;
 
-  function cleanup() {
+  function closeStream() {
     if (stream) {
       stream.close();
       stream = null;
     }
-    if (unloadHandler && windowImpl?.removeEventListener) {
-      windowImpl.removeEventListener('beforeunload', unloadHandler);
-      unloadHandler = null;
+  }
+
+  function cleanup() {
+    closeStream();
+    if (pagehideHandler && windowImpl?.removeEventListener) {
+      windowImpl.removeEventListener('pagehide', pagehideHandler);
+      pagehideHandler = null;
+    }
+    if (pageshowHandler && windowImpl?.removeEventListener) {
+      windowImpl.removeEventListener('pageshow', pageshowHandler);
+      pageshowHandler = null;
     }
   }
 
@@ -64,8 +73,15 @@ export function createStatusEvents({
     });
 
     if (windowImpl?.addEventListener) {
-      unloadHandler = () => cleanup();
-      windowImpl.addEventListener('beforeunload', unloadHandler);
+      // `beforeunload` makes back/forward navigation less smooth in several
+      // browsers because it can disable the bfcache. `pagehide` still lets us
+      // close the SSE stream without opting the page out of page cache.
+      pagehideHandler = () => closeStream();
+      pageshowHandler = () => {
+        if (!stream) connect();
+      };
+      windowImpl.addEventListener('pagehide', pagehideHandler);
+      windowImpl.addEventListener('pageshow', pageshowHandler);
     }
   }
 

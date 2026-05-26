@@ -63,7 +63,7 @@ describe('createStatusEvents', () => {
     expect(onDelta).not.toHaveBeenCalled();
   });
 
-  it('closes an existing stream before reconnecting and removes unload listener on cleanup', () => {
+  it('closes an existing stream before reconnecting and removes pagehide listener on cleanup', () => {
     const removeEventListener = vi.fn();
     const addEventListener = vi.fn();
     const sub = createStatusEvents({
@@ -76,10 +76,12 @@ describe('createStatusEvents', () => {
     sub.connect();
 
     expect(first.close).toHaveBeenCalledTimes(1);
-    expect(addEventListener).toHaveBeenCalledWith('beforeunload', expect.any(Function));
+    expect(addEventListener).toHaveBeenCalledWith('pagehide', expect.any(Function));
+    expect(addEventListener).toHaveBeenCalledWith('pageshow', expect.any(Function));
 
     sub.cleanup();
     expect(FakeEventSource.instances[1].close).toHaveBeenCalledTimes(1);
-    expect(removeEventListener).toHaveBeenCalledWith('beforeunload', expect.any(Function));
+    expect(removeEventListener).toHaveBeenCalledWith('pagehide', expect.any(Function));
+    expect(removeEventListener).toHaveBeenCalledWith('pageshow', expect.any(Function));
   });
 });
