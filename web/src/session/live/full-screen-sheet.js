@@ -20,6 +20,27 @@
 
 const SHEET_BREAKPOINT = 900;
 const REMOVE_DELAY = 300; // must match CSS transition duration
+const openSheetCounts = new WeakMap();
+
+function lockPageScroll(documentImpl) {
+  const body = documentImpl?.body;
+  if (!body?.classList) return;
+  const count = openSheetCounts.get(body) || 0;
+  openSheetCounts.set(body, count + 1);
+  body.classList.add('pi-sheet-open');
+}
+
+function unlockPageScroll(documentImpl) {
+  const body = documentImpl?.body;
+  if (!body?.classList) return;
+  const count = Math.max(0, (openSheetCounts.get(body) || 0) - 1);
+  if (count === 0) {
+    openSheetCounts.delete(body);
+    body.classList.remove('pi-sheet-open');
+  } else {
+    openSheetCounts.set(body, count);
+  }
+}
 
 function isMobile(windowImpl) {
   return typeof windowImpl.matchMedia === 'function'
@@ -139,6 +160,7 @@ export function showSheet({
   wrapper.innerHTML = html;
   const backdrop = wrapper.firstElementChild;
   documentImpl.body.appendChild(backdrop);
+  lockPageScroll(documentImpl);
 
   const panel = documentImpl.getElementById(panelId);
   const bodyEl = documentImpl.getElementById(bodyId);
@@ -208,6 +230,7 @@ export function showSheet({
     if (closed) return;
     closed = true;
     if (teardownHistory) teardownHistory({ skipHistory });
+    unlockPageScroll(documentImpl);
     documentImpl.removeEventListener('keydown', onKey);
     documentImpl.removeEventListener('keydown', trapFocus);
     panel.classList.remove('open');
