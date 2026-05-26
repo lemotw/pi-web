@@ -6,17 +6,24 @@ function chatUrl(path, sessionId) {
   return `${path}?id=${encodeURIComponent(sessionId)}`;
 }
 
-function applyTheme(windowImpl, next) {
-  document.documentElement.dataset.theme = next || 'dark';
-  try { localStorage.setItem('pi-web-theme', next); } catch (e) {}
-  var meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.content = (next || 'dark') === 'dark' ? '#0e0e13' : '#f8f8f8';
+function applyTheme(windowImpl, documentImpl, next) {
+  documentImpl.documentElement.dataset.theme = next || 'dark';
+  try { windowImpl.localStorage.setItem('pi-web-theme', next); } catch (e) {}
+  var meta = documentImpl.querySelector('meta[name="theme-color"]');
+  if (meta) meta.content = (next || 'dark') === 'dark' ? '#0e0e13' : '#f6f5f2';
 }
 
-function toggleTheme(windowImpl) {
-  var current = document.documentElement.dataset.theme || 'dark';
+function toggleTheme(windowImpl, documentImpl) {
+  var current = documentImpl.documentElement.dataset.theme || 'dark';
   var next = current === 'dark' ? 'light' : 'dark';
-  applyTheme(windowImpl, next);
+  applyTheme(windowImpl, documentImpl, next);
+}
+
+function syncThemeIcons(documentImpl) {
+  const isDark = (documentImpl.documentElement.dataset.theme || 'dark') === 'dark';
+  documentImpl.querySelectorAll('[data-command-theme-icon]').forEach((el) => {
+    el.textContent = isDark ? '☀' : '◐';
+  });
 }
 
 function showToast(message, documentImpl, windowImpl) {
@@ -70,6 +77,7 @@ export function setupCommandMenu({
   windowImpl = window,
   setSidebarOpen = null,
   setSidebarCollapsed = null,
+  getEntries = null,
   escapeHtml = String,
   formatTokens = String,
   fetchImpl = fetch,
@@ -99,6 +107,7 @@ export function setupCommandMenu({
     mobileBackdrop.style.display = '';
     mobilePanel.style.display = '';
     syncNotifyToggle();
+    syncThemeIcons(documentImpl);
     requestAnimationFrame(() => {
       mobileBackdrop.classList.add('open');
       mobilePanel.classList.add('open');
@@ -120,6 +129,7 @@ export function setupCommandMenu({
   function openDesktopPopover() {
     if (!desktopPopover) return;
     syncNotifyToggle();
+    syncThemeIcons(documentImpl);
     desktopPopover.style.display = '';
     requestAnimationFrame(() => {
       desktopPopover.classList.add('open');
@@ -139,6 +149,7 @@ export function setupCommandMenu({
 
   function openMenu() {
     open = true;
+    menuBtn.setAttribute('aria-expanded', 'true');
     if (isMobileLayout(windowImpl)) {
       openMobilePanel();
     } else {
@@ -148,6 +159,7 @@ export function setupCommandMenu({
 
   function closeMenu() {
     open = false;
+    menuBtn.setAttribute('aria-expanded', 'false');
     closeMobilePanel();
     closeDesktopPopover();
   }
@@ -177,9 +189,9 @@ export function setupCommandMenu({
   function handleAction(action) {
     switch (action) {
       case 'theme': {
-        toggleTheme(windowImpl);
-        showToast('Theme toggled', documentImpl, windowImpl);
-        closeMenu();
+        toggleTheme(windowImpl, documentImpl);
+        syncThemeIcons(documentImpl);
+        showToast('Appearance updated', documentImpl, windowImpl);
         break;
       }
       case 'notifications': {

@@ -6,7 +6,10 @@ function makeDom() {
   return new JSDOM(`<!doctype html><html><head><title>Old</title></head><body>
     <button id="command-menu-btn">⋯</button>
     <span id="session-header-title">Old</span>
-    <div id="command-menu-popover"><button class="command-menu-item" data-action="rename">Rename</button></div>
+    <div id="command-menu-popover">
+      <button class="command-menu-item" data-action="rename">Rename</button>
+      <button class="command-menu-item" data-action="model-usage">Model Usage</button>
+    </div>
   </body></html>`, { url: 'http://localhost/session?id=session.jsonl' });
 }
 
@@ -53,5 +56,32 @@ describe('setupCommandMenu rename', () => {
 
     expect(dom.window.document.getElementById('session-header-title').textContent).toBe('Old');
     expect(dom.window.document.title).toBe('Old');
+  });
+
+  it('opens model usage from the detail page menu', () => {
+    const dom = makeDom();
+    dom.window.matchMedia = vi.fn(() => ({ matches: false }));
+    dom.window.requestAnimationFrame = (fn) => fn();
+
+    setupCommandMenu({
+      documentImpl: dom.window.document,
+      windowImpl: dom.window,
+      getEntries: () => ([{
+        type: 'message',
+        message: {
+          role: 'assistant',
+          provider: 'p',
+          model: 'm',
+          usage: { input: 1000, output: 2000, cost: { input: 0.001, output: 0.002 } },
+          content: [{ type: 'toolCall' }],
+        },
+      }]),
+      escapeHtml: (s) => String(s),
+      formatTokens: (n) => String(n),
+    });
+
+    expect(() => dom.window.document.querySelector('[data-action="model-usage"]').click()).not.toThrow();
+    expect(dom.window.document.querySelector('.pi-sheet-panel')).toBeTruthy();
+    expect(dom.window.document.querySelector('.pi-sheet-body').textContent).toContain('Total cost');
   });
 });

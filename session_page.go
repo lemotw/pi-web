@@ -18,6 +18,9 @@ var liveSessionHtml string
 //go:embed live_templates/session.css
 var liveSessionCss string
 
+//go:embed live_templates/menu.css
+var liveMenuCss string
+
 //go:embed live_templates/chat_composer.html
 var chatComposerTmplStr string
 
@@ -117,7 +120,7 @@ func prepareSessionPageData(session sessions.Session, cssTemplate string) (dataB
 	css = replaceRequired(css, "{{BODY_BG}}", "#18181e")
 	css = replaceRequired(css, "{{CONTAINER_BG}}", "#1e1e24")
 	css = replaceRequired(css, "{{INFO_BG}}", "#3c3728")
-	css = replaceRequired(css, "{{BODY_BG_LIGHT}}", "#f8f8f8")
+	css = replaceRequired(css, "{{BODY_BG_LIGHT}}", "#f6f5f2")
 	css = replaceRequired(css, "{{CONTAINER_BG_LIGHT}}", "#ffffff")
 	css = replaceRequired(css, "{{INFO_BG_LIGHT}}", "#fffae6")
 
@@ -130,7 +133,7 @@ func prepareSessionPageData(session sessions.Session, cssTemplate string) (dataB
 // renderLiveSessionPage renders the interactive session viewer served at
 // /session. It loads the Vite-built session module and includes the chat composer.
 func renderLiveSessionPage(session sessions.Session) string {
-	dataBase64, css, bodyAttrs := prepareSessionPageData(session, liveSessionCss)
+	dataBase64, css, bodyAttrs := prepareSessionPageData(session, liveSessionCss+"\n"+liveMenuCss)
 
 	scriptSrc := template.HTMLEscapeString(sessionScriptPath)
 	preload := `<link rel="modulepreload" href="` + scriptSrc + `">`
@@ -140,6 +143,8 @@ func renderLiveSessionPage(session sessions.Session) string {
 	html = replaceRequired(html, "{{SESSION_PRELOAD}}", preload)
 	html = replaceRequired(html, "{{CSS}}", css)
 	html = replaceRequired(html, "{{BODY_ATTRS}}", bodyAttrs)
+	html = replaceRequired(html, "{{SESSION_COMMAND_MENU}}", string(sessionDesktopMenuHTML()))
+	html = replaceRequired(html, "{{MOBILE_COMMAND_MENU}}", string(sessionMobileMenuHTML()))
 	html = replaceRequired(html, "{{SESSION_DATA}}", dataBase64)
 	html = replaceRequired(html, "{{SESSION_SCRIPT}}", `<script type="module" src="`+scriptSrc+`"></script>`)
 	html = replaceRequired(html, "{{FIRST_MESSAGE_STUB}}", firstMessageStub(session))

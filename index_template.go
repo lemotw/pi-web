@@ -50,6 +50,7 @@ var funcMap = template.FuncMap{
 	"indexPreload": func() template.HTML {
 		return template.HTML(`<link rel="modulepreload" href="` + template.HTMLEscapeString(indexScriptPath) + `">`)
 	},
+	"homeMenu": homeMenuHTML,
 }
 
 var indexTmpl = template.Must(template.New("index").Funcs(funcMap).Parse(indexTmplStr))

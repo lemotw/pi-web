@@ -1,4 +1,11 @@
 import { createSessionsPage } from './sessions-page.js';
+import {
+  isDoneNotifyEnabled,
+  registerPushSubscription,
+  requestNotifyPermission,
+  setDoneNotifyEnabled,
+  unregisterPushSubscription,
+} from '../session/chat/done-notifier.js';
 
 export { createSessionsPage };
 
@@ -35,6 +42,8 @@ export function runIndexPage({
   const sessionPathInput = documentImpl.getElementById('sessionPath');
   const recentLocations = documentImpl.getElementById('recentLocations');
   const modalError = documentImpl.getElementById('modalError');
+  const notifyToggle = documentImpl.getElementById('index-notify-toggle');
+  const notifyStatus = documentImpl.getElementById('index-notify-status');
 
   function showModal() {
     closePalette();
@@ -134,6 +143,31 @@ export function runIndexPage({
   if (webMenu) {
     webMenu.addEventListener('click', (e) => e.stopPropagation());
     windowImpl.addEventListener('click', closeMenu);
+  }
+
+  function syncNotifyMenuItem() {
+    if (!notifyToggle || !notifyStatus) return;
+    const enabled = isDoneNotifyEnabled({ storage: windowImpl.localStorage });
+    notifyStatus.textContent = enabled ? 'ON' : 'OFF';
+    notifyStatus.classList.toggle('on', enabled);
+    notifyToggle.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+  }
+
+  if (notifyToggle) {
+    syncNotifyMenuItem();
+    notifyToggle.addEventListener('click', async () => {
+      const enabled = isDoneNotifyEnabled({ storage: windowImpl.localStorage });
+      if (enabled) {
+        setDoneNotifyEnabled(false, { storage: windowImpl.localStorage });
+        await unregisterPushSubscription({ windowImpl });
+      } else {
+        const permission = await requestNotifyPermission({ windowImpl });
+        const granted = permission === 'granted';
+        setDoneNotifyEnabled(granted, { storage: windowImpl.localStorage });
+        if (granted) await registerPushSubscription({ windowImpl });
+      }
+      syncNotifyMenuItem();
+    });
   }
 
   async function openNewSessionModal() {

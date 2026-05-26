@@ -1,8 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"strings"
 	"testing"
+
+	"pi-web/internal/sessions"
 )
 
 func TestHomePageMobilePreventsHorizontalOverflow(t *testing.T) {
@@ -44,7 +47,11 @@ func TestHomePageRunningCountHasWorkspaceSummary(t *testing.T) {
 }
 
 func TestHomePageNewSessionEntryPointsExist(t *testing.T) {
-	html := indexTmpl.Tree.Root.String()
+	var buf bytes.Buffer
+	if err := indexTmpl.Execute(&buf, []sessions.Session{}); err != nil {
+		t.Fatalf("failed to render index template: %v", err)
+	}
+	html := buf.String()
 	htmlChecks := []string{
 		`id="commandPalette"`,
 		`id="web-menu"`,
@@ -62,8 +69,9 @@ func TestHomePageNewSessionEntryPointsExist(t *testing.T) {
 		".web-menu {",
 		".palette-action",
 	}
+	css := indexCSS + "\n" + menuCSS
 	for _, check := range cssChecks {
-		if !strings.Contains(indexCSS, check) {
+		if !strings.Contains(css, check) {
 			t.Fatalf("home new-session entry point CSS missing %q", check)
 		}
 	}

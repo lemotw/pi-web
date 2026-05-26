@@ -13,6 +13,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Pi Sessions">
 <link rel="stylesheet" href="/index.css">
+<link rel="stylesheet" href="/menu.css">
 </head>
 <body>
 <script>
@@ -27,7 +28,7 @@
     var icon = btn.querySelector('[data-theme-icon]');
     if(icon) icon.textContent = isDark ? '☀' : '◐';
     var meta = document.querySelector('meta[name="theme-color"]');
-    if(meta) meta.content = isDark ? '#0e0e13' : '#f8f8f8';
+    if(meta) meta.content = isDark ? '#0e0e13' : '#f6f5f2';
   }
   function toggleTheme(){
     var current = document.documentElement.dataset.theme || 'dark';
@@ -52,7 +53,7 @@
 <div class="header">
   <div class="header-inner">
     <div class="header-top">
-      <h1><span class="pi-logo-mark" aria-hidden="true"></span><span>Pi Sessions</span></h1>
+      <h1><span class="pi-logo-mark" aria-hidden="true"></span><span>Sessions</span></h1>
       <div class="header-actions">
         <button class="nav-search-btn" id="open-search" type="button" aria-haspopup="dialog" aria-controls="commandPalette"><span>Search sessions...</span><kbd>⌘K</kbd></button>
         <button class="nav-menu-btn" id="web-menu-btn" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="web-menu">⋯</button>
@@ -65,21 +66,7 @@
   </div>
 </div>
 
-<div class="web-menu" id="web-menu" role="menu" aria-labelledby="web-menu-btn" hidden>
-  <button class="web-menu-item" type="button" data-new-session-btn role="menuitem">New Session</button>
-  <button class="web-menu-item muted" type="button" role="menuitem">Import Session</button>
-  <div class="web-menu-separator"></div>
-  <button class="web-menu-item" id="theme-toggle" type="button" role="menuitem"><span>Appearance</span><span data-theme-icon>◐</span></button>
-  <button class="web-menu-item muted" type="button" role="menuitem"><span>Notifications</span><span>›</span></button>
-  <div class="web-menu-separator"></div>
-  <button class="web-menu-item muted" type="button" role="menuitem">Active Sessions</button>
-  <button class="web-menu-item muted" type="button" role="menuitem">Archived Sessions</button>
-  <div class="web-menu-separator"></div>
-  <a class="web-menu-item" href="https://github.com/ygncode/pi-web/tree/main/docs" target="_blank" rel="noreferrer" role="menuitem">Documentation</a>
-  <a class="web-menu-item" href="https://github.com/ygncode/pi-web" target="_blank" rel="noreferrer" role="menuitem">GitHub</a>
-  <div class="web-menu-separator"></div>
-  <button class="web-menu-item muted" type="button" role="menuitem"><span>Settings</span><span>›</span></button>
-</div>
+{{ homeMenu }}
 
 <div class="command-palette-overlay" id="commandPalette" aria-hidden="true">
   <div class="command-palette" role="dialog" aria-modal="true" aria-label="Search sessions">
