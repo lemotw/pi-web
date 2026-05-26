@@ -33,6 +33,7 @@ export function runIndexPage({
   const openSearchBtn = documentImpl.getElementById('open-search');
   const paletteOverlay = documentImpl.getElementById('commandPalette');
   const paletteResults = documentImpl.querySelector('[data-palette-results]');
+  const paletteCloseBtns = Array.from(documentImpl.querySelectorAll('[data-palette-close]'));
   const menuBtn = documentImpl.getElementById('web-menu-btn');
   const webMenu = documentImpl.getElementById('web-menu');
   const modalOverlay = documentImpl.getElementById('modalOverlay');
@@ -136,6 +137,7 @@ export function runIndexPage({
     if (!paletteOverlay) return;
     paletteOverlay.classList.add('open');
     paletteOverlay.setAttribute('aria-hidden', 'false');
+    documentImpl.body?.classList.add('pi-palette-open');
     updatePaletteResults();
     if (searchInput) searchInput.focus();
   }
@@ -144,6 +146,7 @@ export function runIndexPage({
     if (!paletteOverlay) return;
     paletteOverlay.classList.remove('open');
     paletteOverlay.setAttribute('aria-hidden', 'true');
+    documentImpl.body?.classList.remove('pi-palette-open');
   }
 
   if (searchInput) {
@@ -158,6 +161,10 @@ export function runIndexPage({
   if (openSearchBtn) {
     openSearchBtn.addEventListener('click', openPalette);
   }
+
+  paletteCloseBtns.forEach((btn) => {
+    btn.addEventListener('click', closePalette);
+  });
 
   layoutBtns.forEach((btn) => {
     btn.addEventListener('click', async () => {

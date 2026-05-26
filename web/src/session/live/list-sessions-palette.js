@@ -54,6 +54,7 @@ export function setupListSessionsPalette({
   const overlay = documentImpl.getElementById('sessionPalette');
   const searchInput = documentImpl.getElementById('session-palette-search');
   const resultsEl = documentImpl.querySelector('[data-palette-results]');
+  const closeBtns = Array.from(documentImpl.querySelectorAll('[data-palette-close]'));
 
   if (!overlay || !searchInput || !resultsEl) return { open: () => {}, close: () => {} };
 
@@ -67,6 +68,7 @@ export function setupListSessionsPalette({
     open = false;
     overlay.classList.remove('open');
     overlay.setAttribute('aria-hidden', 'true');
+    documentImpl.body?.classList.remove('pi-palette-open');
     if (searchInput) searchInput.value = '';
 
     if (escapeHandler) {
@@ -84,6 +86,7 @@ export function setupListSessionsPalette({
     open = true;
     overlay.classList.add('open');
     overlay.setAttribute('aria-hidden', 'false');
+    documentImpl.body?.classList.add('pi-palette-open');
 
     // Register close handlers
     escapeHandler = (e) => {
@@ -128,6 +131,10 @@ export function setupListSessionsPalette({
   if (searchInput) {
     searchInput.addEventListener('input', debouncedFilter);
   }
+
+  closeBtns.forEach((btn) => {
+    btn.addEventListener('click', close);
+  });
 
   return { open: openPalette, close };
 }
