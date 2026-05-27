@@ -1,6 +1,6 @@
 # Sequence Flow: Server Startup
 
-This document traces the execution from `go run .` to the first HTTP request.
+This document traces the execution from `go run ./cmd/pi-web` to the first HTTP request.
 
 ## Sequence Diagram
 

@@ -4,14 +4,25 @@
 
 ```
 pi-web/
-├── main.go                     # CLI entry point, wiring, HTTP mux setup
-├── network.go                  # Host detection (Tailscale, loopback)
-├── models_cache.go             # Process-wide coalesced cache for model list
-├── export.go                   # Session HTML export (embedded templates)
-├── index_template.go           # Index page template + helpers
-├── dist_embed.go               # Vite build embedding + manifest parsing
-│
+├── cmd/pi-web/
+│   └── main.go                 # Tiny CLI entry point; passes build version to app.Main
+├── web/
+│   └── assets_embed.go         # Embeds Vite build output from web/dist
 ├── internal/
+│   ├── app/
+│   │   ├── app.go              # CLI flags, dependency wiring, HTTP mux setup
+│   │   ├── network.go          # Bind host / loopback helpers
+│   │   ├── tailscale.go        # Tailscale Serve detection/configuration
+│   │   ├── models_cache.go     # Process-wide coalesced cache for model list
+│   │   └── state_file_*.go     # pi-web-state.json + flock helpers
+│   ├── frontend/
+│   │   └── assets.go           # Vite manifest parsing + static asset handlers
+│   ├── ui/
+│   │   ├── session_page.go     # Live session renderer
+│   │   ├── export.go           # Static export renderer
+│   │   ├── index_template.go   # Index page template + helpers
+│   │   ├── live_templates/     # Embedded live HTML/CSS/assets
+│   │   └── export/             # Embedded standalone export HTML/CSS/JS
 │   ├── auth/
 │   │   └── auth.go             # Token-based HTTP middleware
 │   ├── chat/

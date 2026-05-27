@@ -31,6 +31,7 @@ import * as newSessionButton from './live/new-session-button.js';
 import * as liveEvents from './live/live-events.js';
 import * as liveRenderer from './live/live-renderer.js';
 import { setupCommandMenu } from './live/command-menu.js';
+import { setupKeyboardNav } from '../shared/keyboard-nav.js';
 import { setupListSessionsPalette } from './live/list-sessions-palette.js';
 export { buildSessionLookups, createSessionDataModel, decodeBase64JSON, getSessionSearchParams, loadSessionData, readSessionPayload } from './data/session-data.js';
 export { buildActivePathIds, buildTree, buildTreeNodeMap, buildTreePrefix, findNewestLeaf, flattenTree, getPath } from './tree/session-tree.js';
@@ -281,6 +282,8 @@ export function runSessionApp({ target = window } = {}) {
     onSessionDataReload: (data) => syncDataModelEntries(data.entries)
   });
 
+  setupKeyboardNav({ windowImpl: target, documentImpl });
+
   setupCommandMenu({
     documentImpl,
     windowImpl: target,
@@ -316,8 +319,19 @@ export function runSessionApp({ target = window } = {}) {
         sidebarApi.setSidebarOpen(!isOpen, { documentImpl });
       } else {
         const isCollapsed = documentImpl.body?.classList.contains('sidebar-collapsed');
-        sidebarApi.setSidebarCollapsed(!isCollapsed, { documentImpl });
+        const next = !isCollapsed;
+        sidebarApi.setSidebarCollapsed(next, { documentImpl });
+        sidebarApi.saveSidebarCollapsed(next);
       }
+    }
+  });
+
+  // Cmd+T keyboard shortcut for new session
+  target.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 't') {
+      e.preventDefault();
+      const newBtn = documentImpl.getElementById('new-btn');
+      if (newBtn) newBtn.click();
     }
   });
 

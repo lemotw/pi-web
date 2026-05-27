@@ -216,14 +216,14 @@ setup_macos() {
   # Generate plist from local file or fetch from repo
   local generated
   generated="$(mktemp)"
-  local plist_src="${SRC_DIR}/com.pi-web.plist"
+  local plist_src="${SRC_DIR}/init/com.pi-web.plist"
   if [[ -f "$plist_src" ]]; then
     sed "s|/usr/local/bin/pi-web|${BINARY}|g" "$plist_src" > "$generated"
   else
     info "Fetching launchd config from repo..."
     local raw
     raw="$(mktemp)"
-    fetch_config "com.pi-web.plist" "$raw"
+    fetch_config "init/com.pi-web.plist" "$raw"
     sed "s|/usr/local/bin/pi-web|${BINARY}|g" "$raw" > "$generated"
     rm -f "$raw"
   fi
@@ -283,16 +283,16 @@ setup_linux() {
   mkdir -p "$service_dir"
 
   # Get service file from local clone or fetch from repo
-  local service_src="${SRC_DIR}/pi-web.service"
+  local service_src="${SRC_DIR}/init/pi-web.service"
   if [[ ! -f "$service_src" ]]; then
     info "Fetching systemd service file from repo..."
     service_src="$(mktemp)"
-    fetch_config "pi-web.service" "$service_src"
+    fetch_config "init/pi-web.service" "$service_src"
   fi
 
   local generated_service
   generated_service="$(mktemp)"
-  cp "$service_src" "$generated_service"
+  sed "s|/usr/local/bin/pi-web|${BINARY}|g" "$service_src" > "$generated_service"
   info "pi-web will listen on localhost; if Tailscale is running, it will publish HTTPS with Tailscale Serve."
 
   # Check if service file changed

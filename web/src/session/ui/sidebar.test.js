@@ -129,27 +129,7 @@ describe('setupSidebarCollapse', () => {
     expect(storage.setItem).toHaveBeenCalledWith(SIDEBAR_COLLAPSED_STORAGE_KEY, 'true');
   });
 
-  it('keyboard shortcut b toggles collapsed state when not editable', () => {
-    const jsdom = collapseDom();
-    const storage = { getItem: () => 'false', setItem: vi.fn() };
-    setupSidebarCollapse({ documentImpl: jsdom.window.document, windowImpl: jsdom.window, storage });
-    const event = new jsdom.window.KeyboardEvent('keydown', { key: 'b', bubbles: true });
-    jsdom.window.document.dispatchEvent(event);
-    expect(jsdom.window.document.body.classList.contains('sidebar-collapsed')).toBe(true);
-    expect(storage.setItem).toHaveBeenCalledWith(SIDEBAR_COLLAPSED_STORAGE_KEY, 'true');
-  });
 
-  it('keyboard shortcut does not toggle when target is editable', () => {
-    const jsdom = collapseDom();
-    jsdom.window.document.body.innerHTML += '<input id="test-input">';
-    const storage = { getItem: () => 'false', setItem: vi.fn() };
-    setupSidebarCollapse({ documentImpl: jsdom.window.document, windowImpl: jsdom.window, storage });
-    const input = jsdom.window.document.getElementById('test-input');
-    input.focus();
-    const event = new jsdom.window.KeyboardEvent('keydown', { key: 'b', bubbles: true });
-    jsdom.window.document.dispatchEvent(event);
-    expect(jsdom.window.document.body.classList.contains('sidebar-collapsed')).toBe(false);
-  });
 });
 
 describe('setupSidebarResize', () => {

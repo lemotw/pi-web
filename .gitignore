@@ -3,7 +3,7 @@ pi-sessions-viewer
 .DS_Store
 .superpowers/
 .worktrees/
-pi-web
+/pi-web
 web/node_modules/
 web/dist/
 .pi/extensions/node_modules/

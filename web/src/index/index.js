@@ -6,6 +6,7 @@ import {
   setDoneNotifyEnabled,
   unregisterPushSubscription,
 } from '../session/chat/done-notifier.js';
+import { setupKeyboardNav } from '../shared/keyboard-nav.js';
 
 export { createSessionsPage };
 
@@ -28,6 +29,8 @@ export function runIndexPage({
     setTimeoutImpl,
     clearTimeoutImpl,
   });
+
+  setupKeyboardNav({ windowImpl, documentImpl });
 
   const searchInput = documentImpl.getElementById('search');
   const openSearchBtn = documentImpl.getElementById('open-search');

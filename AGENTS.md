@@ -13,7 +13,7 @@ Before making structural changes, read the relevant doc in `docs/`:
 | Working on chat, SSE, or live-reload | `docs/sequence-flows/chat.md`, `docs/sequence-flows/live-reload.md` |
 | Working on export/share | `docs/sequence-flows/share.md` |
 
-The most important doc for frontend work is **`docs/dev/templates-vs-web.md`** — it explains the split between `web/` (live Vite app), `live_templates/` (Go-embedded HTML shells), and `export/` (self-contained snapshots for Gists). Getting this wrong means changing the wrong files.
+The most important doc for frontend work is **`docs/dev/templates-vs-web.md`** — it explains the split between `web/` (live Vite app), `internal/ui/live_templates/` (Go-embedded HTML shells), and `internal/ui/export/` (self-contained snapshots for Gists). Getting this wrong means changing the wrong files.
 
 ## Tech Stack
 
@@ -40,32 +40,33 @@ The most important doc for frontend work is **`docs/dev/templates-vs-web.md`** �
 | `web/src/index/` | Sessions list page (Vite) |
 | `web/src/session/` | Session viewer — tree rendering, chat composer, live reload |
 | `web/src/shared/` | API helpers, escape, storage, status events |
-| `live_templates/` | Go-embedded HTML shells for index/session pages |
-| `export/` | Self-contained HTML/CSS/JS for Gist snapshots (no server, no chat, no SSE) |
+| `internal/ui/live_templates/` | Go-embedded HTML shells for index/session pages |
+| `internal/ui/export/` | Self-contained HTML/CSS/JS for Gist snapshots (no server, no chat, no SSE) |
 
 ### Key Files
-- `main.go` — CLI flags, Tailscale auto-detect, dependency wiring
-- `dist_embed.go` — `//go:embed all:web/dist` (Vite output embedded into binary)
-- `session_page.go` — **Live session page** rendering (`live_templates/session.html`, chat composer)
-- `export.go` — **Export/share snapshot** rendering (`export/index.html`, inlined JS, no server deps)
-- `live_templates/session.css` — Live session page CSS
-- `export/template.css` — Export snapshot CSS
+- `cmd/pi-web/main.go` — tiny CLI entrypoint and build-time version variable
+- `internal/app/app.go` — CLI flags, Tailscale auto-detect, dependency wiring
+- `internal/frontend/assets.go` + `web/assets_embed.go` — Vite output embedding, manifest parsing, static asset serving
+- `internal/ui/session_page.go` — **Live session page** rendering (`internal/ui/live_templates/session.html`, chat composer)
+- `internal/ui/export.go` — **Export/share snapshot** rendering (`internal/ui/export/index.html`, inlined JS, no server deps)
+- `internal/ui/live_templates/session.css` — Live session page CSS
+- `internal/ui/export/template.css` — Export snapshot CSS
 - `.pi/extensions/pi-web.ts` — Pi extension with `/pi-web`, `/remote`, `/refresh` commands
 
 ### Live App vs. Export — DO NOT MIX THESE UP
 
 | | Live App (`/session`) | Export/Share (Gist) |
 |---|---|---|
-| Go file | `session_page.go` | `export.go` |
-| HTML shell | `live_templates/session.html` | `export/index.html` |
-| JS source | `web/src/session/` (Vite) | `export/app/*.js` + `export/vendor/` |
-| CSS | `live_templates/session.css` | `export/template.css` |
-| Chat composer | Yes (`live_templates/chat_composer.html`) | No |
-| Action buttons | Yes (baked into `live_templates/session.html`) | No |
+| Go file | `internal/ui/session_page.go` | `internal/ui/export.go` |
+| HTML shell | `internal/ui/live_templates/session.html` | `internal/ui/export/index.html` |
+| JS source | `web/src/session/` (Vite) | `internal/ui/export/app/*.js` + `internal/ui/export/vendor/` |
+| CSS | `internal/ui/live_templates/session.css` | `internal/ui/export/template.css` |
+| Chat composer | Yes (`internal/ui/live_templates/chat_composer.html`) | No |
+| Action buttons | Yes (baked into `internal/ui/live_templates/session.html`) | No |
 | SSE/API calls | Yes | No |
 | Needs server? | Yes | No — fully self-contained |
 
-**Never** use `export/index.html` for the live session page. **Never** inject live-only chrome (buttons, chat) into `export/index.html`. They are separate templates for a reason.
+**Never** use `internal/ui/export/index.html` for the live session page. **Never** inject live-only chrome (buttons, chat) into `internal/ui/export/index.html`. They are separate templates for a reason.
 
 ## Build & Test
 
@@ -77,7 +78,7 @@ make build    # frontend-build + go build -o pi-web
 make check    # test + build + vet
 ```
 
-**Critical:** `go build` requires `web/dist` to exist first because of `//go:embed`. Always run `make build`, never `go build` alone.
+**Critical:** `go build ./cmd/pi-web` requires `web/dist` to exist first because of `//go:embed`. Always run `make build`, never `go build` alone.
 
 ## Testing
 
@@ -86,14 +87,14 @@ make check    # test + build + vet
 
 ## Coding Standards
 
-- **Go:** Small focused packages; `internal/server` is the HTTP glue exception. Avoid global state — `main.go` wires `server.New(server.Deps{...})`. Use sentinel errors. `WriteTimeout` stays 0 for SSE.
-- **JS:** ES modules. Explicit DI (`documentImpl`, `windowImpl`) over globals. Keep `live_templates/` manually in sync with `web/src/session/live/` changes.
-- **CSS:** live styling is in `live_templates/session.css`; export styling is in `export/template.css`. Keep shared visual changes intentionally mirrored when both products need them.
+- **Go:** Small focused packages; `internal/server` is the HTTP glue exception. Avoid global state — `internal/app/app.go` wires `server.New(server.Deps{...})`. Use sentinel errors. `WriteTimeout` stays 0 for SSE.
+- **JS:** ES modules. Explicit DI (`documentImpl`, `windowImpl`) over globals. Keep `internal/ui/live_templates/` manually in sync with `web/src/session/live/` changes.
+- **CSS:** live styling is in `internal/ui/live_templates/session.css`; export styling is in `internal/ui/export/template.css`. Keep shared visual changes intentionally mirrored when both products need them.
 
 ## Critical Rules
 
-1. **Live and export are separate products.** `live_templates/session.html` is for the live app. `export/index.html` is for Gist snapshots. Do not mix them.
-2. **Always keep `live_templates/` in sync** with `web/src/session/live/` changes.
+1. **Live and export are separate products.** `internal/ui/live_templates/session.html` is for the live app. `internal/ui/export/index.html` is for Gist snapshots. Do not mix them.
+2. **Always keep `internal/ui/live_templates/` in sync** with `web/src/session/live/` changes.
 2. **Existing session data is append-only for rename.** Browser chat goes to a `pi --mode rpc` worker, which writes conversation entries. pi-web otherwise watches and broadcasts; its only direct write to existing session files is appending `session_info` for browser rename. New-session creation may write initial implicit `model_change` / `thinking_level_change` entries in the fresh file.
 3. **One worker per session.** Reused for subsequent messages. Crashed = evicted + replaced. Idle workers reaped after 10 min.
 4. **SSE topics:** `globalSessID = "__all__"` for index-wide events; session ID for per-session events.

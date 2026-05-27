@@ -422,6 +422,7 @@ func (w *piRPCWorker) wait() {
 }
 
 func (w *piRPCWorker) setError(err error) {
+	err = w.withStderr(err)
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	if w.status.State != workers.WorkerStateError {
@@ -431,4 +432,19 @@ func (w *piRPCWorker) setError(err error) {
 		delete(w.pending, id)
 		ch <- response{ID: id, Type: "response", Success: false, Error: err.Error()}
 	}
+}
+
+func (w *piRPCWorker) withStderr(err error) error {
+	if w.stderrBuf == nil {
+		return err
+	}
+	stderr := strings.TrimSpace(w.stderrBuf.String())
+	if stderr == "" {
+		return err
+	}
+	const maxStderr = 4096
+	if len(stderr) > maxStderr {
+		stderr = "…" + stderr[len(stderr)-maxStderr:]
+	}
+	return fmt.Errorf("%w; stderr: %s", err, stderr)
 }

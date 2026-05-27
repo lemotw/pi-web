@@ -1,4 +1,4 @@
-# `export/`, `live_templates/`, and `web/`
+# `internal/ui/export/`, `internal/ui/live_templates/`, and `web/`
 
 > This repo used to put export files, live Go templates, vendored JS, and Vite-owned frontend code under one overloaded `templates/` directory. That split is now explicit.
 
@@ -7,8 +7,8 @@
 | Directory | Purpose |
 |-----------|---------|
 | `web/` | The **live app runtime** — Vite-built ES modules served from `/static/assets/...` |
-| `live_templates/` | Thin **live app HTML/template shells** embedded by Go |
-| `export/` | The **standalone share/export app** — self-contained HTML/CSS/JS for Gist uploads |
+| `internal/ui/live_templates/` | Thin **live app HTML/template shells** embedded by Go |
+| `internal/ui/export/` | The **standalone share/export app** — self-contained HTML/CSS/JS for Gist uploads |
 
 ## ⚠️ Live App vs. Export — Separate Products
 
@@ -18,10 +18,10 @@ The live app is a dynamic web UI served by the Go server. The export is a frozen
 
 | | Live App (`/session`) | Export/Share (Gist) |
 |---|---|---|
-| Go renderer | `session_page.go` | `export.go` |
-| HTML shell | `live_templates/session.html` | `export/index.html` |
-| JS runtime | `web/src/session/` (Vite) | `export/app/*.js` + `export/vendor/` |
-| CSS | `live_templates/session.css` | `export/template.css` |
+| Go renderer | `internal/ui/session_page.go` | `internal/ui/export.go` |
+| HTML shell | `internal/ui/live_templates/session.html` | `internal/ui/export/index.html` |
+| JS runtime | `web/src/session/` (Vite) | `internal/ui/export/app/*.js` + `internal/ui/export/vendor/` |
+| CSS | `internal/ui/live_templates/session.css` | `internal/ui/export/template.css` |
 | Chat composer | Yes | No |
 | Action buttons | Yes (baked into template) | No |
 | SSE/API | Yes | No |
@@ -33,17 +33,17 @@ The live app is the browser UI served by the local Go server.
 
 #### Index page (`/`)
 
-- Go renders `live_templates/index.html`.
+- Go renders `internal/ui/live_templates/index.html`.
 - The template injects the Vite index module path via `indexScript`.
 - The interactive code lives in `web/src/index/`.
 
 #### Session page (`/session?id=...`)
 
-- Go renders `live_templates/session.html`.
+- Go renders `internal/ui/live_templates/session.html`.
 - The template includes action buttons (Sessions, Share, Terminal) and a chat composer placeholder.
 - The page loads the Vite session module with `<script type="module" src="/static/assets/session-*.js">`.
 - Interactive session behavior lives in `web/src/session/`.
-- `export/app/*.js` is **not** used by the live session page.
+- `internal/ui/export/app/*.js` is **not** used by the live session page.
 
 #### Live reload / SSE
 
@@ -56,23 +56,23 @@ The export is a frozen, server-independent session snapshot uploaded by the Shar
 
 When you click **"↗ Share"**:
 
-1. The server calls `renderExportSessionPage(session)` in `export.go`.
-2. Go renders `export/index.html` with `export/template.css`.
+1. The server calls `renderExportSessionPage(session)` in `internal/ui/export.go`.
+2. Go renders `internal/ui/export/index.html` with `internal/ui/export/template.css`.
 3. Go inlines the export runtime JS:
-   - `export/vendor/marked.min.js`
-   - `export/vendor/highlight.min.js`
-   - `export/app/*.js` concatenated in lexical order and wrapped in one IIFE
-   - `export/template.css` styles
+   - `internal/ui/export/vendor/marked.min.js`
+   - `internal/ui/export/vendor/highlight.min.js`
+   - `internal/ui/export/app/*.js` concatenated in lexical order and wrapped in one IIFE
+   - `internal/ui/export/template.css` styles
 4. The resulting single HTML file is uploaded as a private Gist with `gh gist create --public=false`.
 
 The export intentionally has no chat composer, no action buttons, no SSE, no API calls, and no external asset dependency.
 
 ### What Not To Do
 
-- **Do not** use `export/index.html` for the live session page. It has no buttons, no chat composer placeholder, and no Vite module hook.
-- **Do not** inject live-only chrome (buttons, chat composer) into `export/index.html`. The export must remain server-independent.
-- **Do not** use `export/app/*.js` for the live app. The live app uses Vite-built `web/src/session/`.
-- **Do not** point the live page at `export/template.css`. Live and export CSS are separate; keep shared visual changes intentionally mirrored when both products need them.
+- **Do not** use `internal/ui/export/index.html` for the live session page. It has no buttons, no chat composer placeholder, and no Vite module hook.
+- **Do not** inject live-only chrome (buttons, chat composer) into `internal/ui/export/index.html`. The export must remain server-independent.
+- **Do not** use `internal/ui/export/app/*.js` for the live app. The live app uses Vite-built `web/src/session/`.
+- **Do not** point the live page at `internal/ui/export/template.css`. Live and export CSS are separate; keep shared visual changes intentionally mirrored when both products need them.
 
 ## Why the Split Exists
 
@@ -86,8 +86,8 @@ The live app and export are **different products** with different constraints:
 | API/SSE? | Yes | No |
 | JS delivery | Vite assets (`/static/assets/...`) | Inline JS (no external requests) |
 | State | Live/updating | Frozen snapshot |
-| HTML shell | `live_templates/session.html` | `export/index.html` |
-| Go renderer | `session_page.go` | `export.go` |
+| HTML shell | `internal/ui/live_templates/session.html` | `internal/ui/export/index.html` |
+| Go renderer | `internal/ui/session_page.go` | `internal/ui/export.go` |
 
 They share `prepareSessionPageData()` because both need the same base64-encoded session data and theme variable injection. Their CSS files are separate because the live page includes server-only chrome such as chat controls, action buttons, and overlays. Everything else is separate.
 
@@ -96,6 +96,6 @@ They share `prepareSessionPageData()` because both need the same base64-encoded 
 There is still duplicated session rendering logic between:
 
 - `web/src/session/` for the live app
-- `export/app/*.js` for standalone exports
+- `internal/ui/export/app/*.js` for standalone exports
 
 That duplication is deliberate for now. The next safe cleanup would be extracting small pure formatting/tree helpers that can be shared without forcing the export path to depend on live-only chat, SSE, or API behavior.

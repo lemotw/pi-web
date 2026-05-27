@@ -108,18 +108,7 @@ export function setupSidebarCollapse({ documentImpl = document, windowImpl = win
     saveSidebarCollapsed(true, { storage });
   });
 
-  documentImpl.addEventListener('keydown', (e) => {
-    if (e.key.toLowerCase() !== 'b') return;
-    const tagName = documentImpl.activeElement?.tagName;
-    if (tagName === 'INPUT' || tagName === 'TEXTAREA' || tagName === 'SELECT' || tagName === 'BUTTON' || documentImpl.activeElement?.isContentEditable) {
-      return;
-    }
-    e.preventDefault();
-    const currentlyCollapsed = documentImpl.body?.classList.contains('sidebar-collapsed');
-    const next = !currentlyCollapsed;
-    setSidebarCollapsed(next, { documentImpl });
-    saveSidebarCollapsed(next, { storage });
-  });
+
 }
 
 export function setupSidebarResize({ documentImpl = document, windowImpl = window, storage = globalThis.localStorage } = {}) {
