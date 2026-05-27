@@ -12,16 +12,16 @@ Built with **Vite** + **vanilla JS modules**, embedded into the Go binary.
 web/src/index/index.js      ──┐
 web/src/session/session.js    │
 web/src/live/live.js          ├──▶  vite build  ──▶  web/dist/  ──▶  //go:embed
-web/src/shared/*.js           │                      │              (dist_embed.go)
+web/src/shared/*.js           │                      │              (internal/frontend/assets.go + web/assets_embed.go)
 web/src/session/**/*.js       │                      ▼
                               │                  .vite/manifest.json
 ```
 
-At startup, `dist_embed.go` reads `.vite/manifest.json`, validates configured entrypoints, and registers their hashed asset routes under `/static/...`.
+At startup, `internal/frontend/assets.go` + `web/assets_embed.go` reads `.vite/manifest.json`, validates configured entrypoints, and registers their hashed asset routes under `/static/...`.
 
 ## Index Page (`/`)
 
-`live_templates/index.html` renders the shell and injects the Vite `index` module path with `indexScript`.
+`internal/ui/live_templates/index.html` renders the shell and injects the Vite `index` module path with `indexScript`.
 
 The index app is in `web/src/index/`:
 
@@ -39,10 +39,10 @@ The Go template still renders the live HTML shell, CSS, chat form shell, and ser
 ```
 renderLiveSessionPage(session)
        │
-       ├──▶ live_templates/session.html
-       ├──▶ export/template.css
+       ├──▶ internal/ui/live_templates/session.html
+       ├──▶ internal/ui/live_templates/session.css
        ├──▶ base64(sessionData) in #session-data
-       ├──▶ live_templates/chat_composer.html
+       ├──▶ internal/ui/live_templates/chat_composer.html
        └──▶ <script type="module" src="/static/assets/session-*.js">
 ```
 
@@ -56,15 +56,15 @@ Session frontend modules are split by ownership:
 - `web/src/session/live/` — session SSE/live reload behavior
 - `web/src/session/ui/` — session page interaction wiring and sidebar behavior
 
-`export/app/*.js` is not the source of live interactive session runtime behavior. It is kept only for static/share exports.
+`internal/ui/export/app/*.js` is not the source of live interactive session runtime behavior. It is kept only for static/share exports.
 
 ## Static / Share Export
 
 When `renderExportSessionPage(session)` creates self-contained exported HTML, it inlines:
 
-- `export/app/*.js`
-- `export/vendor/marked.min.js`
-- `export/vendor/highlight.min.js`
+- `internal/ui/export/app/*.js`
+- `internal/ui/export/vendor/marked.min.js`
+- `internal/ui/export/vendor/highlight.min.js`
 
 This keeps exported/shared HTML independent from the Go server and Vite assets.
 
@@ -92,8 +92,8 @@ The session page listens to `/events?id=<sessionId>` for:
 | Vite index bundle | `web/dist/assets/index-*.js` | `/static/assets/index-*.js` |
 | Vite session bundle | `web/dist/assets/session-*.js` | `/static/assets/session-*.js` |
 | Vite live bundle | `web/dist/assets/live-*.js` | `/static/assets/live-*.js` |
-| Static export JS | `export/app/*.js` + vendors | inline in exported HTML |
+| Static export JS | `internal/ui/export/app/*.js` + vendors | inline in exported HTML |
 
 ## Theme System
 
-Session colors are still defined by `computeThemeVars()` in `session_page.go` and injected into both `live_templates/session.css` and `export/template.css`. Moving live CSS into Vite-owned files is a remaining cleanup step.
+Session colors are still defined by `computeThemeVars()` in `internal/ui/session_page.go` and injected into both `internal/ui/live_templates/session.css` and `internal/ui/export/template.css`. Moving live CSS into Vite-owned files is a remaining cleanup step.

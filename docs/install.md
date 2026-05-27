@@ -44,7 +44,7 @@ This single command:
 - Registers the `/remote`, `/refresh` pi commands
 - Registers `set_tab_title`, which updates the Pi/pi-web session title and auto-derives a short title from each user message
 
-On Linux, auto-start is configured as a user systemd service at `~/.config/systemd/user/pi-web.service`. Its `ExecStart` points at `%h/.pi/agent/bin/pi-web`. If Tailscale is available at runtime, pi-web publishes the localhost server with Tailscale Serve HTTPS. If user systemd is unavailable, run it manually with `~/.pi/agent/bin/pi-web -o`.
+On Linux, auto-start is configured as a user systemd service at `~/.config/systemd/user/pi-web.service`. The installer rewrites its `ExecStart` to the actual installed binary path. If Tailscale is available at runtime, pi-web publishes the localhost server with Tailscale Serve HTTPS. If user systemd is unavailable, run it manually with `~/.pi/agent/bin/pi-web -o`.
 
 To install only for a specific project (shared with your team via `.pi/settings.json`):
 
@@ -103,10 +103,10 @@ make build   # builds the Vite bundle, then embeds it into the Go binary
 cp pi-web ~/.pi/agent/bin/
 ```
 
-The frontend bundle is embedded via `//go:embed all:web/dist`, so `go build` needs
+The frontend bundle is embedded by `web/assets_embed.go`, so `go build` needs
 `web/dist` to exist first. `make build` does both steps in order; if you build
 by hand, run `npm --prefix web install && npm --prefix web run build` before
-`go build`.
+`go build ./cmd/pi-web`.
 
 ## Usage
 
@@ -179,7 +179,7 @@ Shared gists are snapshots and do not live-update.
 ### macOS
 
 ```bash
-cp com.pi-web.plist ~/Library/LaunchAgents/
+cp init/com.pi-web.plist ~/Library/LaunchAgents/
 launchctl load ~/Library/LaunchAgents/com.pi-web.plist
 ```
 
@@ -188,7 +188,7 @@ launchctl load ~/Library/LaunchAgents/com.pi-web.plist
 ```bash
 # Install the systemd user service
 mkdir -p ~/.config/systemd/user
-cp pi-web.service ~/.config/systemd/user/
+cp init/pi-web.service ~/.config/systemd/user/
 
 # Optional: set your PI_WEB_TOKEN for non-loopback binds
 mkdir -p ~/.config/pi-web
@@ -206,4 +206,4 @@ journalctl --user -u pi-web.service -f
 ```
 
 > For the service to start at boot (before login), use a system service instead:
-> copy `pi-web.service` to `/etc/systemd/system/` and use `sudo systemctl`.
+> copy `init/pi-web.service` to `/etc/systemd/system/` and use `sudo systemctl`.

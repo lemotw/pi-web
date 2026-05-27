@@ -7,7 +7,7 @@ This flow covers a user clicking the **Share** button on a session page, which c
 ```
 ┌─────────┐   ┌─────────┐   ┌────────────┐   ┌─────────────┐   ┌──────────┐   ┌─────────┐
 │ Browser │   │  Server │   │   share    │   │   render    │   │    gh    │   │  GitHub │
-│         │   │         │   │  (package) │   │ (export.go) │   │   CLI    │   │   API   │
+│         │   │         │   │  (package) │   │ (internal/ui/export.go) │   │   CLI    │   │   API   │
 └────┬────┘   └────┬────┘   └─────┬──────┘   └──────┬──────┘   └────┬─────┘   └────┬────┘
      │             │              │                  │               │              │
      │ POST /share?id=abc
@@ -26,8 +26,8 @@ This flow covers a user clicking the **Share** button on a session page, which c
      │             │              │                  │               │              │
      │             │              │─── renderExportSessionPage(session)
      │             │              │                  │               │              │
-     │             │              │                  │─── export/index.html│         │
-     │             │              │                  │─── export/template.css│        │
+     │             │              │                  │─── internal/ui/export/index.html│         │
+     │             │              │                  │─── internal/ui/export/template.css│        │
      │             │              │                  │─── exportJs     │              │
      │             │              │                  │─── marked.js    │              │
      │             │              │                  │─── highlight.js │              │
