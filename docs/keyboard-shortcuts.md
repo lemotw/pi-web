@@ -18,8 +18,9 @@
 |----------|---------|--------|
 | `⌘B` / `Ctrl+B` | Page-level | Toggle sidebar visibility |
 | `⌘K` / `Ctrl+K` | Page-level | Open session list palette |
+| `⌘T` / `Ctrl+T` | Page-level | New session |
 
-> Same browser note applies to `⌘K` as above.
+> `⌘K` and `⌘T` are also browser shortcuts (focus address bar / new tab). The browser may intercept them unless focus is inside a text input.
 
 ### Chat composer
 

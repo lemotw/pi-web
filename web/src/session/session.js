@@ -321,6 +321,15 @@ export function runSessionApp({ target = window } = {}) {
     }
   });
 
+  // Cmd+T keyboard shortcut for new session
+  target.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 't') {
+      e.preventDefault();
+      const newBtn = documentImpl.getElementById('new-btn');
+      if (newBtn) newBtn.click();
+    }
+  });
+
   // Initialize chat after live reload so the optimistic "message sent" event
   // has a listener before the user can submit. Otherwise cold-start sends can
   // clear/disable the composer without rendering the pending message preview.
