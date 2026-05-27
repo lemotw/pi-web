@@ -44,7 +44,7 @@ export function setupKeyboardNav({
       const active = documentImpl.activeElement;
       if (!isEditableTarget(active)) return;
       // Don't steal Escape from popups / modals / overlays.
-      if (active.closest?.('.pi-chat-model-popup, .pi-chat-thinking-popup, [role="menu"], [role="dialog"], .command-menu-popover, .mobile-command-panel, .share-overlay-backdrop, .mobile-command-backdrop, #commandPalette, .model-selector-dropdown')) return;
+      if (active.closest?.('.pi-chat-model-popup, .pi-chat-thinking-popup, [role="menu"], [role="dialog"], .command-menu-popover, .mobile-command-panel, .share-overlay-backdrop, .mobile-command-backdrop, #commandPalette, .model-selector-dropdown, .modal-overlay, .modal')) return;
       e.preventDefault();
       e.stopPropagation();
       active.blur();
