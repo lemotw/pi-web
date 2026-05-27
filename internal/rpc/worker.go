@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"os/exec"
 	"strings"
 	"sync"
@@ -62,11 +61,6 @@ func NewPiWorkerWithStream(sessionPath string, streamSink StreamEventSink) (work
 		return nil, fmt.Errorf("pi executable not found: %w", err)
 	}
 	cmd := exec.Command("pi", "--mode", "rpc")
-	// Do not inherit pi-web's working directory. When developing/running pi-web
-	// from this repo, the project-local .pi/extensions/pi-web.ts can conflict
-	// with the globally installed pi-web package extension and make RPC startup
-	// exit before it can respond. switch_session below loads the target session.
-	cmd.Dir = os.TempDir()
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
 		return nil, err

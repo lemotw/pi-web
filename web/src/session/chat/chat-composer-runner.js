@@ -54,10 +54,11 @@ export function runChatComposer({
     if (label) {
       btn.textContent = label;
       btn.style.display = '';
+    } else if (!btn.textContent || btn.textContent.trim() === '') {
+      // Show a placeholder so the button is always visible and clickable.
+      btn.textContent = 'Model';
+      btn.style.display = '';
     }
-    // If label is empty (e.g. worker-status hasn't reported a model yet),
-    // preserve whatever was server-rendered so the badge doesn't flash
-    // hidden→shown when the first poll resolves.
   }
 
   const THINKING_LEVELS = __piChatSelectors.THINKING_LEVELS;

@@ -36,17 +36,18 @@ export function setupKeyboardNav({
 } = {}) {
   let ggTimer = null;
 
-  // Capture phase so Escape blurs the input *before* bubble-phase
-  // handlers (e.g. close-menu, clear-search) see the event.
+  // Capture phase so Escape blurs the main input *before* bubble-phase
+  // handlers see the event — but only when the user isn't inside a popup
+  // or modal that has its own Escape handling (model popup, palette, etc.).
   documentImpl.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       const active = documentImpl.activeElement;
-      if (isEditableTarget(active)) {
-        e.preventDefault();
-        e.stopPropagation();
-        active.blur();
-        return;
-      }
+      if (!isEditableTarget(active)) return;
+      // Don't steal Escape from popups / modals / overlays.
+      if (active.closest?.('.pi-chat-model-popup, .pi-chat-thinking-popup, [role="menu"], [role="dialog"], .command-menu-popover, .mobile-command-panel, .share-overlay-backdrop, .mobile-command-backdrop, #commandPalette, .model-selector-dropdown')) return;
+      e.preventDefault();
+      e.stopPropagation();
+      active.blur();
     }
   }, { capture: true });
 

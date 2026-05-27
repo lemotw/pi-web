@@ -32,17 +32,132 @@ export async function setupModelSelector({
   setCurrentModelForThinking = () => {},
   setWorkerModelUpdate = () => {}
 } = {}) {
+  let allModels = [];
+  let selectedModel = null;
+
+  function setSelected(model) {
+    selectedModel = model;
+    setCurrentModelForThinking(model || null);
+  }
+
+  const popup = documentImpl.getElementById('pi-chat-model-popup');
+  const popupSearch = documentImpl.getElementById('pi-chat-model-search');
+  const popupList = documentImpl.getElementById('pi-chat-model-list');
+  const modelLabelBtn = documentImpl.getElementById('pi-chat-model-label');
+
+  // Always show the label button so the user can open the model picker.
+  // Server may have hidden it when no model was detected at page load.
+  if (modelLabelBtn) modelLabelBtn.style.display = '';
+
+  function renderPopupList(filter) {
+    if (!popupList) return;
+    popupList.innerHTML = renderModelList(allModels, { filter, selectedModel, escapeHtml });
+    popupList.dataset.activeIndex = '-1';
+  }
+
+  function openPopup() {
+    if (!popup) return;
+    popup.style.display = 'flex';
+    if (popupSearch) {
+      popupSearch.value = '';
+      popupSearch.focus();
+    }
+    renderPopupList('');
+  }
+
+  function closePopup() {
+    if (popup) popup.style.display = 'none';
+  }
+
+  // Attach click handlers immediately so the button is responsive
+  // even before the model list finishes loading.
+  modelLabelBtn?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (popup && popup.style.display !== 'none') closePopup();
+    else openPopup();
+  });
+
+  popupSearch?.addEventListener('input', () => renderPopupList(popupSearch.value));
+  popupSearch?.addEventListener('keydown', (e) => {
+    const items = popupList ? popupList.querySelectorAll('.model-item') : [];
+    let popupActive = parseInt((popupList && popupList.dataset.activeIndex) || '-1', 10);
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      popupActive = Math.min(popupActive + 1, items.length - 1);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      popupActive = Math.max(popupActive - 1, 0);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (popupActive >= 0 && items[popupActive]) items[popupActive].click();
+      return;
+    } else if (e.key === 'Escape') {
+      closePopup();
+      modelLabelBtn?.focus();
+      return;
+    }
+    if (popupList) popupList.dataset.activeIndex = popupActive;
+    items.forEach((item, i) => item.classList.toggle('active', i === popupActive));
+    if (items[popupActive]) items[popupActive].scrollIntoView({ block: 'nearest' });
+  });
+
+  popupList?.addEventListener('click', async (e) => {
+    const item = e.target.closest('.model-item');
+    if (!item) return;
+    const provider = item.dataset.provider;
+    const modelId = item.dataset.modelId;
+    if (!provider || !modelId) return;
+    closePopup();
+    try {
+      const setRes = await chatApi.setModel(sessionId, { provider, modelId });
+      const setData = await setRes.json();
+      if (!setRes.ok) throw new Error(setData.error || 'set model failed');
+      const model = findModel(allModels, provider, modelId);
+      setSelected(model || { provider, id: modelId, name: modelId });
+      const newLabel = modelDisplayLabel(model || { provider, id: modelId, name: modelId });
+      setKnownModelLabel(newLabel);
+      setModelLabel(newLabel);
+      setChatStatus('switched', 'ok');
+    } catch (err) {
+      setChatStatus(err.message || String(err), 'error');
+    }
+  });
+
+  documentImpl.addEventListener('click', (e) => {
+    if (popup && popup.style.display !== 'none') {
+      const modelLabelBtnEl = documentImpl.getElementById('pi-chat-model-label');
+      if (!popup.contains(e.target) && e.target !== modelLabelBtnEl) closePopup();
+    }
+  });
+
+  // Load the model list asynchronously; the button is already wired.
   try {
     const res = await chatApi.listModels();
     const data = await res.json();
-    if (!res.ok || !data.models) return false;
+    if (!res.ok) {
+      // API call failed — show an error in the popup so the user
+      // knows this is a backend issue, not an empty model list.
+      allModels = [];
+      if (popupList) {
+        popupList.innerHTML = '<div class="model-empty">Failed to load models<br><small>Check that <code>pi</code> is on PATH</small></div>';
+      }
+      return true;
+    }
+    if (!data.models || data.models.length === 0) {
+      // API succeeded but returned no models.
+      allModels = [];
+      if (popupList) {
+        popupList.innerHTML = '<div class="model-empty">No models configured<br><small>Run <code>pi setup</code> to configure</small></div>';
+      }
+      return true;
+    }
 
-    const allModels = data.models;
-    let selectedModel = null;
+    allModels = data.models;
 
-    function setSelected(model) {
-      selectedModel = model;
-      setCurrentModelForThinking(model || null);
+    // If the popup is already open, refresh the list so the user
+    // sees the models instead of the stale "No models match" message.
+    if (popup && popup.style.display !== 'none') {
+      renderPopupList(popupSearch ? popupSearch.value : '');
     }
 
     function updateToggleFromStatus(provider, modelId) {
@@ -52,90 +167,6 @@ export async function setupModelSelector({
     }
 
     setWorkerModelUpdate(updateToggleFromStatus);
-
-    const popup = documentImpl.getElementById('pi-chat-model-popup');
-    const popupSearch = documentImpl.getElementById('pi-chat-model-search');
-    const popupList = documentImpl.getElementById('pi-chat-model-list');
-    const modelLabelBtn = documentImpl.getElementById('pi-chat-model-label');
-
-    function renderPopupList(filter) {
-      if (!popupList) return;
-      popupList.innerHTML = renderModelList(allModels, { filter, selectedModel, escapeHtml });
-      popupList.dataset.activeIndex = '-1';
-    }
-
-    function openPopup() {
-      if (!popup) return;
-      popup.style.display = 'flex';
-      if (popupSearch) {
-        popupSearch.value = '';
-        popupSearch.focus();
-      }
-      renderPopupList('');
-    }
-
-    function closePopup() {
-      if (popup) popup.style.display = 'none';
-    }
-
-    modelLabelBtn?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (popup && popup.style.display !== 'none') closePopup();
-      else openPopup();
-    });
-
-    popupSearch?.addEventListener('input', () => renderPopupList(popupSearch.value));
-    popupSearch?.addEventListener('keydown', (e) => {
-      const items = popupList ? popupList.querySelectorAll('.model-item') : [];
-      let popupActive = parseInt((popupList && popupList.dataset.activeIndex) || '-1', 10);
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        popupActive = Math.min(popupActive + 1, items.length - 1);
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        popupActive = Math.max(popupActive - 1, 0);
-      } else if (e.key === 'Enter') {
-        e.preventDefault();
-        if (popupActive >= 0 && items[popupActive]) items[popupActive].click();
-        return;
-      } else if (e.key === 'Escape') {
-        closePopup();
-        modelLabelBtn?.focus();
-        return;
-      }
-      if (popupList) popupList.dataset.activeIndex = popupActive;
-      items.forEach((item, i) => item.classList.toggle('active', i === popupActive));
-      if (items[popupActive]) items[popupActive].scrollIntoView({ block: 'nearest' });
-    });
-
-    popupList?.addEventListener('click', async (e) => {
-      const item = e.target.closest('.model-item');
-      if (!item) return;
-      const provider = item.dataset.provider;
-      const modelId = item.dataset.modelId;
-      if (!provider || !modelId) return;
-      closePopup();
-      try {
-        const setRes = await chatApi.setModel(sessionId, { provider, modelId });
-        const setData = await setRes.json();
-        if (!setRes.ok) throw new Error(setData.error || 'set model failed');
-        const model = findModel(allModels, provider, modelId);
-        setSelected(model || { provider, id: modelId, name: modelId });
-        const newLabel = modelDisplayLabel(model || { provider, id: modelId, name: modelId });
-        setKnownModelLabel(newLabel);
-        setModelLabel(newLabel);
-        setChatStatus('switched', 'ok');
-      } catch (err) {
-        setChatStatus(err.message || String(err), 'error');
-      }
-    });
-
-    documentImpl.addEventListener('click', (e) => {
-      if (popup && popup.style.display !== 'none') {
-        const modelLabelBtnEl = documentImpl.getElementById('pi-chat-model-label');
-        if (!popup.contains(e.target) && e.target !== modelLabelBtnEl) closePopup();
-      }
-    });
 
     const detected = detectCurrentModel(entries);
     if (detected.modelId) {
@@ -149,9 +180,9 @@ export async function setupModelSelector({
         }
       }
     }
-
-    return true;
   } catch (_) {
-    return false;
+    // Model list fetch failed; button still works (shows empty list).
   }
+
+  return true;
 }
