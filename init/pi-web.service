@@ -6,7 +6,7 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-ExecStart=%h/.pi/agent/bin/pi-web
+ExecStart=/usr/local/bin/pi-web
 Restart=on-failure
 RestartSec=5
 
