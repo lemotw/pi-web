@@ -13,7 +13,7 @@ import {
   type KeybindingsManager,
   type TUI,
 } from "@earendil-works/pi-tui";
-import { basename } from "node:path";
+import { basename, delimiter, join } from "node:path";
 import { constants as fsConstants, readFileSync, accessSync } from "node:fs";
 import { homedir } from "node:os";
 
@@ -108,25 +108,42 @@ export function isTailscaleHost(host: string): boolean {
   return ip.toLowerCase().startsWith("fd7a:115c:a1e0");
 }
 
-function tailscaleBin(): string {
-  // DMG install path (not in default PATH)
-  const dmg = "/Applications/Tailscale.app/Contents/MacOS/Tailscale";
+function isExecutable(path: string): boolean {
   try {
-    accessSync(dmg, fsConstants.X_OK);
-    return dmg;
+    accessSync(path, fsConstants.X_OK);
+    return true;
   } catch {
-    // fall through
+    return false;
   }
-  // Homebrew / system paths
-  for (const p of ["/opt/homebrew/bin/tailscale", "/usr/local/bin/tailscale", "/usr/bin/tailscale"]) {
-    try {
-      accessSync(p, fsConstants.X_OK);
-      return p;
-    } catch {
-      // continue
-    }
+}
+
+function pathTailscaleBin(): string | null {
+  const pathEnv = process.env["PATH"] || "";
+  for (const dir of pathEnv.split(delimiter)) {
+    if (!dir) continue;
+    const candidate = join(dir, "tailscale");
+    if (isExecutable(candidate)) return candidate;
   }
-  return "tailscale"; // fall back to PATH lookup
+  return null;
+}
+
+function tailscaleBin(): string {
+  // Prefer PATH first so user-selected CLI installs override fallback locations.
+  const pathBin = pathTailscaleBin();
+  if (pathBin) return pathBin;
+
+  for (const p of [
+    // DMG install paths (not in default PATH)
+    "/Applications/Tailscale.app/Contents/MacOS/Tailscale",
+    "/Applications/Tailscale.app/Contents/MacOS/tailscale",
+    // Homebrew / system paths
+    "/opt/homebrew/bin/tailscale",
+    "/usr/local/bin/tailscale",
+    "/usr/bin/tailscale",
+  ]) {
+    if (isExecutable(p)) return p;
+  }
+  return "tailscale"; // final fallback to PATH lookup
 }
 
 async function detectTailscaleHttpsUrl(
@@ -134,7 +151,9 @@ async function detectTailscaleHttpsUrl(
   port: string,
 ): Promise<string | null> {
   try {
-    const result = await pi.exec(tailscaleBin(), ["status", "--json"]);
+    const result = await pi.exec(tailscaleBin(), ["status", "--json"], {
+      timeout: 10_000,
+    });
     const status = JSON.parse(result.stdout);
     if (status.BackendState && status.BackendState !== "Running") return null;
     const dnsName = String(status.Self?.DNSName || "").replace(/\.$/, "");
