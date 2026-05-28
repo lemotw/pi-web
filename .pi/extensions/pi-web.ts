@@ -124,6 +124,34 @@ async function detectTailscaleHttpsUrl(
   }
 }
 
+function isSSH(): boolean {
+  return !!(
+    process.env["SSH_TTY"] ||
+    process.env["SSH_CONNECTION"] ||
+    process.env["SSH_CLIENT"]
+  );
+}
+
+function openBrowser(pi: ExtensionAPI, url: string): Promise<void> {
+  let cmd: string;
+  let args: string[];
+  switch (process.platform) {
+    case "darwin":
+      cmd = "open";
+      args = [url];
+      break;
+    case "win32":
+      cmd = "cmd";
+      args = ["/c", "start", url];
+      break;
+    default:
+      cmd = "xdg-open";
+      args = [url];
+      break;
+  }
+  return pi.exec(cmd, args).then(() => {});
+}
+
 async function healthCheck(host: string, port: string): Promise<boolean> {
   try {
     const res = await fetch(`http://${host}:${port}`, {
@@ -883,6 +911,65 @@ export default function (pi: ExtensionAPI) {
       if (detected?.tailscaleUrl && detected.tailscaleUrl !== tailscaleUrl)
         lines.push(`state remote: ${detected.tailscaleUrl}`);
       ctx.ui.notify(lines.join("\n"), running ? "info" : "warning");
+    },
+  });
+
+  // ── /web ─────────────────────────────────────────────────────────
+  pi.registerCommand("web", {
+    description: "Open current session in browser",
+    handler: async (_args, ctx: ExtensionCommandContext) => {
+      const sessionFile = ctx.sessionManager.getSessionFile();
+      if (!sessionFile) {
+        ctx.ui.notify("Cannot view an in-memory session.", "error");
+        return;
+      }
+
+      const detected = await detectHostPort(pi);
+      if (!detected) {
+        ctx.ui.notify(
+          "Could not detect pi-web server. Start it with: pi-web -o",
+          "error",
+        );
+        return;
+      }
+
+      const { host, port, tailscaleUrl } = detected;
+      if (!(await ensurePiWebRunning(pi, host, port))) {
+        ctx.ui.notify(
+          `pi-web not responding on ${host}:${port}. Start it with: pi-web -o`,
+          "error",
+        );
+        return;
+      }
+
+      const sessionId = basename(sessionFile);
+      const baseUrl = tailscaleUrl || `http://${host}:${port}`;
+      const url = withToken(
+        `${baseUrl}/session?id=${encodeURIComponent(sessionId)}`,
+      );
+
+      const inSSH = isSSH();
+      ctx.ui.notify(
+        `Session URL: ${url}`,
+        "info",
+      );
+
+      if (inSSH) {
+        ctx.ui.notify(
+          "Running over SSH — skipping browser open. Use the URL above.",
+          "info",
+        );
+        return;
+      }
+
+      try {
+        await openBrowser(pi, url);
+      } catch {
+        ctx.ui.notify(
+          `Failed to open browser. Open manually: ${url}`,
+          "warning",
+        );
+      }
     },
   });
 
