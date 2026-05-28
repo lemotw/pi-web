@@ -301,6 +301,7 @@ export function runSessionApp({ target = window } = {}) {
     windowImpl: target,
     overlayId: 'sessionPalette',
     searchInputId: 'session-palette-search',
+    clearOnClose: true,
     onNewSession: () => {
       const newBtn = documentImpl.getElementById('new-btn');
       if (newBtn) newBtn.click();

@@ -129,6 +129,7 @@ export function setupSessionListPalette({
   onClose = null,
   onQueryChange = null,
   onNewSession = null,
+  onImportSession = null,
   clearOnClose = false,
 } = {}) {
   const overlay = documentImpl.getElementById(overlayId);
@@ -212,8 +213,8 @@ export function setupSessionListPalette({
     };
     overlay.addEventListener('click', overlayClickHandler);
 
-    await reloadSessions();
     searchInput.focus();
+    await reloadSessions();
   }
 
   const debouncedFilter = debounce(() => {
@@ -233,6 +234,20 @@ export function setupSessionListPalette({
         onNewSession();
       });
     });
+  }
+
+  // Import session: disable if no handler is wired (avoids a dead button).
+  const importBtn = overlay.querySelector('[data-import-session-btn]');
+  if (importBtn) {
+    if (onImportSession) {
+      importBtn.addEventListener('click', () => {
+        close();
+        onImportSession();
+      });
+    } else {
+      importBtn.disabled = true;
+      importBtn.setAttribute('aria-disabled', 'true');
+    }
   }
 
   return {

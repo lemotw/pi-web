@@ -136,6 +136,7 @@ body.pi-palette-open { overflow: hidden; }
     outline: none;
 }
 .palette-action.muted { color: var(--muted); }
+.palette-action:disabled { color: var(--dim); cursor: default; opacity: 0.6; }
 .command-palette .palette-action { padding: 8px 16px; }
 .command-palette .palette-action:last-child { margin-bottom: 8px; }
 
