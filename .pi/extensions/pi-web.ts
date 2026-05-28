@@ -330,17 +330,31 @@ function setPiWebTabTitle(
   return cleanTitle;
 }
 
-function findPiWebBinary(): string | null {
-  for (const path of [
-    `${homedir()}/.pi/agent/bin/pi-web`,
-    "/usr/local/bin/pi-web",
-  ]) {
-    try {
-      accessSync(path, fsConstants.X_OK);
-      return path;
-    } catch {
-      // try next candidate
-    }
+async function findPiWebBinary(pi: ExtensionAPI): Promise<string | null> {
+  // 1. Local dev build (e.g. when working inside the pi-web repo).
+  try {
+    accessSync("./pi-web", fsConstants.X_OK);
+    return "./pi-web";
+  } catch {
+    // not in cwd
+  }
+
+  // 2. Pi-managed install (may not be in PATH).
+  const piBin = `${agentDir()}/bin/pi-web`;
+  try {
+    accessSync(piBin, fsConstants.X_OK);
+    return piBin;
+  } catch {
+    // not found
+  }
+
+  // 3. Fall back to PATH lookup.
+  try {
+    const result = await pi.exec("which", ["pi-web"]);
+    const bin = result.stdout.trim();
+    if (bin) return bin;
+  } catch {
+    // not found in PATH
   }
   return null;
 }
@@ -714,7 +728,7 @@ export default function (pi: ExtensionAPI) {
     description: "Show pi-web status, version, and install path",
     handler: async (args, ctx: ExtensionCommandContext) => {
       const [subcommand = "status"] = normalizeCommandArgs(args);
-      const bin = findPiWebBinary();
+      const bin = await findPiWebBinary(pi);
       const detected = await detectHostPort(pi);
       const host = detected?.host || "127.0.0.1";
       const port = detected?.port || "31415";
@@ -739,7 +753,7 @@ export default function (pi: ExtensionAPI) {
         ctx.ui.notify(
           bin
             ? `pi-web binary: ${bin}`
-            : "pi-web binary not found in ~/.pi/agent/bin or /usr/local/bin",
+            : "pi-web binary not found in PATH",
           bin ? "info" : "warning",
         );
         return;
