@@ -1,15 +1,16 @@
-.PHONY: build setup frontend-setup go-setup frontend-build frontend-test go-test vet test check clean dev
+.PHONY: build setup frontend-setup go-setup root-setup frontend-build frontend-test extension-test go-test vet test check clean dev
 
 BINARY ?= pi-web
 WEB_DIR := web
 NODE_MODULES := $(WEB_DIR)/node_modules
+ROOT_NODE_MODULES := node_modules
 
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 
 build: setup frontend-build
 	go build -ldflags="-s -w -X main.version=$(VERSION)" -o $(BINARY) ./cmd/pi-web
 
-setup: frontend-setup go-setup
+setup: frontend-setup go-setup root-setup
 
 frontend-setup:
 	@if [ ! -d "$(NODE_MODULES)" ]; then \
@@ -22,11 +23,22 @@ frontend-setup:
 go-setup:
 	go mod download
 
+root-setup:
+	@if [ ! -d "$(ROOT_NODE_MODULES)" ]; then \
+		echo "Installing root dependencies..."; \
+		npm install; \
+	else \
+		echo "Root dependencies already installed."; \
+	fi
+
 frontend-build: frontend-setup
 	cd $(WEB_DIR) && npm run build
 
 frontend-test: frontend-setup
 	cd $(WEB_DIR) && npm run test
+
+extension-test: root-setup
+	npm run test:extensions
 
 go-test: go-setup
 	go test ./...
@@ -34,9 +46,9 @@ go-test: go-setup
 vet: go-setup
 	go vet ./...
 
-test: frontend-test go-test
+test: frontend-test extension-test go-test
 
-check: frontend-test frontend-build go-test vet
+check: frontend-test extension-test frontend-build go-test vet
 
 dev: frontend-setup go-setup
 	@echo "Starting dev mode (frontend watcher + Go hot-reloader)..."

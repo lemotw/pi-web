@@ -29,6 +29,9 @@ jobs:
           cache: 'npm'
           cache-dependency-path: 'web/package-lock.json'
 
+      - name: Install root dependencies
+        run: npm ci
+
       - name: Run checks
         run: make check
 

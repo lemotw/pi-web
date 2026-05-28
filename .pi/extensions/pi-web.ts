@@ -243,6 +243,10 @@ async function ensurePiWebRunning(
 }
 
 export function readPiWebToken(): string | null {
+  // Check process.env first — allows PI_WEB_TOKEN=... pi-web ... usage
+  const fromEnv = process.env["PI_WEB_TOKEN"];
+  if (fromEnv) return fromEnv;
+
   try {
     const raw = readFileSync(`${homedir()}/.config/pi-web/env`, "utf-8");
     const match = raw.match(/^PI_WEB_TOKEN=(.*)$/m);
@@ -933,13 +937,25 @@ export default function (pi: ExtensionAPI) {
         return;
       }
 
-      const { host, port, tailscaleUrl } = detected;
+      let { host, port, tailscaleUrl } = detected;
       if (!(await ensurePiWebRunning(pi, host, port))) {
         ctx.ui.notify(
           `pi-web not responding on ${host}:${port}. Start it with: pi-web -o`,
           "error",
         );
         return;
+      }
+
+      // Re-read state after startup — auto-start may have changed host/port
+      // or tailscale serve may now be available.
+      const refreshed = await detectHostPort(pi);
+      if (refreshed) {
+        host = refreshed.host;
+        port = refreshed.port;
+        tailscaleUrl = refreshed.tailscaleUrl || tailscaleUrl;
+      }
+      if (!tailscaleUrl) {
+        tailscaleUrl = await detectTailscaleHttpsUrl(pi, port) || undefined;
       }
 
       const sessionId = basename(sessionFile);

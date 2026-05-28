@@ -245,4 +245,22 @@ describe('token helpers', () => {
 
     expect(readPiWebToken()).toBeNull();
   });
+
+  it('readPiWebToken prefers process.env over env file', () => {
+    process.env['PI_WEB_TOKEN'] = 'from-env';
+    (globalThis as any).__MOCK_PI_WEB_TOKEN__ = 'from-file';
+
+    expect(readPiWebToken()).toBe('from-env');
+
+    delete process.env['PI_WEB_TOKEN'];
+  });
+
+  it('readPiWebToken returns token from env var even when no file exists', () => {
+    process.env['PI_WEB_TOKEN'] = 'env-only';
+    (globalThis as any).__MOCK_PI_WEB_TOKEN__ = undefined;
+
+    expect(readPiWebToken()).toBe('env-only');
+
+    delete process.env['PI_WEB_TOKEN'];
+  });
 });
