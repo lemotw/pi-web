@@ -2,6 +2,9 @@
 
 Drive your [pi](https://pi.dev) coding agent from any browser on your network — laptop, phone, or tablet.
 
+> [!WARNING]
+> pi-web is currently in **beta**. Things will change and break!
+
 ## Screenshots
 
 <div align="center">
