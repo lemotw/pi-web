@@ -65,7 +65,7 @@ func computeThemeVars() (dark, light string) {
 		"thinkingLow": "#5f87af", "thinkingMedium": "#81a2be", "thinkingHigh": "#b294bb",
 		"thinkingXhigh": "#d183e8", "bashMode": "#b5bd68", "success": "#b5bd68",
 		"error": "#cc6666", "warning": "#ffff00", "muted": "#858a96", "dim": "#292a33",
-		"text": "#e6e7eb", "border": "#5f87ff", "borderAccent": "#00d7ff", "borderMuted": "#505050",
+		"text": "#e6e7eb", "text-soft": "#b7bbc4", "border": "#5f87ff", "borderAccent": "#00d7ff", "borderMuted": "#505050",
 		"toolOutput": "#808080", "bg": "var(--body-bg)", "selected-bg": "#3a3a4a", "border-accent": "#00d7ff",
 		"userMessageText": "#d4d4d4", "customMessageText": "#d4d4d4",
 	}
@@ -86,7 +86,7 @@ func computeThemeVars() (dark, light string) {
 		"thinkingLow": "#547da7", "thinkingMedium": "#5a8080", "thinkingHigh": "#875f87",
 		"thinkingXhigh": "#8b008b", "bashMode": "#588458", "success": "#588458",
 		"error": "#aa5555", "warning": "#9a7326", "muted": "#747b85", "dim": "#d8d5cc",
-		"text": "#1f2328", "border": "#547da7", "borderAccent": "#5a8080", "borderMuted": "#b0b0b0",
+		"text": "#1f2328", "text-soft": "#3f4650", "border": "#547da7", "borderAccent": "#5a8080", "borderMuted": "#b0b0b0",
 		"toolOutput": "#6c6c6c", "bg": "var(--body-bg)", "selected-bg": "#d0d0e0", "border-accent": "#5a8080",
 		"userMessageText": "#1f2328", "customMessageText": "#1f2328",
 	}
