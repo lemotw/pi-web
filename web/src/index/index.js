@@ -7,6 +7,7 @@ import {
   unregisterPushSubscription,
 } from '../session/chat/done-notifier.js';
 import { setupKeyboardNav } from '../shared/keyboard-nav.js';
+import { toggleTheme, syncThemeIcons } from '../session/live/command-menu.js';
 import { setupSessionListPalette } from '../shared/session-list-palette.js';
 
 export { createSessionsPage };
@@ -206,6 +207,22 @@ export function runIndexPage({
       if (e.target === modalOverlay) hideModal();
     });
   }
+
+  // Cmd+Shift+L keyboard shortcut for system theme toggle (capture phase)
+  windowImpl.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'l') {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleTheme(windowImpl, documentImpl);
+      syncThemeIcons(documentImpl);
+      // Also update index page's inline theme-toggle icon
+      const indexIcon = documentImpl.querySelector('[data-theme-icon]');
+      if (indexIcon) {
+        const isDark = (documentImpl.documentElement.dataset.theme || 'dark') === 'dark';
+        indexIcon.textContent = isDark ? '☀' : '◐';
+      }
+    }
+  }, { capture: true });
 
   windowImpl.addEventListener('keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {

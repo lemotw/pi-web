@@ -30,7 +30,7 @@ import * as resumeButton from './live/resume-button.js';
 import * as newSessionButton from './live/new-session-button.js';
 import * as liveEvents from './live/live-events.js';
 import * as liveRenderer from './live/live-renderer.js';
-import { setupCommandMenu } from './live/command-menu.js';
+import { setupCommandMenu, toggleTheme, syncThemeIcons } from './live/command-menu.js';
 import { setupKeyboardNav } from '../shared/keyboard-nav.js';
 import { setupSessionListPalette } from '../shared/session-list-palette.js';
 export { buildSessionLookups, createSessionDataModel, decodeBase64JSON, getSessionSearchParams, loadSessionData, readSessionPayload } from './data/session-data.js';
@@ -341,6 +341,17 @@ export function runSessionApp({ target = window } = {}) {
       if (newBtn) newBtn.click();
     }
   });
+
+  // Cmd+Shift+L keyboard shortcut for system theme toggle
+  // Use capture phase so the browser doesn't swallow Cmd+Shift+L before we see it.
+  target.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'l') {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleTheme(target, documentImpl);
+      syncThemeIcons(documentImpl);
+    }
+  }, { capture: true });
 
   // Initialize chat after live reload so the optimistic "message sent" event
   // has a listener before the user can submit. Otherwise cold-start sends can

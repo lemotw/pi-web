@@ -226,4 +226,23 @@ describe('chat composer runner', () => {
 
     expect(dom.window.document.getElementById('pi-chat-attachments').children.length).toBe(1);
   });
+
+  it('focuses the message textarea on page load', () => {
+    const dom = new JSDOM('<body><form id="pi-chat-composer" data-chat-available="true" data-session-id="s1"><textarea id="pi-chat-message"></textarea><input id="pi-chat-images"><button id="pi-chat-attach"></button><div id="pi-chat-attachments"></div><button id="pi-chat-send"></button><span id="pi-chat-status"></span></form></body>');
+    const textarea = dom.window.document.getElementById('pi-chat-message');
+    const focusSpy = vi.spyOn(textarea, 'focus');
+
+    runChatComposer({
+      documentImpl: dom.window.document,
+      windowImpl: dom.window,
+      chatApi: { getWorkerStatus: () => Promise.resolve(new Response('{}', { status: 500 })) },
+      chatSelectors: { THINKING_LEVELS: [] },
+      modelSelector: { setupModelSelector: vi.fn() },
+      thinkingSelector: { setupThinkingLevelSelector: vi.fn() },
+      setIntervalImpl: () => {}
+    });
+    dom.window.document.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
+
+    expect(focusSpy).toHaveBeenCalled();
+  });
 });

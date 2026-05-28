@@ -575,6 +575,12 @@ export function runChatComposer({
     // Without this, the Cancel button + "running" status linger until the
     // next poll tick, which feels broken right after a response completes.
     window.addEventListener('pi-session-reload', () => { refreshWorkerStatus(); });
+
+    // Focus the message textarea on page load so the user can start typing immediately.
+    if (textarea && typeof textarea.focus === 'function') {
+      textarea.focus();
+    }
+
     return true;
   }
 
