@@ -300,7 +300,11 @@ export function setupSessionListPalette({
     if (onQueryChange) onQueryChange(query());
     renderFiltered();
   }, debounceMs);
-  searchInput.addEventListener('input', debouncedFilter);
+  searchInput.addEventListener('input', () => {
+    selectedIndex = -1;
+    applySelection();
+    debouncedFilter();
+  });
 
   closeBtns.forEach((btn) => {
     btn.addEventListener('click', close);

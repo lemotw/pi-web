@@ -208,7 +208,7 @@ describe('setupThinkingLevelSelector', () => {
       cleanupDom(el);
     });
 
-    it('ignores stale responses when rapid cycling outpaces the API', async () => {
+    it('serializes rapid cycles so the backend observes the final UI order', async () => {
       const el = createDom();
       let resolveFirst;
       const firstDeferred = new Promise((r) => { resolveFirst = r; });
@@ -225,7 +225,8 @@ describe('setupThinkingLevelSelector', () => {
           })),
       };
 
-      const setKnownThinkingLevel = vi.fn();
+      let knownThinkingLevel = 'off';
+      const setKnownThinkingLevel = vi.fn((level) => { knownThinkingLevel = level; });
       const setThinkingLabel = vi.fn();
       const setChatStatus = vi.fn();
 
@@ -233,25 +234,28 @@ describe('setupThinkingLevelSelector', () => {
         documentImpl: document,
         sessionId: 's',
         chatApi,
-        getKnownThinkingLevel: () => 'off',
+        getKnownThinkingLevel: () => knownThinkingLevel,
         setKnownThinkingLevel,
         setThinkingLabel,
         setChatStatus,
       });
 
-      // Fire two cycles rapidly — only await the second
       const firstCycle = api.cycle();
-      await api.cycle();
+      const secondCycle = api.cycle();
+      await Promise.resolve();
+      await Promise.resolve();
 
-      // Second cycle's response should be the last applied
+      // The UI advances immediately, but the backend request is serialized.
+      expect(setKnownThinkingLevel).toHaveBeenCalledWith('minimal');
       expect(setKnownThinkingLevel).toHaveBeenCalledWith('low');
-      expect(setThinkingLabel).toHaveBeenCalledWith('low');
+      expect(chatApi.setThinkingLevel).toHaveBeenCalledTimes(1);
+      expect(chatApi.setThinkingLevel).toHaveBeenNthCalledWith(1, 's', 'minimal');
 
-      // Now let the stale first response land
       resolveFirst();
-      await firstCycle;
+      await Promise.all([firstCycle, secondCycle]);
 
-      // The stale response must not have overwritten the final state
+      expect(chatApi.setThinkingLevel).toHaveBeenCalledTimes(2);
+      expect(chatApi.setThinkingLevel).toHaveBeenNthCalledWith(2, 's', 'low');
       const lastCall = setKnownThinkingLevel.mock.calls[setKnownThinkingLevel.mock.calls.length - 1][0];
       expect(lastCall).toBe('low');
 

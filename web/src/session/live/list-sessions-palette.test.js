@@ -418,16 +418,34 @@ describe('palette keyboard navigation', () => {
     searchInput.value = 'Session 4';
     searchInput.dispatchEvent(new dom.window.Event('input'));
 
+    // selection should be cleared immediately, before the debounce fires
+    expect(selectedResult(dom)).toBeNull();
+
     // wait for debounce
     await new Promise((r) => dom.window.setTimeout(r, 150));
 
-    // selection should be cleared
+    // selection should still be cleared
     expect(selectedResult(dom)).toBeNull();
 
     // filtered results should show only Session 4
     const buttons = resultButtons(dom);
     expect(buttons.length).toBe(1);
     expect(buttons[0].querySelector('.palette-result-title').textContent).toBe('Session 4');
+  });
+
+  it('Enter immediately after filtering opens the first fresh result', async () => {
+    const { dom, navigate } = await openPaletteWith(5);
+
+    key(dom, 'ArrowDown');
+    key(dom, 'ArrowDown');
+    expect(selectedResult(dom).querySelector('.palette-result-title').textContent).toBe('Session 1');
+
+    const searchInput = dom.window.document.getElementById('session-palette-search');
+    searchInput.value = 'Session 4';
+    searchInput.dispatchEvent(new dom.window.Event('input'));
+    key(dom, 'Enter');
+
+    expect(navigate).toHaveBeenCalledWith('/session?id=s4.jsonl');
   });
 
   it('keyboard handler is cleaned up on close', async () => {
