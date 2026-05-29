@@ -448,6 +448,42 @@ describe('palette keyboard navigation', () => {
     expect(navigate).toHaveBeenCalledWith('/session?id=s4.jsonl');
   });
 
+  it('does not steal Enter from focused palette action buttons', async () => {
+    const dom = makeDom();
+    const action = dom.window.document.createElement('button');
+    action.type = 'button';
+    action.className = 'palette-action';
+    action.dataset.newSessionBtn = '';
+    action.textContent = 'New session';
+    dom.window.document.querySelector('.command-palette').appendChild(action);
+
+    const fetchImpl = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({ sessions: sessions(3) }),
+    }));
+    const navigate = vi.fn();
+    const onNewSession = vi.fn();
+
+    const palette = setupListSessionsPalette({
+      documentImpl: dom.window.document,
+      windowImpl: dom.window,
+      fetchImpl,
+      navigate,
+      getCwd: () => '/proj',
+      onNewSession,
+    });
+
+    await palette.open();
+    key(dom, 'ArrowDown');
+    action.focus();
+
+    const event = new dom.window.KeyboardEvent('keydown', { key: 'Enter', cancelable: true });
+    dom.window.dispatchEvent(event);
+
+    expect(event.defaultPrevented).toBe(false);
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
   it('keyboard handler is cleaned up on close', async () => {
     const { dom, palette } = await openPaletteWith(3);
 

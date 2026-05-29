@@ -176,6 +176,14 @@ export function setupSessionListPalette({
     renderResults(resultsEl, visibleSessions, documentImpl, navigate, limit);
   }
 
+  function shouldHandlePaletteNavigation() {
+    const active = documentImpl.activeElement;
+    if (!active || active === searchInput || active === documentImpl.body || active === documentImpl.documentElement) {
+      return true;
+    }
+    return !overlay.contains(active);
+  }
+
   async function reloadSessions() {
     const generation = ++loadGeneration;
     try {
@@ -227,6 +235,7 @@ export function setupSessionListPalette({
         return;
       }
       if (e.key === 'ArrowDown') {
+        if (!shouldHandlePaletteNavigation()) return;
         e.preventDefault();
         // Recompute and re-render synchronously so the DOM matches before we highlight
         const fresh = filterSessions(allSessions, query());
@@ -244,6 +253,7 @@ export function setupSessionListPalette({
         return;
       }
       if (e.key === 'ArrowUp') {
+        if (!shouldHandlePaletteNavigation()) return;
         e.preventDefault();
         const fresh = filterSessions(allSessions, query());
         const lastRendered = Math.min(fresh.length, limit) - 1;
@@ -263,6 +273,7 @@ export function setupSessionListPalette({
         return;
       }
       if (e.key === 'Enter') {
+        if (!shouldHandlePaletteNavigation()) return;
         // Recompute from current query synchronously so we never navigate to a stale result
         const fresh = filterSessions(allSessions, query());
         // Clamp selection — debounced render may have changed result count

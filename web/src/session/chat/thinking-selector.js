@@ -68,18 +68,25 @@ export function setupThinkingLevelSelector({
     const level = item.dataset.level;
     if (!level) return;
     closeThinkingPopup();
-    try {
-      const res = await chatApi.setThinkingLevel(sessionId, level);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'set thinking level failed');
-      const effectiveLevel = data.thinkingLevel || level;
-      confirmedThinkingLevel = effectiveLevel;
-      setKnownThinkingLevel(effectiveLevel);
-      setThinkingLabel(effectiveLevel);
-      setChatStatus('thinking: ' + effectiveLevel, 'ok');
-    } catch (err) {
-      setChatStatus(err.message || String(err), 'error');
-    }
+    const gen = ++cycleGeneration;
+    const run = async () => {
+      try {
+        const res = await chatApi.setThinkingLevel(sessionId, level);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'set thinking level failed');
+        const effectiveLevel = data.thinkingLevel || level;
+        confirmedThinkingLevel = effectiveLevel;
+        if (gen !== cycleGeneration) return;
+        setKnownThinkingLevel(effectiveLevel);
+        setThinkingLabel(effectiveLevel);
+        setChatStatus('thinking: ' + effectiveLevel, 'ok');
+      } catch (err) {
+        if (gen !== cycleGeneration) return;
+        setChatStatus(err.message || String(err), 'error');
+      }
+    };
+    cycleQueue = cycleQueue.catch(() => {}).then(run);
+    await cycleQueue;
   });
 
   documentImpl.addEventListener('click', (e) => {
@@ -106,6 +113,7 @@ export function setupThinkingLevelSelector({
 
     const run = async () => {
       try {
+        if (gen !== cycleGeneration) return; // stale before reaching backend
         const res = await chatApi.setThinkingLevel(sessionId, next);
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'set thinking level failed');
