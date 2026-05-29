@@ -7,7 +7,7 @@ import {
   unregisterPushSubscription,
 } from '../session/chat/done-notifier.js';
 import { setupKeyboardNav } from '../shared/keyboard-nav.js';
-import { toggleTheme, syncThemeIcons } from '../session/live/command-menu.js';
+import { toggleTheme, syncThemeIcons } from '../shared/theme.js';
 import { setupSessionListPalette } from '../shared/session-list-palette.js';
 
 export { createSessionsPage };

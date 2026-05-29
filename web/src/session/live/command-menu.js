@@ -1,29 +1,12 @@
 import { isDoneNotifyEnabled } from '../chat/done-notifier.js';
+import { applyTheme, toggleTheme, syncThemeIcons } from '../../shared/theme.js';
 import { showModelUsageModal } from './model-usage-modal.js';
 import { showForkModal } from './fork-modal.js';
 
+export { applyTheme, toggleTheme, syncThemeIcons };
+
 function chatUrl(path, sessionId) {
   return `${path}?id=${encodeURIComponent(sessionId)}`;
-}
-
-export function applyTheme(windowImpl, documentImpl, next) {
-  documentImpl.documentElement.dataset.theme = next || 'dark';
-  try { windowImpl.localStorage.setItem('pi-web-theme', next); } catch (e) {}
-  var meta = documentImpl.querySelector('meta[name="theme-color"]');
-  if (meta) meta.content = (next || 'dark') === 'dark' ? '#0e0e13' : '#f6f5f2';
-}
-
-export function toggleTheme(windowImpl, documentImpl) {
-  var current = documentImpl.documentElement.dataset.theme || 'dark';
-  var next = current === 'dark' ? 'light' : 'dark';
-  applyTheme(windowImpl, documentImpl, next);
-}
-
-export function syncThemeIcons(documentImpl) {
-  const isDark = (documentImpl.documentElement.dataset.theme || 'dark') === 'dark';
-  documentImpl.querySelectorAll('[data-command-theme-icon]').forEach((el) => {
-    el.textContent = isDark ? '☀' : '◐';
-  });
 }
 
 function showToast(message, documentImpl, windowImpl) {

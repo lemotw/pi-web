@@ -245,4 +245,48 @@ describe('chat composer runner', () => {
 
     expect(focusSpy).toHaveBeenCalled();
   });
+
+  it('Shift+Tab in the textarea cycles thinking level', () => {
+    const dom = new JSDOM('<body><form id="pi-chat-composer" data-chat-available="true" data-session-id="s1"><textarea id="pi-chat-message"></textarea><input id="pi-chat-images"><button id="pi-chat-attach"></button><div id="pi-chat-attachments"></div><button id="pi-chat-send"></button><span id="pi-chat-status"></span></form></body>');
+    const cycle = vi.fn();
+
+    runChatComposer({
+      documentImpl: dom.window.document,
+      windowImpl: dom.window,
+      chatApi: { getWorkerStatus: () => Promise.resolve(new Response('{}', { status: 500 })) },
+      chatSelectors: { THINKING_LEVELS: [] },
+      modelSelector: { setupModelSelector: vi.fn(() => ({ open: vi.fn() })) },
+      thinkingSelector: { setupThinkingLevelSelector: vi.fn(() => ({ cycle })) },
+      setIntervalImpl: () => {}
+    });
+    dom.window.document.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
+
+    const event = new dom.window.KeyboardEvent('keydown', { key: 'Tab', shiftKey: true, bubbles: true, cancelable: true });
+    dom.window.document.getElementById('pi-chat-message').dispatchEvent(event);
+
+    expect(cycle).toHaveBeenCalledTimes(1);
+    expect(event.defaultPrevented).toBe(true);
+  });
+
+  it('Ctrl+L in the textarea opens the model selector', () => {
+    const dom = new JSDOM('<body><form id="pi-chat-composer" data-chat-available="true" data-session-id="s1"><textarea id="pi-chat-message"></textarea><input id="pi-chat-images"><button id="pi-chat-attach"></button><div id="pi-chat-attachments"></div><button id="pi-chat-send"></button><span id="pi-chat-status"></span></form></body>');
+    const open = vi.fn();
+
+    runChatComposer({
+      documentImpl: dom.window.document,
+      windowImpl: dom.window,
+      chatApi: { getWorkerStatus: () => Promise.resolve(new Response('{}', { status: 500 })) },
+      chatSelectors: { THINKING_LEVELS: [] },
+      modelSelector: { setupModelSelector: vi.fn(() => ({ open })) },
+      thinkingSelector: { setupThinkingLevelSelector: vi.fn(() => ({ cycle: vi.fn() })) },
+      setIntervalImpl: () => {}
+    });
+    dom.window.document.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
+
+    const event = new dom.window.KeyboardEvent('keydown', { key: 'l', ctrlKey: true, bubbles: true, cancelable: true });
+    dom.window.document.getElementById('pi-chat-message').dispatchEvent(event);
+
+    expect(open).toHaveBeenCalledTimes(1);
+    expect(event.defaultPrevented).toBe(true);
+  });
 });
