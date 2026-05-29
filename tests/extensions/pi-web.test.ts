@@ -1,15 +1,29 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { homedir } from 'node:os';
+import { dirname } from 'node:path';
+import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 
 // Mock node:fs before importing the module under test
 vi.mock('node:fs', async (importOriginal) => {
   const actual = await importOriginal<typeof import('node:fs')>();
   return {
     ...actual,
+    chmodSync: vi.fn(),
+    mkdirSync: vi.fn(),
+    writeFileSync: vi.fn((path: string, content: string, options?: unknown) => {
+      const tokenEnvPath = `${homedir()}/.config/pi-web/env`;
+      if (typeof path === 'string' && path === tokenEnvPath) {
+        (globalThis as any).__MOCK_PI_WEB_ENV_CONTENT__ = content;
+        return undefined;
+      }
+      return (actual as any).writeFileSync(path, content, options);
+    }),
     readFileSync: vi.fn((path: string, encoding: BufferEncoding) => {
       // Delegate to actual unless it's the token env file
       const tokenEnvPath = `${homedir()}/.config/pi-web/env`;
       if (typeof path === 'string' && path === tokenEnvPath) {
+        const content = (globalThis as any).__MOCK_PI_WEB_ENV_CONTENT__;
+        if (content !== undefined) return content;
         const token = (globalThis as any).__MOCK_PI_WEB_TOKEN__;
         if (token === undefined) {
           throw Object.assign(new Error('ENOENT'), { code: 'ENOENT' });
@@ -32,10 +46,12 @@ import {
   TITLE_STOP_WORDS,
   withToken,
   readPiWebToken,
+  writePiWebToken,
 } from '../../.pi/extensions/pi-web.ts';
 
 declare global {
   var __MOCK_PI_WEB_TOKEN__: string | null | undefined;
+  var __MOCK_PI_WEB_ENV_CONTENT__: string | undefined;
 }
 
 // ── isSSH ───────────────────────────────────────────────────────────
@@ -122,6 +138,16 @@ describe('normalizeCommandArgs', () => {
   it('converts numbers to strings', () => {
     expect(normalizeCommandArgs([1, 2])).toEqual(['1', '2']);
   });
+
+  it('set-token destructure: [, token] from [subcommand, token]', () => {
+    const [, token] = normalizeCommandArgs('set-token my-secret');
+    expect(token).toBe('my-secret');
+  });
+
+  it('set-token destructure: token with special chars', () => {
+    const [, token] = normalizeCommandArgs('set-token sec=ret&val');
+    expect(token).toBe('sec=ret&val');
+  });
 });
 
 // ── titleCaseWord ───────────────────────────────────────────────────
@@ -191,6 +217,7 @@ describe('token helpers', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     delete (globalThis as any).__MOCK_PI_WEB_TOKEN__;
+    delete (globalThis as any).__MOCK_PI_WEB_ENV_CONTENT__;
   });
 
   it('withToken appends token when available', () => {
@@ -262,5 +289,18 @@ describe('token helpers', () => {
     expect(readPiWebToken()).toBe('env-only');
 
     delete process.env['PI_WEB_TOKEN'];
+  });
+
+  it('writePiWebToken creates a private env file and directory', () => {
+    const path = `${homedir()}/.config/pi-web/env`;
+
+    writePiWebToken('secret-123');
+
+    expect(mkdirSync).toHaveBeenCalledWith(dirname(path), { recursive: true });
+    expect(chmodSync).toHaveBeenCalledWith(dirname(path), 0o700);
+    expect(writeFileSync).toHaveBeenCalledWith(path, 'PI_WEB_TOKEN=secret-123\n', {
+      mode: 0o600,
+    });
+    expect(chmodSync).toHaveBeenCalledWith(path, 0o600);
   });
 });

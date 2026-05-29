@@ -142,7 +142,6 @@ jobs:
           tag_version="${GITHUB_REF_NAME#v}"
           if [[ "${GITHUB_REF_NAME}" == *"-"* ]]; then
             npm publish --access public --tag beta --provenance
-            npm dist-tag add "@ygncode/pi-web@${tag_version}" latest
           else
             npm publish --access public --tag latest --provenance
           fi

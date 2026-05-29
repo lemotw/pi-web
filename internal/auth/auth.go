@@ -177,11 +177,11 @@ func (a *Middleware) Enabled() bool {
 
 // Wrap returns a handler that enforces the token check when auth is enabled.
 //
-// Token sources (checked in order): query parameter, Authorization header,
-// X-Pi-Token header, cookie, and — for browser POSTs — form body. When the
-// token arrives via query or POST, a cookie is set and the browser is
-// redirected to the same URL without the token, so the secret never appears
-// in the address bar or browser history.
+// Token sources (checked in order): for browser POSTs, form body first;
+// otherwise query parameter, Authorization header, X-Pi-Token header, and
+// cookie. When the token arrives via query or POST, a cookie is set and the
+// browser is redirected to the same URL without the token, so the secret never
+// appears in the address bar or browser history.
 //
 // When auth fails and the request appears to come from a browser (Accept
 // header includes text/html), the middleware serves an HTML token prompt
@@ -192,18 +192,23 @@ func (a *Middleware) Wrap(h http.HandlerFunc) http.HandlerFunc {
 		return h
 	}
 	return func(w http.ResponseWriter, r *http.Request) {
-		got, fromQuery := ExtractToken(r)
-
-		// // If not found via standard sources and this is a browser POST,
-		// // check the form body (login form submission).
+		got := ""
+		fromQuery := false
 		fromPost := false
-		if got == "" && r.Method == http.MethodPost && strings.Contains(r.Header.Get("Accept"), "text/html") {
+
+		// Browser login form submissions should prefer the submitted token over
+		// any stale token that may still be present in the URL query string.
+		if r.Method == http.MethodPost && strings.Contains(r.Header.Get("Accept"), "text/html") {
 			// ParseForm is idempotent; safe to call even if already parsed.
 			r.ParseForm()
 			if t := r.PostFormValue("token"); t != "" {
 				got = t
 				fromPost = true
 			}
+		}
+
+		if got == "" {
+			got, fromQuery = ExtractToken(r)
 		}
 
 		if subtle.ConstantTimeCompare([]byte(got), []byte(a.token)) != 1 {

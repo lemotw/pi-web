@@ -240,6 +240,29 @@ func TestAuthRejectsPostLoginWithErrorRedirect(t *testing.T) {
 	}
 }
 
+func TestAuthPostLoginPrefersFormTokenOverStaleQuery(t *testing.T) {
+	a := New("secret")
+	rec := httptest.NewRecorder()
+	body := strings.NewReader("token=secret")
+	req := httptest.NewRequest(http.MethodPost, "/session?id=abc&token=old", body)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Accept", "text/html,application/xhtml+xml")
+	a.Wrap(okHandler)(rec, req)
+	if rec.Code != http.StatusFound {
+		t.Fatalf("status = %d, want 302 redirect", rec.Code)
+	}
+	loc := rec.Header().Get("Location")
+	if loc != "/session?id=abc" {
+		t.Fatalf("redirect Location = %q, want /session?id=abc", loc)
+	}
+	for _, c := range rec.Result().Cookies() {
+		if c.Name == TokenCookieName && c.Value == "secret" {
+			return
+		}
+	}
+	t.Fatalf("expected %s cookie to be set from form token", TokenCookieName)
+}
+
 func TestAuthAllowsBrowserWithCorrectTokenViaCookie(t *testing.T) {
 	// After login, browsers use the cookie — handler proceeds normally.
 	a := New("secret")
