@@ -8,7 +8,7 @@ This document details the core design system for `pi-web`. The design system is 
 
 1. **Monospace Typography:** Highly tailored to developer workflows, using a clean monospace typeface stack.
 2. **Obsidian Obsidian Dark by Default:** Provides a premium, high-contrast visual footprint that is comfortable for long hours of pairing.
-3. **Fully Semantic Visual Tokens:** No hardcoded hex values are used in components. Every color, border, padding, and layout attribute references semantic tokens.
+3. **Fully Semantic Visual Tokens:** No hardcoded hex values in CSS rules or component styles. Every color, border, padding, and layout attribute references semantic tokens. (Note: `<meta name="theme-color">` requires a literal color value and is the sole exception.)
 4. **Zero Compilation Overhead:** Themes are resolved purely at runtime by the browser, removing the need for server-side CSS precompilation.
 5. **Local Custom Themes:** Anyone can configure custom themes by adding a simple CSS stylesheet in their active configuration directory.
 
@@ -72,7 +72,7 @@ Create `~/.pi/agent/pi-web/custom-themes.css` and paste the following structure:
 }
 ```
 
-Once saved, simply click the **Appearance** button in the Command Menu until you reach the **Settings Gear Icon (⚙)**, or select **Custom Theme**!
+Once saved, reload the page and open the **Session Actions menu (⋯)** in the top-right of the session header, then cycle through the **Theme** toggle until **⚙ Custom** appears.
 
 ---
 

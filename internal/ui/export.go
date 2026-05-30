@@ -3,9 +3,9 @@ package ui
 import (
 	"bytes"
 	"embed"
-	_ "embed"
 	"fmt"
 	"html/template"
+	"log"
 	"net/http"
 	"sort"
 	"strings"
@@ -90,6 +90,17 @@ func verifyExportAppManifest() {
 // renderExportSessionPage renders a self-contained HTML snapshot suitable for
 // GitHub Gist sharing. All JS is inlined and server-dependent chrome (buttons,
 // chat composer) is stripped.
+// sanitizeTheme returns the theme name if it is one of the recognised built-in
+// values, or "dark" as a safe default. This prevents a user-controlled cookie
+// value from being interpolated verbatim into the export <script> block.
+func sanitizeTheme(t string) string {
+	switch t {
+	case "dark", "light", "nord", "dracula", "custom":
+		return t
+	}
+	return "dark"
+}
+
 func RenderExportSessionPage(session sessions.Session, theme string) string {
 	dataBase64, css, bodyAttrs := prepareSessionPageData(session, liveSessionCss)
 
@@ -114,7 +125,7 @@ func RenderExportSessionPage(session sessions.Session, theme string) string {
 		IsLive:             false,
 		Title:              session.Name,
 		LiveDocumentStart:  renderExportDocumentStart(session.Name, styles, bodyAttrs),
-		ThemeBoot:          exportThemeBootScript(theme),
+		ThemeBoot:          exportThemeBootScript(sanitizeTheme(theme)),
 		ServiceWorker:      "",
 		SessionCommandMenu: "",
 		MobileCommandMenu:  "",
@@ -128,13 +139,10 @@ func RenderExportSessionPage(session sessions.Session, theme string) string {
 
 	var buf bytes.Buffer
 	if err := liveSessionTmpl.Execute(&buf, data); err != nil {
+		log.Printf("export: template execution failed for session %q: %v", session.ID, err)
 		return ""
 	}
 	return buf.String()
-}
-
-func renderExportSessionPage(session sessions.Session, theme string) string {
-	return RenderExportSessionPage(session, theme)
 }
 
 func renderExportDocumentStart(title string, styles string, bodyAttrs string) template.HTML {

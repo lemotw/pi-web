@@ -124,7 +124,7 @@ func TestRenderedSessionPagesReplaceKnownPlaceholders(t *testing.T) {
 	}
 	for name, html := range map[string]string{
 		"live":   renderLiveSessionPage(session),
-		"export": renderExportSessionPage(session, "dark"),
+		"export": RenderExportSessionPage(session, "dark"),
 	} {
 		for _, placeholder := range placeholders {
 			if strings.Contains(html, placeholder) {
@@ -139,7 +139,7 @@ func TestRenderedSessionCSSDefinesUsedCustomProperties(t *testing.T) {
 	session := sessions.Session{SessionSummary: sessions.SessionSummary{ID: "s.jsonl", Name: "Session"}}
 	for name, html := range map[string]string{
 		"live":   renderLiveSessionPage(session),
-		"export": renderExportSessionPage(session, "dark"),
+		"export": RenderExportSessionPage(session, "dark"),
 	} {
 		assertCSSCustomPropertiesDefined(t, name, html)
 	}
@@ -206,7 +206,7 @@ func TestSessionPageUsesViteModuleForInteractiveViewer(t *testing.T) {
 }
 
 func TestStaticExportKeepsInlineSessionRenderer(t *testing.T) {
-	html := renderExportSessionPage(sessions.Session{SessionSummary: sessions.SessionSummary{ID: "s.jsonl", Name: "Session"}}, "dark")
+	html := RenderExportSessionPage(sessions.Session{SessionSummary: sessions.SessionSummary{ID: "s.jsonl", Name: "Session"}}, "dark")
 	if !strings.Contains(html, "function renderTree()") {
 		t.Fatal("static export missing inline legacy session renderer")
 	}
