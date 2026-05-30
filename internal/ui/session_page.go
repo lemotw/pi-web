@@ -18,13 +18,13 @@ var liveSessionHtml string
 
 var liveSessionTmpl = template.Must(template.New("live_session").Parse(liveSessionHtml))
 
-//go:embed live_templates/session.css
+//go:embed live_templates/styles/session.css
 var liveSessionCss string
 
-//go:embed live_templates/menu.css
+//go:embed live_templates/styles/menu.css
 var liveMenuCss string
 
-//go:embed live_templates/palette.css
+//go:embed live_templates/styles/palette.css
 var livePaletteCss string
 
 //go:embed live_templates/chat_composer.html
