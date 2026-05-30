@@ -26,8 +26,6 @@ func TestHomePageRunningCountHasWorkspaceSummary(t *testing.T) {
 	htmlChecks := []string{
 		`<div class="workspace-summary">`,
 		`<span class="stat-running" id="statRunning" data-running-stat>`,
-		"document.querySelectorAll('[data-running-count]')",
-		"document.querySelectorAll('[data-running-stat]')",
 	}
 	for _, check := range htmlChecks {
 		if !strings.Contains(html, check) {

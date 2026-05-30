@@ -102,7 +102,7 @@ func TestGenerateExportHtmlIncludesChatComposerWhenButtonsShown(t *testing.T) {
 
 func TestGenerateExportHtmlOmitsChatComposerForShare(t *testing.T) {
 	session := sessions.Session{SessionSummary: sessions.SessionSummary{ID: "s.jsonl", Filename: "s.jsonl"}, Entries: []map[string]any{{"id": "aaaaaaaa"}}}
-	html := renderExportSessionPage(session)
+	html := renderExportSessionPage(session, "dark")
 	if strings.Contains(html, `id="pi-chat-composer"`) {
 		t.Fatalf("chat composer should not be included in share export")
 	}
@@ -200,7 +200,7 @@ func TestResumeButtonShowsToastWithoutChangingButtonText(t *testing.T) {
 
 func TestGenerateExportHtmlOmitsResumeButtonForShare(t *testing.T) {
 	session := sessions.Session{SessionSummary: sessions.SessionSummary{ID: "s.jsonl", Filename: "s.jsonl"}, Entries: []map[string]any{{"id": "aaaaaaaa"}}}
-	html := renderExportSessionPage(session)
+	html := renderExportSessionPage(session, "dark")
 	if strings.Contains(html, `id="resume-btn"`) {
 		t.Fatalf("resume button should not be included in share export")
 	}
