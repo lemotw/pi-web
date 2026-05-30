@@ -19,7 +19,7 @@
 - Deep links to individual messages
 - Download a session as JSONL
 - Share static snapshots as secret GitHub Gists
-- `/web`, `/remote`, `/refresh` pi extensions for opening sessions, remote QR, and session sync
+- `/web`, `/remote`, `/refresh`, `/pi-web token` and `/pi-web set-token` pi extensions for opening sessions, remote QR, session sync, and token management
 
 ## Requirements
 
@@ -41,7 +41,7 @@ This single command:
 - Downloads the correct pi-web binary for your platform from GitHub Releases
 - Installs it to `~/.pi/agent/bin/pi-web`
 - Sets up auto-start on login (launchd on macOS, systemd on Linux)
-- Registers the `/web`, `/remote`, `/refresh` pi commands
+- Registers the `/web`, `/remote`, `/refresh`, `/pi-web token`, and `/pi-web set-token` pi commands
 - Registers `set_tab_title`, which updates the Pi/pi-web session title and auto-derives a short title from each user message
 
 On Linux, auto-start is configured as a user systemd service at `~/.config/systemd/user/pi-web.service`. The installer rewrites its `ExecStart` to the actual installed binary path. If Tailscale is available at runtime, pi-web publishes the localhost server with Tailscale Serve HTTPS. If user systemd is unavailable, run it manually with `~/.pi/agent/bin/pi-web -o`.
@@ -52,7 +52,7 @@ To install only for a specific project (shared with your team via `.pi/settings.
 pi install -l npm:@ygncode/pi-web
 ```
 
-Then restart pi (or run `/reload`), and use `/web`, `/pi-web`, `/remote`, `/refresh`.
+Then restart pi (or run `/reload`), and use `/web`, `/pi-web`, `/remote`, `/refresh`. Manage your access token with `/pi-web token` and `/pi-web set-token`.
 
 ### Quick install (no build tools needed)
 
@@ -191,6 +191,7 @@ mkdir -p ~/.config/systemd/user
 cp init/pi-web.service ~/.config/systemd/user/
 
 # Optional: set your PI_WEB_TOKEN for non-loopback binds
+# (or use /pi-web set-token <token> from inside pi)
 mkdir -p ~/.config/pi-web
 echo 'PI_WEB_TOKEN=your-token-here' > ~/.config/pi-web/env
 

@@ -139,6 +139,7 @@ jobs:
 
       - name: Publish to npm
         run: |
+          tag_version="${GITHUB_REF_NAME#v}"
           if [[ "${GITHUB_REF_NAME}" == *"-"* ]]; then
             npm publish --access public --tag beta --provenance
           else

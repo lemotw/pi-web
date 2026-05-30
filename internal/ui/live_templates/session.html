@@ -1,33 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <title>{{TITLE}}</title>
-  {{SESSION_PRELOAD}}
-  <link rel="icon" type="image/svg+xml" href="/icon.svg">
-  <link rel="apple-touch-icon" href="/icon.svg">
-  <link rel="manifest" href="/manifest.webmanifest">
-  <meta name="theme-color" content="#0e0e13">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Pi Sessions">
-  <style>
-{{CSS}}
-  </style>
-</head>
-<body{{BODY_ATTRS}}>
-  <script>try{const c=localStorage.getItem('pi-share:v1:sidebar-collapsed');if(c==='true')document.body.classList.add('sidebar-collapsed');}catch(e){}</script>
-  <script>
-  (function(){
-    var STORAGE_KEY = 'pi-web-theme';
-    function applyTheme(t){ document.documentElement.dataset.theme = t || 'dark'; }
-    try{ applyTheme(localStorage.getItem(STORAGE_KEY)); }catch(e){ applyTheme('dark'); }
-    var meta = document.querySelector('meta[name="theme-color"]');
-    if(meta) meta.content = (document.documentElement.dataset.theme || 'dark') === 'dark' ? '#0e0e13' : '#f6f5f2';
-  })();
-  </script>
-  <script>if('serviceWorker' in navigator && window.isSecureContext){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js',{scope:'/'}).catch(function(){});});}</script>
+{{.LiveDocumentStart}}  <script>try{const c=localStorage.getItem('pi-share:v1:sidebar-collapsed');if(c==='true')document.body.classList.add('sidebar-collapsed');}catch(e){}</script>
+  {{.ThemeBoot}}
+  {{.ServiceWorker}}
 
   <!-- Hidden buttons for backward-compat JS handlers -->
   <div style="display:none">
@@ -40,18 +13,18 @@
 
   <div class="session-header-bar">
     <a href="/" class="session-header-back"><span>←</span> Sessions</a>
-    <span class="session-header-title" id="session-header-title">{{TITLE}}</span>
+    <span class="session-header-title" id="session-header-title">{{.Title}}</span>
     <button id="command-menu-btn" class="session-header-actions" aria-label="Session actions" aria-haspopup="menu" aria-expanded="false" aria-controls="command-menu-popover">⋯</button>
   </div>
 
   <!-- Desktop popover menu -->
-  {{SESSION_COMMAND_MENU}}
+  {{.SessionCommandMenu}}
 
   <!-- Mobile dropdown menu -->
   <div id="mobile-command-backdrop" class="mobile-command-backdrop" style="display: none;"></div>
-  {{MOBILE_COMMAND_MENU}}
+  {{.MobileCommandMenu}}
 
-  {{SESSION_PALETTE}}
+  {{.SessionPalette}}
 
   <button id="hamburger" title="Open sidebar"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="6" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="12" r="2.5"/><rect x="5" y="6" width="2" height="12"/><path d="M6 12h10c1 0 2 0 2-2V8"/></svg></button>
   <div id="sidebar-overlay"></div>
@@ -85,7 +58,7 @@
     <div id="sidebar-resizer" role="separator" aria-orientation="vertical" aria-label="Resize session tree sidebar"></div>
     <main id="content">
       <div id="header-container"></div>
-      <div id="messages">{{FIRST_MESSAGE_STUB}}</div>
+      <div id="messages">{{.FirstMessageStub}}</div>
     </main>
     <div id="image-modal" class="image-modal">
       <img id="modal-image" src="" alt="">
@@ -109,9 +82,8 @@
   </div>
   <div id="share-copy-notice" class="toast-notice"></div>
 
-  <script id="session-data" type="application/json">{{SESSION_DATA}}</script>
+  <script id="session-data" type="application/json">{{.SessionData}}</script>
 
-{{SESSION_SCRIPT}}
-{{CHAT_COMPOSER}}
-</body>
-</html>
+{{.SessionScript}}
+{{.ChatComposer}}
+{{.LiveDocumentEnd}}

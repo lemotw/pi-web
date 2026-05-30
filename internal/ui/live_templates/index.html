@@ -1,58 +1,11 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>Pi Sessions</title>
-{{ indexPreload }}
-<link rel="icon" type="image/svg+xml" href="/icon.svg">
-<link rel="apple-touch-icon" href="/icon.svg">
-<link rel="manifest" href="/manifest.webmanifest">
-<meta name="theme-color" content="#0e0e13">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Pi Sessions">
-<link rel="stylesheet" href="/index.css">
-<link rel="stylesheet" href="/menu.css">
-<link rel="stylesheet" href="/palette.css">
-</head>
-<body>
+{{ liveDocumentStart "Pi Sessions" (indexPreload) (indexStylesheets) }}
+{{ liveThemeBootScript }}
 <script>
 (function(){
-  var STORAGE_KEY = 'pi-web-theme';
-  function applyTheme(t){ document.documentElement.dataset.theme = t || 'dark'; }
-  try{ applyTheme(localStorage.getItem(STORAGE_KEY)); }catch(e){ applyTheme('dark'); }
   try{
     var savedLayout = localStorage.getItem('pi-sessions:view-layout');
     document.documentElement.dataset.sessionLayout = savedLayout === 'projects' ? 'projects' : 'timeline';
   }catch(e){ document.documentElement.dataset.sessionLayout = 'timeline'; }
-  function updateBtn(){
-    var btn = document.getElementById('theme-toggle');
-    if(!btn) return;
-    var isDark = (document.documentElement.dataset.theme || 'dark') === 'dark';
-    var icon = btn.querySelector('[data-theme-icon]');
-    if(icon) icon.textContent = isDark ? '☀' : '◐';
-    var meta = document.querySelector('meta[name="theme-color"]');
-    if(meta) meta.content = isDark ? '#0e0e13' : '#f6f5f2';
-  }
-  function toggleTheme(){
-    var current = document.documentElement.dataset.theme || 'dark';
-    var next = current === 'dark' ? 'light' : 'dark';
-    applyTheme(next);
-    try{ localStorage.setItem(STORAGE_KEY, next); }catch(e){}
-    updateBtn();
-  }
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', function(){
-      updateBtn();
-      var btn = document.getElementById('theme-toggle');
-      if(btn) btn.addEventListener('click', toggleTheme);
-    });
-  } else {
-    updateBtn();
-    var btn = document.getElementById('theme-toggle');
-    if(btn) btn.addEventListener('click', toggleTheme);
-  }
 })();
 </script>
 <div class="header">
@@ -237,14 +190,8 @@
   } else {
     start();
   }
-
-  if ('serviceWorker' in navigator && window.isSecureContext) {
-    window.addEventListener('load', function() {
-      navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(function() {});
-    });
-  }
 })();
 </script>
+{{ liveServiceWorkerScript }}
 <script type="module" src="{{ indexScript }}"></script>
-</body>
-</html>
+{{ liveDocumentEnd }}

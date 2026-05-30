@@ -116,6 +116,7 @@ func TestRenderedSessionPagesReplaceKnownPlaceholders(t *testing.T) {
 	placeholders := []string{
 		"{{TITLE}}", "{{SESSION_PRELOAD}}", "{{CSS}}", "{{BODY_ATTRS}}",
 		"{{SESSION_DATA}}", "{{SESSION_SCRIPT}}", "{{FIRST_MESSAGE_STUB}}",
+		"{{LIVE_DOCUMENT_START}}", "{{LIVE_THEME_BOOT}}", "{{LIVE_SERVICE_WORKER}}", "{{LIVE_DOCUMENT_END}}",
 		"{{CHAT_COMPOSER}}", "{{THEME_VARS_DARK}}", "{{THEME_VARS_LIGHT}}",
 		"{{BODY_BG}}", "{{CONTAINER_BG}}", "{{INFO_BG}}",
 		"{{BODY_BG_LIGHT}}", "{{CONTAINER_BG_LIGHT}}", "{{INFO_BG_LIGHT}}",

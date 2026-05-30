@@ -29,7 +29,7 @@ The live app is a dynamic web UI served by the Go server. The export is a frozen
 
 ### Live App
 
-The live app is the browser UI served by the local Go server.
+The live app is the browser UI served by the local Go server. Index and session pages keep separate page bodies and Vite entrypoints, but share common document chrome (doctype/head/PWA tags/theme boot/service-worker registration) through `internal/ui/live_page.go`.
 
 #### Index page (`/`)
 

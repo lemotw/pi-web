@@ -51,7 +51,7 @@ The most important doc for frontend work is **`docs/dev/templates-vs-web.md`** �
 - `internal/ui/export.go` — **Export/share snapshot** rendering (`internal/ui/export/index.html`, inlined JS, no server deps)
 - `internal/ui/live_templates/session.css` — Live session page CSS
 - `internal/ui/export/template.css` — Export snapshot CSS
-- `.pi/extensions/pi-web.ts` — Pi extension with `/pi-web`, `/remote`, `/refresh` commands
+- `.pi/extensions/pi-web.ts` — Pi extension with `/pi-web`, `/pi-web token`, `/pi-web set-token`, `/remote`, `/refresh` commands
 
 ### Live App vs. Export — DO NOT MIX THESE UP
 

@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"bytes"
 	_ "embed"
 	"encoding/base64"
 	"encoding/json"
@@ -15,13 +16,15 @@ import (
 //go:embed live_templates/session.html
 var liveSessionHtml string
 
-//go:embed live_templates/session.css
+var liveSessionTmpl = template.Must(template.New("live_session").Parse(liveSessionHtml))
+
+//go:embed live_templates/styles/session.css
 var liveSessionCss string
 
-//go:embed live_templates/menu.css
+//go:embed live_templates/styles/menu.css
 var liveMenuCss string
 
-//go:embed live_templates/palette.css
+//go:embed live_templates/styles/palette.css
 var livePaletteCss string
 
 //go:embed live_templates/chat_composer.html
@@ -140,26 +143,51 @@ func RenderLiveSessionPage(session sessions.Session) string {
 
 	scriptSrc := template.HTMLEscapeString(sessionScriptPath)
 	preload := `<link rel="modulepreload" href="` + scriptSrc + `">`
+	styles := "<style>\n" + css + "\n  </style>"
 
-	html := liveSessionHtml
-	html = strings.ReplaceAll(html, "{{TITLE}}", template.HTMLEscapeString(session.Name))
-	html = replaceRequired(html, "{{SESSION_PRELOAD}}", preload)
-	html = replaceRequired(html, "{{CSS}}", css)
-	html = replaceRequired(html, "{{BODY_ATTRS}}", bodyAttrs)
-	html = replaceRequired(html, "{{SESSION_COMMAND_MENU}}", string(sessionDesktopMenuHTML()))
-	html = replaceRequired(html, "{{MOBILE_COMMAND_MENU}}", string(sessionMobileMenuHTML()))
-	html = replaceRequired(html, "{{SESSION_PALETTE}}", string(renderPalette(paletteData{
-		ID:       "sessionPalette",
-		Label:    "List sessions",
-		SearchID: "session-palette-search",
-		Actions:  true,
-	})))
-	html = replaceRequired(html, "{{SESSION_DATA}}", dataBase64)
-	html = replaceRequired(html, "{{SESSION_SCRIPT}}", `<script type="module" src="`+scriptSrc+`"></script>`)
-	html = replaceRequired(html, "{{FIRST_MESSAGE_STUB}}", firstMessageStub(session))
-	html = replaceRequired(html, "{{CHAT_COMPOSER}}", chatComposerHtmlForSession(session))
+	data := struct {
+		Title              string
+		LiveDocumentStart  template.HTML
+		ThemeBoot          template.HTML
+		ServiceWorker      template.HTML
+		SessionCommandMenu template.HTML
+		MobileCommandMenu  template.HTML
+		SessionPalette     template.HTML
+		SessionData        template.JS
+		SessionScript      template.HTML
+		FirstMessageStub   template.HTML
+		ChatComposer       template.HTML
+		LiveDocumentEnd    template.HTML
+	}{
+		Title: session.Name,
+		LiveDocumentStart: template.HTML(renderLiveDocumentStart(liveDocumentData{
+			Title:     session.Name,
+			Preload:   template.HTML(preload),
+			Styles:    template.HTML(styles),
+			BodyAttrs: template.HTMLAttr(bodyAttrs),
+		})),
+		ThemeBoot:          liveThemeBootScript(),
+		ServiceWorker:      liveServiceWorkerScript(),
+		SessionCommandMenu: sessionDesktopMenuHTML(),
+		MobileCommandMenu:  sessionMobileMenuHTML(),
+		SessionPalette: renderPalette(paletteData{
+			ID:       "sessionPalette",
+			Label:    "List sessions",
+			SearchID: "session-palette-search",
+			Actions:  true,
+		}),
+		SessionData:      template.JS(dataBase64),
+		SessionScript:    template.HTML(`<script type="module" src="` + scriptSrc + `"></script>`),
+		FirstMessageStub: template.HTML(firstMessageStub(session)),
+		ChatComposer:     template.HTML(chatComposerHtmlForSession(session)),
+		LiveDocumentEnd:  liveDocumentEnd(),
+	}
 
-	return html
+	var buf bytes.Buffer
+	if err := liveSessionTmpl.Execute(&buf, data); err != nil {
+		return ""
+	}
+	return buf.String()
 }
 
 func renderLiveSessionPage(session sessions.Session) string { return RenderLiveSessionPage(session) }

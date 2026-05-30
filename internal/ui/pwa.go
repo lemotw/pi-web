@@ -5,31 +5,31 @@ import (
 	"net/http"
 )
 
-//go:embed live_templates/manifest.webmanifest
+//go:embed live_templates/assets/manifest.webmanifest
 var manifestJSON string
 
-//go:embed live_templates/sw.js
+//go:embed live_templates/assets/sw.js
 var swJS string
 
-//go:embed live_templates/icon.svg
+//go:embed live_templates/assets/icon.svg
 var iconSVG string
 
-//go:embed live_templates/icon-maskable.svg
+//go:embed live_templates/assets/icon-maskable.svg
 var iconMaskableSVG string
 
-//go:embed live_templates/pi-logo.svg
+//go:embed live_templates/assets/pi-logo.svg
 var piLogoSVG string
 
-//go:embed live_templates/done.mp3
+//go:embed live_templates/assets/done.mp3
 var doneMP3 []byte
 
-//go:embed live_templates/index.css
+//go:embed live_templates/styles/index.css
 var indexCSS string
 
-//go:embed live_templates/menu.css
+//go:embed live_templates/styles/menu.css
 var menuCSS string
 
-//go:embed live_templates/palette.css
+//go:embed live_templates/styles/palette.css
 var paletteCSS string
 
 // registerPWAHandlers serves the manifest, service worker, and icons.

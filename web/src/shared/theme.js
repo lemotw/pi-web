@@ -1,6 +1,7 @@
 export function applyTheme(windowImpl, documentImpl, next) {
   documentImpl.documentElement.dataset.theme = next || 'dark';
   try { windowImpl.localStorage.setItem('pi-web-theme', next); } catch (e) {}
+  try { documentImpl.cookie = 'pi-web-theme=' + next + ';path=/;SameSite=Lax;max-age=31536000'; } catch (e) {}
   const meta = documentImpl.querySelector('meta[name="theme-color"]');
   if (meta) meta.content = (next || 'dark') === 'dark' ? '#0e0e13' : '#f6f5f2';
 }

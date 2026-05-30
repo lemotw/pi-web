@@ -72,6 +72,11 @@ var funcMap = template.FuncMap{
 			Actions:  true,
 		})
 	},
+	"liveDocumentStart":       liveDocumentStart,
+	"liveThemeBootScript":     liveThemeBootScript,
+	"liveServiceWorkerScript": liveServiceWorkerScript,
+	"liveDocumentEnd":         liveDocumentEnd,
+	"indexStylesheets":        indexStylesheets,
 }
 
 var indexTmpl = template.Must(template.New("index").Funcs(funcMap).Parse(indexTmplStr))
