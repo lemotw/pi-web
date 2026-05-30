@@ -143,7 +143,7 @@ func RenderLiveSessionPage(session sessions.Session) string {
 
 	scriptSrc := template.HTMLEscapeString(sessionScriptPath)
 	preload := `<link rel="modulepreload" href="` + scriptSrc + `">`
-	styles := `<style>\n` + css + `\n  </style>`
+	styles := "<style>\n" + css + "\n  </style>"
 
 	data := struct {
 		Title              string
