@@ -2,7 +2,6 @@ package sessions
 
 import (
 	"bufio"
-	"bytes"
 	"crypto/rand"
 	"encoding/json"
 	"errors"
@@ -171,12 +170,12 @@ func ParseSummary(path, dirName, fileName string) (SessionSummary, error) {
 	scanner := bufio.NewScanner(f)
 	scanner.Buffer(make([]byte, 64*1024), 4*1024*1024)
 	for scanner.Scan() {
-		line := bytes.TrimSpace(scanner.Bytes())
+		line := strings.TrimSpace(scanner.Text())
 		if len(line) == 0 {
 			continue
 		}
 		var raw summaryLine
-		if err := json.Unmarshal(line, &raw); err != nil {
+		if err := json.Unmarshal([]byte(line), &raw); err != nil {
 			continue
 		}
 		switch raw.Type {
@@ -622,8 +621,10 @@ func resolveLocation(sessionsDir, dirName string) string {
 	return loc
 }
 
-// readSessionCWD opens the first *.jsonl file in dir, reads its session
-// header line, and returns the cwd field.  Returns "" on any error.
+// readSessionCWD opens a *.jsonl file in dir, reads its session header
+// line, and returns the cwd field.  Returns "" on any error.  Any file
+// in the directory will do — all sessions in the same project share
+// the same cwd.
 func readSessionCWD(dir string) string {
 	matches, err := filepath.Glob(filepath.Join(dir, "*.jsonl"))
 	if err != nil || len(matches) == 0 {
@@ -637,7 +638,7 @@ func readSessionCWD(dir string) string {
 	scanner := bufio.NewScanner(f)
 	scanner.Buffer(make([]byte, 64*1024), 1*1024*1024)
 	for scanner.Scan() {
-		line := bytes.TrimSpace(scanner.Bytes())
+		line := strings.TrimSpace(scanner.Text())
 		if len(line) == 0 {
 			continue
 		}
@@ -645,7 +646,7 @@ func readSessionCWD(dir string) string {
 			Type string `json:"type"`
 			CWD  string `json:"cwd"`
 		}
-		if err := json.Unmarshal(line, &raw); err != nil {
+		if err := json.Unmarshal([]byte(line), &raw); err != nil {
 			continue
 		}
 		if raw.Type == "session" && raw.CWD != "" {

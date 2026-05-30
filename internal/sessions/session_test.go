@@ -194,6 +194,34 @@ func TestListRecentLocationsRecoversLegacyHyphenatedPaths(t *testing.T) {
 	}
 }
 
+func TestResolveLocationReturnsDecodedPathWhenOnDisk(t *testing.T) {
+	tmp := t.TempDir()
+
+	// Create a real project directory so os.Stat succeeds.
+	realPath := filepath.Join(tmp, "my-project")
+	if err := os.MkdirAll(realPath, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create the new-format encoded directory under a sessions root.
+	sessionsDir := filepath.Join(tmp, "sessions")
+	encodedDir := filepath.Join(sessionsDir, EncodeProjectName(realPath))
+	if err := os.MkdirAll(encodedDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	locations, err := ListRecentLocations(sessionsDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(locations) == 0 {
+		t.Fatal("expected at least 1 location")
+	}
+	if locations[0] != realPath {
+		t.Fatalf("expected %q, got %q", realPath, locations[0])
+	}
+}
+
 func TestCreateSessionFile(t *testing.T) {
 	tmpDir := t.TempDir()
 	sessDir := filepath.Join(tmpDir, "sessions")
