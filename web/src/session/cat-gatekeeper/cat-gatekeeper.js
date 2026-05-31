@@ -155,7 +155,12 @@ export function setupCatGatekeeper({
     if (art && !art.querySelector('video')) art.innerHTML = catVideoHTML();
     const video = art?.querySelector('video');
     if (video) {
-      try { video.currentTime = 0; const p = video.play(); if (p && p.catch) p.catch(() => {}); } catch { /* ignore */ }
+      try {
+        video.currentTime = 0;
+        video.playbackRate = 0.6; // calmer, slower cat
+        const p = video.play();
+        if (p && p.catch) p.catch(() => {});
+      } catch { /* ignore */ }
     }
     blockInput();
     requestAnimationFrameImpl(() => el.classList.add('visible'));
@@ -174,7 +179,8 @@ export function setupCatGatekeeper({
     const timer = el.querySelector('[data-cat-timer]');
     const msg = el.querySelector('[data-cat-message]');
     if (timer) { timer.style.display = ''; timer.textContent = formatMMSS(state.breakRemainingMs); }
-    if (msg) msg.textContent = 'Break time! The cat will let you back soon.';
+    // Break shows only the countdown box (no message overlapping the cat).
+    if (msg) { msg.textContent = ''; msg.style.display = 'none'; }
   }
 
   function renderSleep(locked) {
@@ -182,7 +188,7 @@ export function setupCatGatekeeper({
     const timer = el.querySelector('[data-cat-timer]');
     const msg = el.querySelector('[data-cat-message]');
     if (timer) timer.style.display = 'none';
-    if (msg) msg.textContent = locked ? 'Locked for the night — get some rest.' : 'Time to sleep!';
+    if (msg) { msg.style.display = ''; msg.textContent = locked ? 'Locked for the night — get some rest.' : 'Time to sleep!'; }
     if (locked) el.classList.add('cat-overlay--locked');
   }
 
