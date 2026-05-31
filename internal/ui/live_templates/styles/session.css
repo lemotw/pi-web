@@ -3836,5 +3836,206 @@
       color: var(--error, #cc6666);
     }
 
+    /* ===================================================================
+       Cat Gatekeeper — focus/break + bedtime overlay (live app only).
+       The overlay DOM is created by web/src/session/cat-gatekeeper/.
+       =================================================================== */
 
+    .cat-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 2147483000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 50% 40%, rgba(20, 22, 30, 0.92), rgba(8, 9, 13, 0.98));
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.45s ease, visibility 0s linear 0.45s;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .cat-overlay.visible {
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 0.45s ease;
+    }
+
+    .cat-overlay-hidden {
+      pointer-events: none;
+    }
+
+    .cat-overlay--sleep,
+    .cat-overlay--locked {
+      background: radial-gradient(circle at 50% 35%, rgba(14, 16, 34, 0.95), rgba(4, 4, 12, 0.99));
+    }
+
+    .cat-overlay-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+      text-align: center;
+      padding: 24px;
+      transform: translateY(40px) scale(0.96);
+      transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .cat-overlay.visible .cat-overlay-inner {
+      transform: translateY(0) scale(1);
+    }
+
+    .cat-art {
+      width: 180px;
+      height: 180px;
+    }
+
+    .cat-svg {
+      width: 100%;
+      height: 100%;
+      transform-origin: 60px 104px;
+      animation: cat-bob 1.6s ease-in-out infinite;
+    }
+
+    .cat-svg--sleepy {
+      animation: cat-breathe 3.2s ease-in-out infinite;
+    }
+
+    @keyframes cat-bob {
+      0%, 100% { transform: translateY(0) rotate(-1.5deg); }
+      50% { transform: translateY(-8px) rotate(1.5deg); }
+    }
+
+    @keyframes cat-breathe {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+    }
+
+    .cat-body { fill: #f7a23b; stroke: #2a1c0c; stroke-width: 2.5; stroke-linejoin: round; }
+    .cat-overlay--sleep .cat-body,
+    .cat-overlay--locked .cat-body { fill: #8b8fc7; }
+    .cat-eye { fill: #fff; }
+    .cat-pupil { fill: #1a1a1a; }
+    .cat-eye-closed { fill: none; stroke: #2a1c0c; stroke-width: 3; stroke-linecap: round; }
+    .cat-nose { fill: #e26d5c; }
+    .cat-mouth { fill: none; stroke: #2a1c0c; stroke-width: 2; stroke-linecap: round; }
+    .cat-whiskers { fill: none; stroke: #2a1c0c; stroke-width: 1.5; stroke-linecap: round; opacity: 0.7; }
+    .cat-shadow { fill: rgba(0, 0, 0, 0.35); }
+
+    .cat-zzz text {
+      fill: #cfd3ff;
+      font-family: var(--font-sans, sans-serif);
+      font-weight: 700;
+      animation: cat-zzz 2.4s ease-in-out infinite;
+    }
+    .cat-zzz text:last-child { animation-delay: 0.5s; }
+
+    @keyframes cat-zzz {
+      0% { opacity: 0; transform: translateY(0); }
+      40% { opacity: 1; }
+      100% { opacity: 0; transform: translateY(-6px); }
+    }
+
+    .cat-timer {
+      font-family: var(--font-sans, sans-serif);
+      font-size: clamp(48px, 12vw, 110px);
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: 2px;
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+    }
+
+    .cat-message {
+      font-family: var(--font-sans, sans-serif);
+      font-size: clamp(15px, 3.5vw, 20px);
+      color: rgba(255, 255, 255, 0.82);
+      max-width: 32ch;
+      line-height: 1.4;
+    }
+
+    .cat-overlay--locked .cat-message {
+      color: rgba(207, 211, 255, 0.9);
+    }
+
+    /* --- settings sheet form --- */
+    .cat-settings { display: flex; flex-direction: column; gap: 4px; }
+
+    .cat-settings-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 4px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+    }
+    .cat-settings-row:last-of-type { border-bottom: none; }
+
+    .cat-settings-label {
+      font-size: 14px;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .cat-settings-hint {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 400;
+      margin-top: 3px;
+    }
+
+    .cat-settings-number,
+    .cat-settings-time {
+      flex: 0 0 auto;
+      width: 90px;
+      padding: 6px 8px;
+      font: inherit;
+      font-size: 14px;
+      text-align: right;
+      color: var(--text);
+      background: var(--container-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+    .cat-settings-time { width: 110px; }
+
+    .cat-settings-toggle {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .cat-settings-status {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 14px;
+      padding: 14px;
+      background: var(--container-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    .cat-settings-status-text {
+      font-size: 13px;
+      color: var(--text-soft, var(--muted));
+    }
+
+    .cat-settings-skip {
+      flex: 0 0 auto;
+      padding: 8px 14px;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--bg, #111);
+      background: var(--accent);
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .cat-settings-skip:hover { filter: brightness(1.08); }
 

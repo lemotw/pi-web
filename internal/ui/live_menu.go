@@ -106,6 +106,7 @@ func sessionMenuHTML(id, class, bodyClass, itemClass, toggleID, themeIconClass, 
 				{Label: "<span>Appearance</span>", Suffix: template.HTML("<span class=\"" + themeIconClass + "\" data-command-theme-icon>◐</span>"), Attrs: `data-action="theme"`},
 				{Label: "<span>Notifications</span>", Suffix: template.HTML("<span class=\"" + toggleClass + "\" id=\"" + toggleID + "\">OFF</span><select class=\"sound-selector\" style=\"display: none;\" data-action=\"select-sound\"></select>"), ExtraClass: itemClass + "-toggle", Attrs: `data-action="notifications"`},
 				{Label: "<span>Spinner</span>", Suffix: template.HTML("<span class=\"" + toggleClass + "\" id=\"" + strings.Replace(toggleID, "notify", "spinner", 1) + "\">RUNCAT</span>"), ExtraClass: itemClass + "-toggle", Attrs: `data-action="spinner"`},
+				{Label: "<span>Cat Gatekeeper</span>", Suffix: "<span>›</span>", Attrs: `data-action="cat-gatekeeper"`},
 			}},
 			{Title: "Development", Items: []liveMenuItem{
 				{Label: "Resume via Terminal", Attrs: `data-action="terminal"`},

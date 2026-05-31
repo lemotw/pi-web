@@ -36,6 +36,7 @@ import { setupKeyboardNav } from '../shared/keyboard-nav.js';
 import { toggleTheme, syncThemeIcons } from '../shared/theme.js';
 import { setupSessionListPalette } from '../shared/session-list-palette.js';
 import { showShortcutsModal } from './live/shortcuts-modal.js';
+import { setupCatGatekeeper } from './cat-gatekeeper/cat-gatekeeper.js';
 export { buildSessionLookups, createSessionDataModel, decodeBase64JSON, getSessionSearchParams, loadSessionData, readSessionPayload } from './data/session-data.js';
 export { buildActivePathIds, buildTree, buildTreeNodeMap, buildTreePrefix, findNewestLeaf, flattenTree, getPath } from './tree/session-tree.js';
 export { createTreeRenderer } from './tree/tree-renderer.js';
@@ -327,6 +328,10 @@ export function runSessionApp({ target = window } = {}) {
   setupKeyboardNav({ windowImpl: target, documentImpl });
 
   createVersionController({ documentImpl, windowImpl: target });
+
+  // Cat Gatekeeper — focus/break + bedtime companion. Self-paced background
+  // timer; settings open from the command menu (data-action="cat-gatekeeper").
+  target.__piCatGatekeeper = setupCatGatekeeper({ documentImpl, windowImpl: target }).start();
 
   setupCommandMenu({
     documentImpl,

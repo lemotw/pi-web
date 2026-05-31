@@ -334,6 +334,10 @@ export function setupCommandMenu({
           .catch(() => showToast('Clone failed', documentImpl, windowImpl));
         break;
       }
+      case 'cat-gatekeeper':
+        closeMenu();
+        windowImpl.__piCatGatekeeper?.openSettings?.();
+        break;
       case 'version':
         closeMenu();
         openVersionModal();
