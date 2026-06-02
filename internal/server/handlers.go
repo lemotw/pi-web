@@ -30,7 +30,9 @@ func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 500)
 		return
 	}
+	s.reapOrphanedBtw(summaries)
 	summaries = s.filterEnabledSummaries(summaries)
+	summaries = s.filterBtwSummaries(summaries)
 	sessions.SortSummariesByActivity(summaries)
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	if err := s.renderIndex(w, summaries); err != nil {
@@ -53,8 +55,16 @@ func (s *Server) handleSession(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+	scratchpad := ""
+	if resolved.Session.Header != nil {
+		if cwd, ok := resolved.Session.Header["cwd"].(string); ok && cwd != "" {
+			if content, err := s.lookupScratchpad(cwd); err == nil {
+				scratchpad = content
+			}
+		}
+	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	io.WriteString(w, s.renderLiveSession(resolved.Session))
+	io.WriteString(w, s.renderLiveSession(resolved.Session, scratchpad))
 }
 
 func (s *Server) handleApiForkSession(w http.ResponseWriter, r *http.Request) {
@@ -174,6 +184,7 @@ func (s *Server) handleApiSessions(w http.ResponseWriter, r *http.Request) {
 	} else {
 		summaries = s.filterEnabledSummaries(summaries)
 	}
+	summaries = s.filterBtwSummaries(summaries)
 	sessions.SortSummariesByActivity(summaries)
 
 	writeJSON(w, 0, map[string]any{"sessions": summaries})
