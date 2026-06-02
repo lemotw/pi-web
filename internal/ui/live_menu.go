@@ -56,34 +56,24 @@ func homeMenuHTML() template.HTML {
 			{Items: []liveMenuItem{
 				{Label: "New Session", Attrs: `data-new-session-btn role="menuitem"`},
 				{Label: "Manage Projects", Attrs: `id="manage-projects-btn" data-manage-projects-btn role="menuitem"`},
-				{Label: "Import Session", Muted: true, Attrs: `role="menuitem"`},
-			}},
-			{Items: []liveMenuItem{
-				{Label: "<span>Appearance</span>", Suffix: "<span data-theme-icon>◐</span>", Attrs: `id="theme-toggle" role="menuitem"`},
-				{Label: "<span>Notifications</span>", Suffix: `<span id="index-notify-status">OFF</span><select class="sound-selector" style="display: none;" data-action="select-sound"></select>`, Attrs: `id="index-notify-toggle" role="menuitem" aria-pressed="false"`},
-				{Label: "<span>Spinner</span>", Suffix: `<span id="index-spinner-status">RUNCAT</span>`, Attrs: `id="index-spinner-toggle" role="menuitem" aria-pressed="false"`},
-			}},
-			{Items: []liveMenuItem{
-				{Label: "Active Sessions", Muted: true, Attrs: `role="menuitem"`},
-				{Label: "Archived Sessions", Muted: true, Attrs: `role="menuitem"`},
 			}},
 			{Items: []liveMenuItem{
 				{Label: "Documentation", Href: "https://github.com/ygncode/pi-web/tree/main/docs", Attrs: `target="_blank" rel="noreferrer" role="menuitem"`},
 				{Label: "GitHub", Href: "https://github.com/ygncode/pi-web", Attrs: `target="_blank" rel="noreferrer" role="menuitem"`},
 			}},
 			{Items: []liveMenuItem{
+				{Label: "<span>Settings</span>", Suffix: "<kbd>⌘,</kbd>", Href: "/settings", Attrs: `role="menuitem"`},
 				{
 					Label:  "<span>Version</span>",
 					Suffix: `<span class="version-status" data-version-status>…</span>`,
 					Attrs:  `id="index-version-row" data-version-row role="menuitem"`,
 				},
-				{Label: "<span>Settings</span>", Suffix: "<span>›</span>", Muted: true, Attrs: `role="menuitem"`},
 			}},
 		},
 	})
 }
 
-func sessionMenuHTML(id, class, bodyClass, itemClass, toggleID, themeIconClass, toggleClass, versionStatusID, containerAttrs string) template.HTML {
+func sessionMenuHTML(id, class, bodyClass, itemClass, versionStatusID, containerAttrs string) template.HTML {
 	return renderLiveMenu(liveMenuData{
 		ID:                id,
 		Class:             class,
@@ -103,9 +93,6 @@ func sessionMenuHTML(id, class, bodyClass, itemClass, toggleID, themeIconClass, 
 				{Label: "Clone", Attrs: `data-action="clone"`},
 			}},
 			{Title: "Preferences", Items: []liveMenuItem{
-				{Label: "<span>Appearance</span>", Suffix: template.HTML("<span class=\"" + themeIconClass + "\" data-command-theme-icon>◐</span>"), Attrs: `data-action="theme"`},
-				{Label: "<span>Notifications</span>", Suffix: template.HTML("<span class=\"" + toggleClass + "\" id=\"" + toggleID + "\">OFF</span><select class=\"sound-selector\" style=\"display: none;\" data-action=\"select-sound\"></select>"), ExtraClass: itemClass + "-toggle", Attrs: `data-action="notifications"`},
-				{Label: "<span>Spinner</span>", Suffix: template.HTML("<span class=\"" + toggleClass + "\" id=\"" + strings.Replace(toggleID, "notify", "spinner", 1) + "\">RUNCAT</span>"), ExtraClass: itemClass + "-toggle", Attrs: `data-action="spinner"`},
 				{Label: "<span>Cat Gatekeeper</span>", Suffix: "<span>›</span>", Attrs: `data-action="cat-gatekeeper"`},
 			}},
 			{Title: "Development", Items: []liveMenuItem{
@@ -121,12 +108,12 @@ func sessionMenuHTML(id, class, bodyClass, itemClass, toggleID, themeIconClass, 
 				{Label: "GitHub", Href: "https://github.com/ygncode/pi-web", Attrs: `target="_blank" rel="noreferrer" role="menuitem"`},
 			}},
 			{Items: []liveMenuItem{
+				{Label: "<span>Settings</span>", Suffix: "<kbd>⌘,</kbd>", Href: "/settings", Attrs: `role="menuitem"`},
 				{
 					Label:  "<span>Version</span>",
 					Suffix: template.HTML("<span class=\"version-status\" id=\"" + versionStatusID + "\" data-version-status>…</span>"),
 					Attrs:  `data-action="version" data-version-row role="menuitem"`,
 				},
-				{Label: "<span>Settings</span>", Suffix: "<span>›</span>", Muted: true, Attrs: `role="menuitem"`},
 			}},
 		},
 	})
@@ -138,9 +125,6 @@ func sessionDesktopMenuHTML() template.HTML {
 		"command-menu-popover",
 		"command-menu-body",
 		"command-menu-item",
-		"command-menu-notify-status",
-		"command-menu-theme-icon",
-		"command-menu-toggle",
 		"command-menu-version-status",
 		`role="menu" aria-labelledby="command-menu-btn" style="display: none;"`,
 	)
@@ -152,9 +136,6 @@ func sessionMobileMenuHTML() template.HTML {
 		"mobile-command-panel",
 		"mobile-command-body",
 		"mobile-command-item",
-		"mobile-command-notify-status",
-		"mobile-command-theme-icon",
-		"mobile-command-toggle",
 		"mobile-command-version-status",
 		`style="display: none;"`,
 	)

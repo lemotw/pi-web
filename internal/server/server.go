@@ -43,6 +43,7 @@ type Deps struct {
 	RenderIndex         func(w io.Writer, summaries []sessions.SessionSummary) error
 	RenderLiveSession   func(s sessions.Session) string
 	RenderExportSession func(s sessions.Session, theme string) string
+	RenderSettings      func(w io.Writer) error
 	Models              func(ctx context.Context) (json.RawMessage, error)
 	Now                 func() time.Time
 	// Updater reports current/latest version + changelog. Optional; when nil
@@ -73,6 +74,7 @@ type Server struct {
 	renderIndex         func(w io.Writer, summaries []sessions.SessionSummary) error
 	renderLiveSession   func(s sessions.Session) string
 	renderExportSession func(s sessions.Session, theme string) string
+	renderSettings      func(w io.Writer) error
 	models              func(ctx context.Context) (json.RawMessage, error)
 	lastKnown           map[string]struct{} // session ids currently broadcast as running
 	lastKnownMu         sync.Mutex
@@ -117,6 +119,14 @@ func New(deps Deps) *Server {
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "failed to create scratchpads table: %v\n", err)
 		}
+		_, err = db.Exec(`CREATE TABLE IF NOT EXISTS settings (
+			key        TEXT PRIMARY KEY,
+			value      TEXT,
+			updated_at DATETIME
+		)`)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "failed to create settings table: %v\n", err)
+		}
 		if _, err := db.Exec(projectPrefsSchema); err != nil {
 			fmt.Fprintf(os.Stderr, "failed to create project_prefs table: %v\n", err)
 		}
@@ -137,6 +147,7 @@ func New(deps Deps) *Server {
 		renderIndex:         deps.RenderIndex,
 		renderLiveSession:   deps.RenderLiveSession,
 		renderExportSession: deps.RenderExportSession,
+		renderSettings:      deps.RenderSettings,
 		models:              deps.Models,
 		lastKnown:           make(map[string]struct{}),
 		stopCh:              make(chan struct{}),
@@ -179,6 +190,7 @@ func (s *Server) Shutdown() {
 func (s *Server) Register(mux *http.ServeMux) {
 	mux.HandleFunc("/", s.auth.Wrap(s.handleIndex))
 	mux.HandleFunc("/session", s.auth.Wrap(s.handleSession))
+	mux.HandleFunc("/settings", s.auth.Wrap(s.handleSettingsPage))
 	mux.HandleFunc("/api/session", s.auth.Wrap(s.handleApiSession))
 	mux.HandleFunc("/api/sessions", s.auth.Wrap(s.handleApiSessions))
 	mux.HandleFunc("/api/chat", s.auth.Wrap(s.handleChat))
@@ -194,23 +206,12 @@ func (s *Server) Register(mux *http.ServeMux) {
 	mux.HandleFunc("/api/clone-session", s.auth.Wrap(s.handleApiCloneSession))
 	mux.HandleFunc("/api/rename-session", s.auth.Wrap(s.handleRenameSession))
 	mux.HandleFunc("/api/recent-locations", s.auth.Wrap(s.handleRecentLocations))
-	mux.HandleFunc("/api/projects", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost {
-			s.auth.Wrap(s.handleUpdateProject)(w, r)
-		} else {
-			s.auth.Wrap(s.handleApiProjects)(w, r)
-		}
-	})
+	mux.HandleFunc("/api/projects", s.getPostHandler(s.handleApiProjects, s.handleUpdateProject))
 	mux.HandleFunc("/api/git/info", s.auth.Wrap(s.handleGitInfo))
 	mux.HandleFunc("/api/git/rename-branch", s.auth.Wrap(s.handleGitRenameBranch))
 	mux.HandleFunc("/custom-themes.css", s.auth.Wrap(s.handleCustomThemes))
-	mux.HandleFunc("/api/scratchpad", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost {
-			s.auth.Wrap(s.handleSaveScratchpad)(w, r)
-		} else {
-			s.auth.Wrap(s.handleGetScratchpad)(w, r)
-		}
-	})
+	mux.HandleFunc("/api/scratchpad", s.getPostHandler(s.handleGetScratchpad, s.handleSaveScratchpad))
+	mux.HandleFunc("/api/settings", s.getPostHandler(s.handleGetSettings, s.handleSaveSettings))
 	mux.HandleFunc("/api/btw", s.auth.Wrap(s.handleGetBtw))
 	mux.HandleFunc("/api/btw/new", s.auth.Wrap(s.handleNewBtw))
 	if s.push != nil {
@@ -223,6 +224,22 @@ func (s *Server) Register(mux *http.ServeMux) {
 		mux.HandleFunc("/api/check-update", s.auth.Wrap(s.handleCheckUpdate))
 		mux.HandleFunc("/api/update", s.auth.Wrap(s.handleUpdate))
 		mux.HandleFunc("/api/restart", s.auth.Wrap(s.handleRestart))
+	}
+}
+
+// getPostHandler routes GET to get and POST to post, each wrapped with auth,
+// and rejects any other method with 405 (and an Allow header) before auth runs.
+func (s *Server) getPostHandler(get, post http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			s.auth.Wrap(get)(w, r)
+		case http.MethodPost:
+			s.auth.Wrap(post)(w, r)
+		default:
+			w.Header().Set("Allow", "GET, POST")
+			writeJSONError(w, http.StatusMethodNotAllowed, "method not allowed")
+		}
 	}
 }
 

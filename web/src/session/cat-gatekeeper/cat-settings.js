@@ -5,12 +5,14 @@
  */
 
 import { showSheet } from '../live/full-screen-sheet.js';
+import { writeSetting } from '../../shared/settings-store.js';
 
 export const CAT_KEYS = {
   enabled: 'pi-web:v1:cat:enabled',
   focusMin: 'pi-web:v1:cat:focus-min',
   breakMin: 'pi-web:v1:cat:break-min',
   bedtime: 'pi-web:v1:cat:bedtime',
+  wakeup: 'pi-web:v1:cat:wakeup',
   sleepMin: 'pi-web:v1:cat:sleep-min',
 };
 
@@ -19,7 +21,8 @@ export const CAT_DEFAULTS = {
   focusMin: 25,
   breakMin: 5,
   bedtime: '23:00',
-  sleepMin: 2,
+  wakeup: '07:00',
+  sleepMin: 5,
 };
 
 const LIMITS = {
@@ -56,18 +59,20 @@ export function loadCatSettings({ storage = globalThis.localStorage } = {}) {
     focusMin: clampInt(read(CAT_KEYS.focusMin), LIMITS.focusMin, CAT_DEFAULTS.focusMin),
     breakMin: clampInt(read(CAT_KEYS.breakMin), LIMITS.breakMin, CAT_DEFAULTS.breakMin),
     bedtime: normalizeBedtime(read(CAT_KEYS.bedtime)),
+    wakeup: normalizeBedtime(read(CAT_KEYS.wakeup), CAT_DEFAULTS.wakeup),
     sleepMin: clampInt(read(CAT_KEYS.sleepMin), LIMITS.sleepMin, CAT_DEFAULTS.sleepMin),
   };
 }
 
 export function saveCatSettings(partial = {}, { storage = globalThis.localStorage } = {}) {
   const write = (key, value) => {
-    try { storage?.setItem(key, String(value)); } catch { /* ignore */ }
+    writeSetting(key, String(value), { storage });
   };
   if ('enabled' in partial) write(CAT_KEYS.enabled, !!partial.enabled);
   if ('focusMin' in partial) write(CAT_KEYS.focusMin, clampInt(partial.focusMin, LIMITS.focusMin, CAT_DEFAULTS.focusMin));
   if ('breakMin' in partial) write(CAT_KEYS.breakMin, clampInt(partial.breakMin, LIMITS.breakMin, CAT_DEFAULTS.breakMin));
   if ('bedtime' in partial) write(CAT_KEYS.bedtime, normalizeBedtime(partial.bedtime));
+  if ('wakeup' in partial) write(CAT_KEYS.wakeup, normalizeBedtime(partial.wakeup, CAT_DEFAULTS.wakeup));
   if ('sleepMin' in partial) write(CAT_KEYS.sleepMin, clampInt(partial.sleepMin, LIMITS.sleepMin, CAT_DEFAULTS.sleepMin));
   return loadCatSettings({ storage });
 }
@@ -151,6 +156,17 @@ export function showCatSettings({
         onChange(next);
       });
       root.appendChild(field('Bedtime', bedtime, 'When the cat says goodnight.'));
+
+      const wakeup = documentImpl.createElement('input');
+      wakeup.type = 'time';
+      wakeup.className = 'cat-settings-time';
+      wakeup.value = settings.wakeup;
+      wakeup.addEventListener('change', () => {
+        const next = saveCatSettings({ wakeup: wakeup.value }, { storage });
+        wakeup.value = next.wakeup;
+        onChange(next);
+      });
+      root.appendChild(field('Wakeup', wakeup, 'When the cat lets you back in.'));
 
       root.appendChild(field('Sleep reminder (minutes)', numberInput('sleepMin', settings.sleepMin), 'How long the sleepy cat stays before locking.'));
 
