@@ -23,6 +23,7 @@ type ChatSender interface {
 	GetState(ctx context.Context, sessionID string) (workers.WorkerStatus, error)
 	Status(sessionID string) workers.WorkerStatus
 	EnsureWorker(ctx context.Context, sessionID, sessionPath string) error
+	Commands(ctx context.Context, sessionID, sessionPath string, spawn bool) ([]workers.SlashCommand, bool, error)
 }
 
 func (s *Server) handleChat(w http.ResponseWriter, r *http.Request) {
@@ -265,4 +266,40 @@ func (s *Server) handleSetThinkingLevel(w http.ResponseWriter, r *http.Request) 
 		status.ThinkingLevel = state.ThinkingLevel
 	}
 	writeJSON(w, 0, map[string]any{"ok": true, "thinkingLevel": status.ThinkingLevel})
+}
+
+// handleGetCommands lists the commands loaded by the session's worker, used by
+// the composer to show skills when the user types "/skill". With ?load=1 it
+// spawns the worker on demand (the "Load skills" button); otherwise it only
+// peeks at an already-running worker and reports workerReady=false if none.
+func (s *Server) handleGetCommands(w http.ResponseWriter, r *http.Request) {
+	resolved, err := sessions.ResolveByID(s.sessionsDir, r.URL.Query().Get("id"))
+	if err != nil {
+		if errors.Is(err, sessions.ErrInvalidSessionID) {
+			writeJSONError(w, http.StatusBadRequest, "invalid session id")
+			return
+		}
+		if errors.Is(err, sessions.ErrSessionNotFound) {
+			writeJSONError(w, http.StatusNotFound, "session not found")
+			return
+		}
+		writeJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	if s.chatSender == nil {
+		writeJSONError(w, http.StatusServiceUnavailable, "chat unavailable")
+		return
+	}
+	spawn := r.URL.Query().Get("load") == "1" || r.URL.Query().Get("load") == "true"
+	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+	defer cancel()
+	commands, workerReady, err := s.chatSender.Commands(ctx, resolved.Session.ID, resolved.Path, spawn)
+	if err != nil {
+		writeJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	if commands == nil {
+		commands = []workers.SlashCommand{}
+	}
+	writeJSON(w, 0, map[string]any{"commands": commands, "workerReady": workerReady})
 }

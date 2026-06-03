@@ -36,6 +36,22 @@ type ChatWorker interface {
 	Close() error
 }
 
+// SlashCommand is one entry from a worker's command palette — extensions, prompt
+// templates, and skills. Source distinguishes them; the browser filters for
+// skills (source "skill", named "skill:<name>").
+type SlashCommand struct {
+	Name        string `json:"name"`
+	Source      string `json:"source,omitempty"`
+	Description string `json:"description,omitempty"`
+}
+
+// CommandLister is implemented by workers that can report their loaded commands.
+// It is optional (queried via type assertion) so worker fakes need not implement
+// it; the Manager treats a worker without it as having no commands.
+type CommandLister interface {
+	GetCommands(ctx context.Context) ([]SlashCommand, error)
+}
+
 type Factory func(sessionID, sessionPath string) (ChatWorker, error)
 
 type Manager struct {
@@ -178,6 +194,38 @@ func (m *Manager) Abort(ctx context.Context, sessionID string) error {
 func (m *Manager) EnsureWorker(ctx context.Context, sessionID, sessionPath string) error {
 	_, err := m.workerFor(sessionID, sessionPath)
 	return err
+}
+
+// Commands returns the commands loaded by the session's worker, plus whether a
+// worker is (now) running. When none is running it reports ready=false without
+// starting one, unless spawn is true — then it starts the worker on demand
+// first. Used by the composer's /skill listing.
+func (m *Manager) Commands(ctx context.Context, sessionID, sessionPath string, spawn bool) ([]SlashCommand, bool, error) {
+	m.mu.Lock()
+	worker := m.workers[sessionID]
+	m.mu.Unlock()
+	if worker != nil && worker.Status().State == WorkerStateError {
+		worker = nil
+	}
+	if worker == nil {
+		if !spawn {
+			return nil, false, nil
+		}
+		var err error
+		worker, err = m.workerFor(sessionID, sessionPath)
+		if err != nil {
+			return nil, false, err
+		}
+	}
+	lister, ok := worker.(CommandLister)
+	if !ok {
+		return nil, true, nil
+	}
+	cmds, err := lister.GetCommands(ctx)
+	if err != nil {
+		return nil, true, err
+	}
+	return cmds, true, nil
 }
 
 func (m *Manager) Close() error {

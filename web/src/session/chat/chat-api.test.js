@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { cancelChat, chatUrl, getWorkerStatus, listModels, sendChat, setModel, setThinkingLevel } from './chat-api.js';
+import { cancelChat, chatUrl, getCommands, getWorkerStatus, listModels, sendChat, setModel, setThinkingLevel } from './chat-api.js';
 
 describe('chat api helpers', () => {
   it('builds encoded session URLs', () => {
@@ -31,5 +31,13 @@ describe('chat api helpers', () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ level: 'medium' })
     });
+  });
+
+  it('peeks commands without load by default and spawns with load', async () => {
+    const fetchImpl = vi.fn(() => Promise.resolve(new Response('{}')));
+    await getCommands('s.jsonl', { fetchImpl });
+    await getCommands('s.jsonl', { load: true, fetchImpl });
+    expect(fetchImpl).toHaveBeenNthCalledWith(1, '/api/commands?id=s.jsonl');
+    expect(fetchImpl).toHaveBeenNthCalledWith(2, '/api/commands?id=s.jsonl&load=1');
   });
 });

@@ -36,6 +36,11 @@ type fakeSender struct {
 	setThinkingSessionID    string
 	setThinkingLevel        string
 	sendCh                  chan struct{}
+	commands                []workers.SlashCommand
+	commandsReady           bool
+	commandsErr             error
+	commandsSessionID       string
+	commandsSpawn           bool
 }
 
 func (f *fakeSender) Send(ctx context.Context, sessionID, sessionPath string, chat chat.Request) error {
@@ -91,6 +96,12 @@ func (f *fakeSender) EnsureWorker(ctx context.Context, sessionID, sessionPath st
 		f.ensureWorkerCh <- struct{}{}
 	}
 	return nil
+}
+
+func (f *fakeSender) Commands(ctx context.Context, sessionID, sessionPath string, spawn bool) ([]workers.SlashCommand, bool, error) {
+	f.commandsSessionID = sessionID
+	f.commandsSpawn = spawn
+	return f.commands, f.commandsReady, f.commandsErr
 }
 
 func TestHandleChatQueuesResolvedSession(t *testing.T) {
@@ -611,5 +622,60 @@ func waitForCondition(t *testing.T, timeout time.Duration, fn func() bool) {
 	}
 	if !fn() {
 		t.Fatal("condition not met before timeout")
+	}
+}
+
+func TestHandleGetCommandsListsSkills(t *testing.T) {
+	root := t.TempDir()
+	writeSessionFile(t, root, "--tmp--project--", "session.jsonl")
+	fake := &fakeSender{
+		commands:      []workers.SlashCommand{{Name: "skill:foo", Source: "skill", Description: "do foo"}},
+		commandsReady: true,
+	}
+	s := &Server{sessionsDir: root, chatSender: fake}
+	req := httptest.NewRequest(http.MethodGet, "/api/commands?id=session.jsonl&load=1", nil)
+	w := httptest.NewRecorder()
+	s.handleGetCommands(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("status = %d body = %s", w.Code, w.Body.String())
+	}
+	if !fake.commandsSpawn {
+		t.Fatalf("expected spawn=true when load=1")
+	}
+	var got struct {
+		Commands    []workers.SlashCommand `json:"commands"`
+		WorkerReady bool                   `json:"workerReady"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
+		t.Fatal(err)
+	}
+	if !got.WorkerReady || len(got.Commands) != 1 || got.Commands[0].Name != "skill:foo" {
+		t.Fatalf("got %+v", got)
+	}
+}
+
+func TestHandleGetCommandsPeekReportsNotReady(t *testing.T) {
+	root := t.TempDir()
+	writeSessionFile(t, root, "--tmp--project--", "session.jsonl")
+	fake := &fakeSender{commandsReady: false}
+	s := &Server{sessionsDir: root, chatSender: fake}
+	req := httptest.NewRequest(http.MethodGet, "/api/commands?id=session.jsonl", nil)
+	w := httptest.NewRecorder()
+	s.handleGetCommands(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("status = %d body = %s", w.Code, w.Body.String())
+	}
+	if fake.commandsSpawn {
+		t.Fatalf("expected spawn=false without load param")
+	}
+	var got struct {
+		Commands    []workers.SlashCommand `json:"commands"`
+		WorkerReady bool                   `json:"workerReady"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
+		t.Fatal(err)
+	}
+	if got.WorkerReady || len(got.Commands) != 0 {
+		t.Fatalf("got %+v, want not ready and empty commands", got)
 	}
 }

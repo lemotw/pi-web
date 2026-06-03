@@ -203,6 +203,7 @@ func (s *Server) Register(mux *http.ServeMux) {
 	mux.HandleFunc("/api/set-model", s.auth.Wrap(s.handleSetModel))
 	mux.HandleFunc("/api/set-thinking-level", s.auth.Wrap(s.handleSetThinkingLevel))
 	mux.HandleFunc("/api/models", s.auth.Wrap(s.handleAvailableModels))
+	mux.HandleFunc("/api/commands", s.auth.Wrap(s.handleGetCommands))
 	mux.HandleFunc("/api/worker-status", s.auth.Wrap(s.handleWorkerStatus))
 	mux.HandleFunc("/share", s.auth.Wrap(s.handleShare))
 	mux.HandleFunc("/events", s.auth.Wrap(s.handleEvents))

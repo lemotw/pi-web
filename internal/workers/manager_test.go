@@ -252,3 +252,53 @@ func TestEnsureWorkerCreatesWorkerWithoutSendingMessage(t *testing.T) {
 		t.Fatalf("status = %q, want idle", status.State)
 	}
 }
+
+type commandWorker struct {
+	fakeChatWorker
+	commands []SlashCommand
+}
+
+func (c *commandWorker) GetCommands(ctx context.Context) ([]SlashCommand, error) {
+	return c.commands, nil
+}
+
+func TestManagerCommandsPeekDoesNotSpawn(t *testing.T) {
+	created := 0
+	manager := NewManager(func(sessionID, sessionPath string) (ChatWorker, error) {
+		created++
+		return &commandWorker{commands: []SlashCommand{{Name: "skill:foo", Source: "skill"}}}, nil
+	})
+	cmds, ready, err := manager.Commands(context.Background(), "a.jsonl", "/tmp/a.jsonl", false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ready {
+		t.Fatalf("ready = true, want false when no worker and peek-only")
+	}
+	if len(cmds) != 0 {
+		t.Fatalf("cmds = %v, want empty", cmds)
+	}
+	if created != 0 {
+		t.Fatalf("created = %d, want 0 (peek must not spawn a worker)", created)
+	}
+}
+
+func TestManagerCommandsSpawnsThenPeeks(t *testing.T) {
+	manager := NewManager(func(sessionID, sessionPath string) (ChatWorker, error) {
+		return &commandWorker{commands: []SlashCommand{{Name: "skill:foo", Source: "skill"}}}, nil
+	})
+	cmds, ready, err := manager.Commands(context.Background(), "a.jsonl", "/tmp/a.jsonl", true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !ready {
+		t.Fatalf("ready = false, want true after spawn")
+	}
+	if len(cmds) != 1 || cmds[0].Name != "skill:foo" {
+		t.Fatalf("cmds = %v, want [skill:foo]", cmds)
+	}
+	cmds2, ready2, err := manager.Commands(context.Background(), "a.jsonl", "/tmp/a.jsonl", false)
+	if err != nil || !ready2 || len(cmds2) != 1 {
+		t.Fatalf("peek after spawn: cmds=%v ready=%v err=%v", cmds2, ready2, err)
+	}
+}
