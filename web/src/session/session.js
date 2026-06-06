@@ -20,6 +20,7 @@ import { filterArtifacts, readArtifactSettings, ARTIFACT_SETTING_KEYS } from './
 import { createAnnotationApi } from './annotations/annotation-api.js';
 import { createAnnotationLayer } from './annotations/annotation-layer.js';
 import { setupLoadEarlierBanner } from './ui/load-earlier.js';
+import { setupImageModal } from './ui/image-modal.js';
 import * as chatComposerRunner from './chat/chat-composer-runner.js';
 import * as doneNotifier from './chat/done-notifier.js';
 import * as chatApi from './chat/chat-api.js';
@@ -48,7 +49,9 @@ import { toggleTheme, syncThemeIcons } from '../shared/theme.js';
 import { setupSessionListPalette } from '../shared/session-list-palette.js';
 import { showShortcutsModal } from './live/shortcuts-modal.js';
 import { setupCatGatekeeper } from './cat-gatekeeper/cat-gatekeeper.js';
+import { openLabelModal } from './ui/label-modal.js';
 import { configureSettingsSync, hydrateSettings } from '../shared/settings-store.js';
+import { t } from '../shared/i18n.js';
 export { buildSessionLookups, createSessionDataModel, decodeBase64JSON, getSessionSearchParams, loadSessionData, readSessionPayload } from './data/session-data.js';
 export { buildActivePathIds, buildTree, buildTreeNodeMap, buildTreePrefix, findNewestLeaf, flattenTree, getPath } from './tree/session-tree.js';
 export { createTreeRenderer } from './tree/tree-renderer.js';
@@ -150,7 +153,7 @@ export function runSessionApp({ target = window } = {}) {
       : '';
     if (!nextLeafId) {
       for (let i = dataModel.entries.length - 1; i >= 0; i -= 1) {
-        if (dataModel.entries[i]?.id) {
+        if (dataModel.entries[i]?.id && dataModel.entries[i]?.type !== 'label') {
           nextLeafId = dataModel.entries[i].id;
           break;
         }
@@ -371,11 +374,33 @@ export function runSessionApp({ target = window } = {}) {
             }
           }
         })
-        .catch((err) => {
+        .catch(() => {
           btn.innerHTML = originalHtml;
           btn.disabled = false;
           target.alert('Fork failed');
         });
+    },
+    onLabel: (entryId) => {
+      openLabelModal({
+        entryId,
+        currentLabel: dataModel.labelMap.get(entryId) || '',
+        documentImpl,
+        onSave: ({ entryId: id, label }) => {
+          target.fetch(`/api/label-session?id=${encodeURIComponent(sessionId)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ entryId: id, label }),
+          })
+            .then(async (res) => {
+              const data = await res.json().catch(() => ({}));
+              if (!res.ok || data.error) throw new Error(data.error || t('session.labelSaveFailed'));
+              if (label) dataModel.labelMap.set(id, label);
+              else dataModel.labelMap.delete(id);
+              forceTreeRerender();
+            })
+            .catch((err) => target.alert(err?.message || t('session.labelSaveFailed')));
+        }
+      });
     }
   });
 
@@ -416,6 +441,10 @@ export function runSessionApp({ target = window } = {}) {
         // composer it just filled is visible and ready to type into.
         if (ui.isMobileLayout()) ui.collapseRightSidebar();
       },
+      onAddToChat: (attachment) => {
+        target.dispatchEvent(new target.CustomEvent('pi-chat-attach-text', { detail: attachment }));
+        if (ui.isMobileLayout()) ui.collapseRightSidebar();
+      },
       resolveArtifact: (artifactId) => artifactPanel?.getArtifact(artifactId) || null,
       documentImpl,
       windowImpl: target
@@ -423,6 +452,8 @@ export function runSessionApp({ target = window } = {}) {
     annotationLayer.init();
     target.addEventListener('pi-session-reload', () => annotationLayer.reapply());
   }
+
+  setupImageModal({ documentImpl });
 
   doneNotifier.setupDoneNotifyToggle({ documentImpl, windowImpl: target });
   doneNotifier.setupAppBadgeClearing({ documentImpl, windowImpl: target });

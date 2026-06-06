@@ -29,18 +29,18 @@ func SetThemeProvider(fn func() string) {
 const defaultMonoStack = "ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono', monospace"
 
 // fontProvider returns the resolved CSS font-family stacks and pixel sizes for
-// the interface (--font-sans / --font-size-ui) and content (--font-content /
-// --font-content-size). Injected into the shell so the page paints with the
-// chosen fonts/sizes before any JS runs. Defaults to the monospace stack; app
-// wiring overrides it via SetFontProvider to read the DB.
-var fontProvider = func() (uiStack, contentStack, uiSize, contentSize string) {
-	return defaultMonoStack, defaultMonoStack, "12", "13"
+// the interface (--font-sans / --font-size-ui), content (--font-content /
+// --font-content-size) and code (--font-code). Injected into the shell so the
+// page paints with the chosen fonts/sizes before any JS runs. Defaults to the
+// monospace stack; app wiring overrides it via SetFontProvider to read the DB.
+var fontProvider = func() (uiStack, contentStack, codeStack, uiSize, contentSize string) {
+	return defaultMonoStack, defaultMonoStack, defaultMonoStack, "12", "13"
 }
 
 // SetFontProvider installs the function used to resolve the current
-// server-backed interface/content font stacks and sizes for server-side
+// server-backed interface/content/code font stacks and sizes for server-side
 // injection.
-func SetFontProvider(fn func() (string, string, string, string)) {
+func SetFontProvider(fn func() (string, string, string, string, string)) {
 	if fn != nil {
 		fontProvider = fn
 	}
@@ -48,19 +48,16 @@ func SetFontProvider(fn func() (string, string, string, string)) {
 
 // wcoBootScript toggles a `wco` class on <html> when the PWA is running with
 // Window Controls Overlay so the app can paint its own header into the OS title
-// bar. Runs in <head> (before <body> exists) so the class is set on the root
-// element with no flash, and tracks runtime changes via geometrychange.
-// wcoBootScript runs in <head> before any CSS loads.
+// bar. It runs in <head> before <body> exists (so the class and background are
+// set with no flash) but *after* the stylesheets — including the user-defined
+// /custom-themes.css — so a parser-blocking <script> guarantees those styles are
+// loaded and getComputedStyle can resolve the custom theme's --body-bg.
 // It does two things:
-//   1. Sets an inline background-color on <html> from localStorage so the
-//      correct theme colour is present from the very first paint, eliminating
-//      the white/gray flash visible in the WCO title-bar area during navigation.
-//   2. Toggles the `wco` class when Window Controls Overlay is active.
-// wcoBootScript runs in <head> before any CSS loads.
-// It does two things:
-//   1. Sets an inline background-color on <html> matching the current theme
-//      and WCO state so the correct colour is present from the very first
-//      paint, eliminating the white/gray flash in the title-bar area.
+//   1. Sets data-theme + an inline background-color on <html> matching the
+//      current theme and WCO state so the correct colour is present from the
+//      very first paint, eliminating the white/gray flash in the title-bar
+//      area. Built-in themes use the hardcoded maps; the custom theme reads
+//      its --body-bg from the loaded stylesheet.
 //   2. Toggles the `wco` class when Window Controls Overlay is active.
 const wcoBootScript = `<script>
 (function(){
@@ -77,11 +74,30 @@ const wcoBootScript = `<script>
     var m = document.querySelector('meta[name="pi-web-theme"]');
     return m && m.content ? m.content : '';
   }
-  function applyBg(){
-    var t = serverTheme();
+  function resolveTheme(){
+    // Prefer the live data-theme: once the SPA/theme boot script sets it (and on
+    // every client-side switch) it is the source of truth, so later sync() calls
+    // from geometrychange don't revert to the stale server-injected meta value.
+    var t = document.documentElement.dataset.theme;
+    if(t) return t;
+    t = serverTheme();
     if(!t){ try{ t = localStorage.getItem('pi-web-theme') || 'dark'; }catch(e){ t = 'dark'; } }
+    return t;
+  }
+  function applyBg(){
+    var t = resolveTheme();
+    // Seed data-theme on the first run (before the body theme script sets it) so
+    // the stylesheets — including the user-defined /custom-themes.css this script
+    // follows in <head> and therefore waits for — resolve the active theme.
+    if(!document.documentElement.dataset.theme){ document.documentElement.dataset.theme = t; }
     var map = isWCO() ? chromeBgs : bodyBgs;
-    document.documentElement.style.backgroundColor = map[t] || map.dark;
+    var color = map[t];
+    if(!color){
+      // User-defined custom theme: its background lives in /custom-themes.css
+      // as the --body-bg variable rather than this hardcoded map.
+      try{ color = getComputedStyle(document.documentElement).getPropertyValue('--body-bg').trim(); }catch(e){}
+    }
+    document.documentElement.style.backgroundColor = color || map.dark;
   }
   function sync(){
     document.documentElement.classList.toggle('wco', isWCO());
@@ -115,23 +131,28 @@ func renderLiveDocumentStart(data liveDocumentData) string {
 	b.WriteString("<meta name=\"pi-web-theme\" content=\"")
 	b.WriteString(template.HTMLEscapeString(themeProvider()))
 	b.WriteString("\">\n")
-	b.WriteString(wcoBootScript)
-	b.WriteByte('\n')
 	if data.Styles != "" {
 		b.WriteString(string(data.Styles))
 		b.WriteByte('\n')
 	}
 	b.WriteString("<link rel=\"stylesheet\" href=\"/custom-themes.css\">\n")
-	fontUI, fontContent, fontUISize, fontContentSize := fontProvider()
+	fontUI, fontContent, fontCode, fontUISize, fontContentSize := fontProvider()
 	b.WriteString("<style id=\"pi-web-fonts\">:root{--font-sans:")
 	b.WriteString(fontUI)
 	b.WriteString(";--font-content:")
 	b.WriteString(fontContent)
+	b.WriteString(";--font-code:")
+	b.WriteString(fontCode)
 	b.WriteString(";--font-size-ui:")
 	b.WriteString(fontUISize)
 	b.WriteString("px;--font-content-size:")
 	b.WriteString(fontContentSize)
 	b.WriteString("px;}</style>\n")
+	// After the stylesheets so the parser-blocking script can read the custom
+	// theme's --body-bg from the now-loaded /custom-themes.css (see comment on
+	// wcoBootScript). Still inside <head>, before <body>, so there is no flash.
+	b.WriteString(wcoBootScript)
+	b.WriteByte('\n')
 	b.WriteString("</head>\n<body")
 	if data.BodyAttrs != "" {
 		b.WriteString(string(data.BodyAttrs))
@@ -181,6 +202,11 @@ func themeBootScript(defaultTheme string) template.HTML {
     if(t === 'light')   { chromeBg = '#ddddda'; bodyBg = '#f6f5f2'; }
     else if(t === 'nord')    { chromeBg = '#292f3a'; bodyBg = '#2e3440'; }
     else if(t === 'dracula') { chromeBg = '#242631'; bodyBg = '#282a36'; }
+    else if(t !== 'dark') {
+      // User-defined custom theme: read its background from the loaded
+      // /custom-themes.css (--body-bg) instead of the hardcoded built-ins.
+      try{ var cb = getComputedStyle(document.documentElement).getPropertyValue('--body-bg').trim(); if(cb){ chromeBg = cb; bodyBg = cb; } }catch(e){}
+    }
     var color = isWCO ? chromeBg : bodyBg;
     document.documentElement.style.backgroundColor = color;
     var meta = document.querySelector('meta[name="theme-color"]');
