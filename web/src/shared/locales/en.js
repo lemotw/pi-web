@@ -14,6 +14,7 @@ export default {
   'common.userDocs': 'User Docs',
   'common.telegram': 'Community Telegram',
   'common.version': 'Version',
+  'common.back': 'Back',
   'common.copied': 'Copied',
   'common.copyFailed': 'Copy failed',
 
@@ -49,7 +50,12 @@ export default {
   'index.closeManageProjects': 'Close Manage projects',
   'index.noProjectsMatch': 'No projects match your search.',
   'index.noProjectsFound': 'No projects found yet.',
+  'index.viewOnly': 'View only',
   'index.removeProject': 'Remove',
+  'index.enterPath': 'Please enter a path',
+  'index.failedCreateSession': 'Failed to create session',
+  'index.networkError': 'Network error',
+  'index.failedLoadProjects': 'Failed to load projects',
   'index.failedUpdateProject': 'Failed to update project',
   'index.failedRemoveProject': 'Failed to remove project',
   'index.filterOnDesc': 'Only checked projects appear on the homepage.',
@@ -60,6 +66,8 @@ export default {
   'palette.closeSearch': 'Close search',
   'palette.actions': 'Actions',
   'palette.newSession': 'New session',
+  'palette.noSessionsFound': 'No sessions found',
+  'palette.failedLoadSessions': 'Failed to load sessions',
 
   // ── Session viewer ──
   'session.back': 'Sessions',
@@ -91,6 +99,11 @@ export default {
   'session.labelInput': 'Label',
   'session.removeLabel': 'Remove label',
   'session.labelPrompt': 'Label (empty to remove):',
+  'session.earlierMessages': 'Earlier messages',
+  'session.showingLatestMessages': 'Showing latest {shown} of {total} messages.',
+  'session.loadEarlierCount': 'Load {count} earlier',
+  'session.loadingEarlier': 'Loading…',
+  'session.loadEarlierFailed': 'Failed to load: {error}',
   'session.labelSaveFailed': 'Failed to save label',
 
   // ── Session command menu ──
@@ -157,6 +170,9 @@ export default {
   'settings.contentFontSize': 'Content font size',
   'settings.contentFontSizeHint': 'Size of rendered message text (px).',
   'settings.fontBuiltIn': 'Built-in',
+  'settings.fontInstalled': 'Installed',
+  'settings.fontDetectUnsupported': 'This browser cannot list installed fonts. Use Custom… to type a font name.',
+  'settings.fontDetectDenied': 'Could not read installed fonts (permission denied). Use Custom… to type a font name.',
   'settings.fontActions': 'Actions',
   'settings.fontMono': 'Monospace',
   'settings.fontSystem': 'System',

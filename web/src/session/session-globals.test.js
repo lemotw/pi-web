@@ -3,7 +3,7 @@ import { setupSessionGlobals } from './session-globals.js';
 
 // Focused coverage for the global keyboard shortcuts + relay buttons, which the
 // e2e suite does not exercise. The other wiring (done-notifier, version, palette,
-// load-earlier) is covered by those modules' own tests; here we just confirm
+// component-owned pieces are covered by their own tests; here we just confirm
 // setupSessionGlobals registers them without throwing in jsdom.
 
 function dispatchKey(key, { meta = false, shift = false } = {}) {
@@ -50,8 +50,11 @@ describe('setupSessionGlobals — keyboard shortcuts', () => {
     delete window.__piOpenSessionPalette;
   });
 
-  it('exposes the session-list palette opener (Cmd+K target)', () => {
-    expect(typeof window.__piOpenSessionPalette).toBe('function');
+  it('Cmd+K calls the Svelte command-palette bridge when present', () => {
+    const open = vi.fn();
+    window.__piOpenSessionPalette = open;
+    dispatchKey('k', { meta: true });
+    expect(open).toHaveBeenCalledOnce();
   });
 
   it('Cmd+T clicks the hidden new-session relay', () => {

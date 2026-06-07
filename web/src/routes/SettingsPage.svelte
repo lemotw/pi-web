@@ -8,15 +8,33 @@
   import NotificationSettings from '../components/settings/NotificationSettings.svelte';
   import SessionsListSettings from '../components/settings/SessionsListSettings.svelte';
   import SessionTitleSettings from '../components/settings/SessionTitleSettings.svelte';
-  import { runSettingsPage } from '../settings/settings.js';
   import { t } from '../shared/i18n.js';
+  import { loadSettings, persistSetting, setupBackLink } from '../settings/settings-support.js';
+
+  let settings = $state({});
+  let savedVisible = $state(false);
+  let savedTimer = null;
+
+  function flashSaved() {
+    savedVisible = true;
+    clearTimeout(savedTimer);
+    savedTimer = setTimeout(() => { savedVisible = false; }, 1200);
+  }
+
+  function saveSetting(key, value) {
+    settings = { ...settings, [key]: value };
+    persistSetting(key, value, { storage: localStorage });
+    flashSaved();
+  }
 
   onMount(() => {
     const previousTitle = document.title;
     document.title = `${t('settings.title')} — Pi Sessions`;
-    runSettingsPage({ documentImpl: document, windowImpl: window });
+    setupBackLink(document, window);
+    loadSettings({ windowImpl: window }).then((loaded) => { settings = loaded || {}; }).catch(() => {});
     return () => {
       document.title = previousTitle;
+      clearTimeout(savedTimer);
     };
   });
 </script>
@@ -27,14 +45,14 @@
     <h1>{t('settings.title')}</h1>
   </div>
 
-  <AppearanceSettings />
-  <LanguageSettings />
-  <SessionsListSettings />
-  <SessionTitleSettings />
-  <ArtifactSettings />
-  <NotificationSettings />
-  <CatGatekeeperSettings />
+  <AppearanceSettings {settings} onSave={saveSetting} onSaved={flashSaved} />
+  <LanguageSettings {settings} onSave={saveSetting} />
+  <SessionsListSettings {settings} onSave={saveSetting} />
+  <SessionTitleSettings {settings} onSave={saveSetting} />
+  <ArtifactSettings {settings} onSave={saveSetting} />
+  <NotificationSettings {settings} onSave={saveSetting} onSaved={flashSaved} />
+  <CatGatekeeperSettings {settings} onSave={saveSetting} />
   <AboutSettings />
 
-  <div class="settings-saved-hint" data-settings-saved>Saved</div>
+  <div class="settings-saved-hint" class:visible={savedVisible} data-settings-saved>{t('common.saved')}</div>
 </div>
