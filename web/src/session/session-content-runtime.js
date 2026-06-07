@@ -10,6 +10,9 @@
 
 import { setIconElement, Loader } from '../shared/icons.js';
 import { t } from '../shared/i18n.js';
+import { openLabel } from './session-modals.svelte.js';
+import { navigate } from '../shared/navigation.js';
+import { sessionRuntime } from './session-runtime.js';
 import { extractContent } from './tree/session-filter.js';
 import { escapeHtml, formatToolCall, getTreeNodeDisplayHtml, shortenPath, truncate } from './render/session-format.js';
 import { buildShareUrl, copyToClipboard, downloadSessionJson } from './render/session-entry-actions.js';
@@ -63,7 +66,7 @@ export function wireSessionContentRuntime({
       .then((res) => res.json())
       .then((data) => {
         if (data.id) {
-          target.location.href = '/session?id=' + encodeURIComponent(data.id);
+          navigate('/session?id=' + encodeURIComponent(data.id), { windowImpl: target });
         } else {
           restoreButton();
           btn.disabled = false;
@@ -84,10 +87,10 @@ export function wireSessionContentRuntime({
       });
   };
 
-  // Set/clear an entry's tree label. The modal is <LabelModal> (SessionPage
-  // exposes the opener); this owns the save (API + reactive labelMap update).
+  // Set/clear an entry's tree label. The modal is <LabelModal>, opened via the
+  // shared sessionModals store; this owns the save (API + reactive labelMap update).
   const labelEntry = (entryId) => {
-    target.__piOpenLabelModal?.({
+    openLabel({
       entryId,
       currentLabel: model.labelMap.get(entryId) || '',
       onSave: ({ entryId: id, label }) => {
@@ -111,7 +114,7 @@ export function wireSessionContentRuntime({
   // state and lazy-highlight any pending code blocks.
   if (contentRuntime) {
     contentRuntime.afterRender = (container) => {
-      target.applyToggleStateToNode?.(container);
+      sessionRuntime.toggleState?.applyToNode(container);
       applyLazyHighlighting(documentImpl);
     };
   }

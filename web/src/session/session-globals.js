@@ -10,6 +10,8 @@
 import * as doneNotifier from './chat/done-notifier.js';
 import * as sidebarApi from './ui/sidebar.js';
 import { setupKeyboardNav } from '../shared/keyboard-nav.js';
+import { openShortcuts } from './session-modals.svelte.js';
+import { sessionRuntime } from './session-runtime.js';
 import { toggleTheme, syncThemeIcons } from '../shared/theme.js';
 
 export function setupSessionGlobals({
@@ -93,16 +95,16 @@ export function setupSessionGlobals({
   on(target, 'keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'n') {
       e.preventDefault();
-      target.__piRightSidebar?.toggle();
+      sessionRuntime.rightSidebar?.toggle();
     }
   });
 
   // Cmd+/ — keyboard shortcuts help modal (the <ShortcutsModal> Svelte
-  // component; SessionPage exposes the opener on window).
+  // component, opened via the shared sessionModals store).
   on(target, 'keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key === '/') {
       e.preventDefault();
-      target.__piOpenShortcuts?.();
+      openShortcuts();
     }
   });
 
@@ -110,7 +112,7 @@ export function setupSessionGlobals({
   if (shortcutsBtn) {
     on(shortcutsBtn, 'click', (e) => {
       e.stopPropagation();
-      target.__piOpenShortcuts?.();
+      openShortcuts();
     });
   }
 

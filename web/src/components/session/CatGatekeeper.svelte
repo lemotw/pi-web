@@ -19,10 +19,13 @@
   let showMessage = $state(false);
   let showSnooze = $state(false);
 
+  // Assigned in onMount; the snooze button (rendered before mount) reads it here.
+  let controller = null;
+
   function onSnooze(e) {
     e.preventDefault();
     e.stopPropagation();
-    window.__piCatGatekeeper?.snooze?.();
+    controller?.snooze?.();
   }
 
   onMount(() => {
@@ -96,15 +99,21 @@
       return !hidden && focused;
     };
 
-    const controller = setupCatGatekeeper({ windowImpl: win, storage: win.localStorage, isActive, view });
-    win.__piCatGatekeeper = controller;
+    controller = setupCatGatekeeper({ windowImpl: win, storage: win.localStorage, isActive, view });
     controller.start();
+
+    // Test seam: the enforced break only fires after the (25-min) focus timer,
+    // so the e2e suite forces it via skipToBreak(). The controller has no in-app
+    // consumers, so this stays a plain window hook rather than a sessionRuntime
+    // registry slot. Cleared on destroy so SPA re-entry never sees a stale one.
+    win.__piCatGatekeeper = controller;
 
     return () => {
       controller.destroy();
       unblockInput();
       overlayEl?.remove();
-      if (win.__piCatGatekeeper === controller) delete win.__piCatGatekeeper;
+      if (win.__piCatGatekeeper === controller) win.__piCatGatekeeper = null;
+      controller = null;
     };
   });
 </script>

@@ -10,6 +10,8 @@
   import { icon, Search, Pencil, Share2, GitFork, Copy, Terminal, ListTree, FileDiff, ChartColumn, BookOpen, Send, Settings, Tag } from '../../shared/icons.js';
   import * as sidebarApi from '../../session/ui/sidebar.js';
   import { openVersionModal } from '../../shared/version.js';
+  import { navigate } from '../../shared/navigation.js';
+  import { openModelUsage, openFork } from '../../session/session-modals.svelte.js';
 
   let { sessionId = '' } = $props();
 
@@ -111,7 +113,7 @@
           else sidebarApi.setSidebarCollapsed(false, { documentImpl: document });
           closeMenu();
           break;
-        case 'model-usage': window.__piOpenModelUsage?.(); closeMenu(); break;
+        case 'model-usage': openModelUsage(); closeMenu(); break;
         case 'rename': {
           const titleEl = document.getElementById('session-header-title');
           const current = titleEl ? titleEl.textContent : '';
@@ -144,12 +146,12 @@
                 })
                   .then((res) => res.json())
                   .then((data) => {
-                    if (data.id) window.location.href = '/session?id=' + encodeURIComponent(data.id);
+                    if (data.id) navigate('/session?id=' + encodeURIComponent(data.id));
                     else showToast(data.error || 'Fork failed');
                   })
                   .catch(() => showToast('Fork failed'));
               };
-              const opened = window.__piOpenForkModal?.({ entries, onSelect });
+              const opened = openFork({ entries, onSelect });
               if (opened === false) showToast('No user messages to fork from');
             })
             .catch(() => showToast('Failed to load messages'));
@@ -164,7 +166,7 @@
           })
             .then((res) => res.json())
             .then((data) => {
-              if (data.id) window.location.href = '/session?id=' + encodeURIComponent(data.id);
+              if (data.id) navigate('/session?id=' + encodeURIComponent(data.id));
               else showToast(data.error || 'Clone failed');
             })
             .catch(() => showToast('Clone failed'));
