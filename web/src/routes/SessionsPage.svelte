@@ -91,6 +91,7 @@
     }
   }
 
+  const RELOAD_DEBOUNCE_MS = 500;
   let reloadTimer = null;
   function scheduleReload() {
     if (reloadTimer) clearTimeout(reloadTimer);
@@ -98,7 +99,7 @@
     reloadTimer = setTimeout(() => {
       reloadTimer = null;
       refreshSessions();
-    }, 500);
+    }, RELOAD_DEBOUNCE_MS);
   }
 
   async function setLayout(nextLayout) {

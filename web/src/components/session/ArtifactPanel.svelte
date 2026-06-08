@@ -23,6 +23,7 @@
   // panel is driven imperatively via the sessionRuntime.artifacts.setArtifacts
   // handle instead.
   const model = getSessionModel();
+  const COPIED_RESET_MS = 1500;
   // Bumped by the cross-tab `storage` listener so the collection effect re-reads
   // the artifact settings (enable/include filter) without a reload.
   let settingsTick = $state(0);
@@ -91,7 +92,7 @@
       window.setTimeout(() => {
         button.textContent = original;
         button.classList.remove('copied');
-      }, 1500);
+      }, COPIED_RESET_MS);
     }
     return ok;
   }

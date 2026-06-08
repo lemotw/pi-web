@@ -25,6 +25,10 @@
   let { cwd = '', parentId = '' } = $props();
 
   const GLOBAL_PARENT = '__global__';
+  // After a send, ignore an "idle" status for this long so the spinner doesn't
+  // flicker off before the worker has actually started.
+  const IDLE_GRACE_MS = 3000;
+  const STATUS_POLL_MS = 1500;
 
   let open = $state(false);
   let entries = $state([]);
@@ -165,14 +169,14 @@
         if (!data) return;
         if (data.state === 'running') setRunning(true);
         else if (data.state === 'idle') {
-          if (Date.now() - lastSentAt > 3000) setRunning(false);
+          if (Date.now() - lastSentAt > IDLE_GRACE_MS) setRunning(false);
         } else if (data.state === 'error') setRunning(false);
       })
       .catch(() => {});
   }
   function startStatusPolling() {
     if (statusTimer) return;
-    statusTimer = window.setInterval(() => refreshStatus(), 1500);
+    statusTimer = window.setInterval(() => refreshStatus(), STATUS_POLL_MS);
   }
   function stopStatusPolling() {
     if (statusTimer) {

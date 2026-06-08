@@ -15,6 +15,7 @@
   const RIGHT_SIDEBAR_WIDTH_KEY = 'pi-web:v1:right-sidebar-width';
   const RIGHT_SIDEBAR_TAB_KEY = 'pi-web:v1:right-sidebar-tab';
   const MIN_CONTENT_WIDTH = 320;
+  const DEFAULT_WIDTH_PX = 320; // double-click reset width
 
   onMount(() => {
     const documentImpl = document;
@@ -153,8 +154,8 @@
       cleanups.push(() => resizer.removeEventListener('pointerdown', onPointerDown));
 
       const onDblClick = () => {
-        applyWidth(320);
-        saveWidth(320);
+        applyWidth(DEFAULT_WIDTH_PX);
+        saveWidth(DEFAULT_WIDTH_PX);
       };
       resizer.addEventListener('dblclick', onDblClick);
       cleanups.push(() => resizer.removeEventListener('dblclick', onDblClick));

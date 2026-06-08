@@ -31,6 +31,7 @@
   let onAddToChat = null;
   let resolveArtifact = null;
   let selectionDelayMs = 250;
+  const FLASH_DURATION_MS = 1200;
 
   let pending = null; // selection info awaiting a note
   let observer = null;
@@ -246,7 +247,7 @@
       if (anchor) {
         anchor.scrollIntoView({ block: 'center', behavior: 'smooth' });
         anchor.classList.add('annotation-flash');
-        window.setTimeout(() => anchor.classList.remove('annotation-flash'), 1200);
+        window.setTimeout(() => anchor.classList.remove('annotation-flash'), FLASH_DURATION_MS);
       }
     }
   }
