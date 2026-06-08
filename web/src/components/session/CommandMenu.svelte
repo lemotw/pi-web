@@ -135,7 +135,7 @@
         case 'rename': {
           const titleEl = document.getElementById('session-header-title');
           const current = titleEl ? titleEl.textContent : '';
-          const next = window.prompt('Rename session', current);
+          const next = window.prompt(t('menu.renamePrompt'), current);
           const trimmed = next ? next.trim() : '';
           closeMenu();
           if (!trimmed || trimmed === current) break;
@@ -144,9 +144,9 @@
               const savedName = (data && data.name) || trimmed;
               if (titleEl) titleEl.textContent = savedName;
               document.title = savedName;
-              toast('Renamed');
+              toast(t('menu.renamed'));
             })
-            .catch(() => toast('Rename failed'));
+            .catch(() => toast(t('git.renameFailed')));
           break;
         }
         case 'fork': {
@@ -165,14 +165,14 @@
                   .then((res) => res.json())
                   .then((data) => {
                     if (data.id) navigate('/session?id=' + encodeURIComponent(data.id));
-                    else toast(data.error || 'Fork failed');
+                    else toast(data.error || t('menu.forkFailed'));
                   })
-                  .catch(() => toast('Fork failed'));
+                  .catch(() => toast(t('menu.forkFailed')));
               };
               const opened = openFork({ entries, onSelect });
-              if (opened === false) toast('No user messages to fork from');
+              if (opened === false) toast(t('menu.noUserMessagesToFork'));
             })
-            .catch(() => toast('Failed to load messages'));
+            .catch(() => toast(t('menu.loadMessagesFailed')));
           break;
         }
         case 'clone': {
@@ -185,9 +185,9 @@
             .then((res) => res.json())
             .then((data) => {
               if (data.id) navigate('/session?id=' + encodeURIComponent(data.id));
-              else toast(data.error || 'Clone failed');
+              else toast(data.error || t('menu.cloneFailed'));
             })
-            .catch(() => toast('Clone failed'));
+            .catch(() => toast(t('menu.cloneFailed')));
           break;
         }
         case 'version':
@@ -199,7 +199,7 @@
           window.open(userDocsUrl, '_blank', 'noreferrer');
           break;
         case 'diff':
-          toast('Not yet implemented');
+          toast(t('menu.notImplemented'));
           closeMenu();
           break;
         default:

@@ -117,6 +117,13 @@ export default {
   'menu.tree': 'Tree',
   'menu.diff': 'Diff',
   'menu.modelUsage': 'Model Usage',
+  'menu.renamePrompt': 'Rename session',
+  'menu.renamed': 'Renamed',
+  'menu.forkFailed': 'Fork failed',
+  'menu.noUserMessagesToFork': 'No user messages to fork from',
+  'menu.loadMessagesFailed': 'Failed to load messages',
+  'menu.cloneFailed': 'Clone failed',
+  'menu.notImplemented': 'Not yet implemented',
 
   // ── Right sidebar ──
   'sidebar.scratchpad': 'Scratchpad',
