@@ -14,6 +14,7 @@
     placeBtwInitial,
     saveBtwGeometry,
   } from './btw-geometry.js';
+  import { closeBtwEventSource, setupBtwParentEvents, setupBtwSessionEvents } from './btw-events.js';
   import { btwContentText, createBtwMarkdownRenderer, renderBtwEntryParts } from './btw-render.js';
 
   let { cwd = '', parentId = '' } = $props();
@@ -81,39 +82,37 @@
 
   function subscribe() {
     unsubscribe();
-    const ES = window.EventSource;
-    if (!sessionId || !ES) return;
-    eventSource = new ES('/events?id=' + encodeURIComponent(sessionId));
-    eventSource.onmessage = (e) => {
-      if (e.data === 'reload') { streamingText = ''; loadTranscript(); refreshStatus(); }
-    };
-    eventSource.addEventListener('chat-preview', (e) => {
-      try {
-        const p = JSON.parse(e.data);
-        streamingText = p.content || '';
-        if (!p.done) setRunning(true);
-      } catch { /* ignore malformed preview */ }
+    eventSource = setupBtwSessionEvents({
+      sessionId,
+      EventSourceImpl: window.EventSource,
+      onReload: () => {
+        streamingText = '';
+        loadTranscript();
+        refreshStatus();
+      },
+      onChatPreview: (payload) => {
+        streamingText = payload.content || '';
+        if (!payload.done) setRunning(true);
+      },
     });
-    eventSource.onerror = () => {};
   }
   function unsubscribe() {
-    if (eventSource) { try { eventSource.close(); } catch { /* closed */ } eventSource = null; }
+    closeBtwEventSource(eventSource);
+    eventSource = null;
   }
   function subscribeGlobal() {
-    const ES = window.EventSource;
-    if (globalSource || !ES) return;
-    globalSource = new ES('/events?id=' + encodeURIComponent(parentTopic()));
-    globalSource.addEventListener('btw-changed', (e) => {
-      try {
-        const p = JSON.parse(e.data);
-        const id = p.sessionId || '';
+    if (globalSource) return;
+    globalSource = setupBtwParentEvents({
+      parentTopic: parentTopic(),
+      EventSourceImpl: window.EventSource,
+      onChanged: (id) => {
         if (id !== sessionId) setSession(id);
-      } catch { /* ignore */ }
+      },
     });
-    globalSource.onerror = () => {};
   }
   function unsubscribeGlobal() {
-    if (globalSource) { try { globalSource.close(); } catch { /* closed */ } globalSource = null; }
+    closeBtwEventSource(globalSource);
+    globalSource = null;
   }
 
   // ── worker running state (spinner + cancel button) ──
