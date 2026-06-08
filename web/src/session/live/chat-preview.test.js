@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 import { JSDOM } from 'jsdom';
-import { clearChatPreviewState as clearChatPreview, finishChatPreviewState as finishChatPreview, renderChatPreviewState as renderChatPreview, renderPendingChatState as renderPendingChat } from '../../components/session/LiveReload.svelte';
+import {
+  clearChatPreviewState as clearChatPreview,
+  finishChatPreviewState as finishChatPreview,
+  renderChatPreviewState as renderChatPreview,
+  renderPendingChatState as renderPendingChat,
+} from './chat-preview.js';
 
 describe('chat preview', () => {
   it('renders, updates, follows, and clears preview', () => {
@@ -101,4 +106,3 @@ describe('chat preview', () => {
     expect(state.chatPreviewEl).toBeNull();
   });
 });
-
