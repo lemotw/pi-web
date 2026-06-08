@@ -3,7 +3,7 @@
   // and inject selector implementations. Model selector wiring has been split
   // into components/session/chat/model-selector.js; the remaining selector
   // helpers below are still being extracted incrementally.
-  import { icon, Maximize2, Paperclip } from '../../shared/icons.js';
+  import { icon, Maximize2 } from '../../shared/icons.js';
   import { t } from '../../shared/i18n.js';
   import {
     THINKING_LEVELS,
@@ -322,6 +322,7 @@ export function runChatComposer({
   import { getSessionRuntime } from '../../session/session-runtime-context.js';
   import * as chatApi from '../../session/chat/chat-api.js';
   import GitFooter from './GitFooter.svelte';
+  import ChatToolbar from './chat/ChatToolbar.svelte';
   import ContextUsage from './chat/ContextUsage.svelte';
   import TextAttachmentModal from './chat/TextAttachmentModal.svelte';
 
@@ -373,7 +374,7 @@ export function runChatComposer({
     <div id="pi-chat-thinking-popup" class="pi-chat-thinking-popup" style="display: none"><div id="pi-chat-thinking-list" class="pi-chat-thinking-list"></div></div>
     <div id="pi-chat-slash-popup" class="pi-chat-slash-popup" style="display: none"><div id="pi-chat-slash-list" class="pi-chat-slash-list"></div></div>
     <div id="pi-chat-mention-popup" class="pi-chat-slash-popup" style="display: none"><div id="pi-chat-mention-list" class="pi-chat-slash-list"></div></div>
-    <div class="pi-chat-toolbar"><div class="pi-chat-toolbar-left"><button type="button" id="pi-chat-attach" class="pi-chat-icon-button pi-chat-photo-button" title={t('composer.attachPhotos')} aria-label={t('composer.attachPhotos')} disabled={!chatAvailable}>{@html icon(Paperclip, { size: 15 })}</button><span id="pi-chat-status" class="pi-chat-status">{chatAvailable ? t('composer.idle') : t('composer.unavailable')}</span><button type="button" id="pi-chat-thinking-label" class="pi-chat-thinking-label" style="display: none" title={t('composer.switchEffort')} disabled={!chatAvailable}></button><button type="button" id="pi-chat-model-label" class="pi-chat-model-label" title={t('composer.switchModel')} style:display={modelLabel ? '' : 'none'} disabled={!chatAvailable}>{modelLabel}</button><ContextUsage /></div><div class="actions"><button type="button" id="pi-chat-cancel" class="pi-chat-cancel" style="display: none" title={t('composer.cancelRunning')} aria-label={t('composer.cancelRunning')} disabled={!chatAvailable}>{t('composer.cancel')}</button><button type="submit" id="pi-chat-send" class="pi-chat-send" disabled>{t('composer.send')}</button></div></div>
+    <ChatToolbar {chatAvailable} {modelLabel} />
     <ContextUsage popover />
   </div>
   <TextAttachmentModal />
