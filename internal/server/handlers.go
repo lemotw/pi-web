@@ -243,7 +243,7 @@ func sessionResponseMap(session sessions.Session, entries []map[string]any, tota
 		"name":               session.Name,
 		"total":              total,
 		"from":               from,
-		"chatAvailable":      session.ChatAvailable || session.ChatDisabledReason == "",
+		"chatAvailable":      session.ChatAvailable,
 		"chatDisabledReason": session.ChatDisabledReason,
 		"model":              session.Model,
 		"modelProvider":      session.ModelProvider,
