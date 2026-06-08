@@ -480,6 +480,7 @@ export function runChatComposer({
       return blocks.join('\n\n');
     }
 
+    let refreshWorkerStatus = async () => {};
     if (cancelButton) {
       cancelButton.addEventListener('click', async () => {
         cancelButton.disabled = true;
@@ -637,7 +638,7 @@ export function runChatComposer({
 
     setupAskQuestionHandlers({ documentImpl: document, sendChatMessage });
 
-    setupWorkerStatusPolling({
+    const workerStatus = setupWorkerStatusPolling({
       windowImpl: window,
       chatApi: __piChatApi,
       sessionId,
@@ -653,6 +654,7 @@ export function runChatComposer({
       setIntervalImpl: setInterval,
       CustomEventImpl: CustomEvent,
     });
+    refreshWorkerStatus = workerStatus.refresh;
 
     // Focus the message textarea on page load so the user can start typing immediately.
     if (textarea && typeof textarea.focus === 'function') {

@@ -85,6 +85,31 @@ describe('chat composer runner', () => {
     expect(getWorkerStatus.mock.calls.length).toBe(initialCalls + 1);
   });
 
+  it('cancels chat and refreshes worker status without throwing', async () => {
+    const dom = new JSDOM('<body><form id="pi-chat-composer" data-chat-available="true" data-session-id="s1"><div class="pi-chat-shell"><textarea id="pi-chat-message"></textarea><input id="pi-chat-images"><button id="pi-chat-attach"></button><div id="pi-chat-attachments"></div><button id="pi-chat-cancel" style="display:none"></button><button id="pi-chat-send"></button><span id="pi-chat-status"></span><button id="pi-chat-model-label" style="display:none"></button><button id="pi-chat-thinking-label" style="display:none"></button></div></form></body>');
+    const getWorkerStatus = vi.fn(() => Promise.resolve(new Response(JSON.stringify({ state: 'running' }), { status: 200 })));
+    const cancelChat = vi.fn(() => Promise.resolve(new Response(JSON.stringify({ status: 'cancelled' }), { status: 200 })));
+    runChatComposer({
+      documentImpl: dom.window.document,
+      windowImpl: dom.window,
+      chatApi: { getWorkerStatus, cancelChat },
+      chatSelectors: { THINKING_LEVELS: [] },
+      modelSelector: { setupModelSelector: vi.fn() },
+      thinkingSelector: { setupThinkingLevelSelector: vi.fn() },
+      setIntervalImpl: () => {}
+    });
+    dom.window.document.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
+    await new Promise((r) => setTimeout(r, 0));
+    const beforeCancel = getWorkerStatus.mock.calls.length;
+
+    dom.window.document.getElementById('pi-chat-cancel').click();
+    await new Promise((r) => setTimeout(r, 0));
+    await new Promise((r) => setTimeout(r, 0));
+
+    expect(cancelChat).toHaveBeenCalledWith('s1');
+    expect(getWorkerStatus.mock.calls.length).toBeGreaterThan(beforeCancel);
+  });
+
   it('toggles composer expanded state and persists per session', () => {
     const dom = new JSDOM('<body><form id="pi-chat-composer" data-chat-available="true" data-session-id="abc"><div class="pi-chat-shell"><textarea id="pi-chat-message"></textarea><div id="pi-chat-attachments"></div><input id="pi-chat-images"><button id="pi-chat-attach"></button><button id="pi-chat-expand" aria-pressed="false"></button><button id="pi-chat-send"></button><span id="pi-chat-status"></span></div></form></body>');
     const storage = new Map();
