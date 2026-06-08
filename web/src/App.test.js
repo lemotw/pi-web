@@ -47,15 +47,6 @@ describe('App', () => {
     expect(document.querySelector('[data-setting="pi-web-theme"]')).toBeTruthy();
   });
 
-  it('routes /login to the Svelte login page', () => {
-    document.body.innerHTML = '<div id="app"></div>';
-
-    mounted = mountApp({ props: { path: '/login' } });
-
-    expect(document.querySelector('#login-title')?.textContent).toBe('Login');
-    expect(document.querySelector('input[name="token"]')).toBeTruthy();
-  });
-
   it('mounts the fallback probe for unmigrated SPA routes', () => {
     document.body.innerHTML = '<div id="app"></div>';
 
