@@ -55,7 +55,7 @@ func TestComputeRunningStatusFromRecentMtime(t *testing.T) {
 }
 
 func TestComputeRunningStatusIdleByDefault(t *testing.T) {
-	s := &Server{sessionsDir: t.TempDir(), chatSender: &fakeSender{}}
+	s := &Server{sessionsDir: t.TempDir(), chatSender: &fakeSender{}, now: time.Now}
 	if s.computeRunningStatus("session.jsonl") {
 		t.Fatalf("expected running=false by default")
 	}
@@ -100,6 +100,7 @@ func TestRecomputeAndBroadcastStatusNoBroadcastWhenUnchanged(t *testing.T) {
 		chatSender:  &fakeSender{},
 		clients:     make([]*sseClient, 0),
 		lastKnown:   make(map[string]struct{}),
+		now:         time.Now,
 	}
 	c := s.addClient(globalSessID)
 	defer s.removeClient(c)
@@ -121,6 +122,7 @@ func TestRecomputeAndBroadcastStatusFlipsBackToIdle(t *testing.T) {
 		chatSender:  &fakeSender{},
 		clients:     make([]*sseClient, 0),
 		lastKnown:   map[string]struct{}{"a.jsonl": {}},
+		now:         time.Now,
 	}
 	c := s.addClient(globalSessID)
 	defer s.removeClient(c)

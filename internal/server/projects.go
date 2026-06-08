@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
-	"time"
 
 	"pi-web/internal/sessions"
 )
@@ -72,13 +71,6 @@ type projectEntry struct {
 	Source       string `json:"source"`
 }
 
-func (s *Server) nowTime() time.Time {
-	if s.now != nil {
-		return s.now()
-	}
-	return time.Now()
-}
-
 // distinctProjects returns the unique, non-empty project paths in first-seen
 // order.
 func distinctProjects(summaries []sessions.SessionSummary) []string {
@@ -110,7 +102,7 @@ func (s *Server) syncProjectPrefs(discovered []string) {
 	if count == 0 {
 		defaultEnabled = 1
 	}
-	now := s.nowTime()
+	now := s.now()
 	for _, p := range discovered {
 		if p == "" {
 			continue
@@ -286,7 +278,7 @@ func (s *Server) handleUpdateProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	now := s.nowTime()
+	now := s.now()
 	var err error
 	switch body.Action {
 	case "enable":
@@ -328,7 +320,7 @@ func (s *Server) setAllProjectsEnabled(enabled bool) {
 	if enabled {
 		val = 1
 	}
-	_, _ = s.db.Exec("UPDATE project_prefs SET enabled = ?, updated_at = ?", val, s.nowTime())
+	_, _ = s.db.Exec("UPDATE project_prefs SET enabled = ?, updated_at = ?", val, s.now())
 }
 
 // normalizeProjectPath expands a leading ~ and cleans the path so a registered

@@ -231,7 +231,7 @@ func TestHandleChatRejectsBrokenSession(t *testing.T) {
 }
 
 func TestHandleWorkerStatusDefaultsIdle(t *testing.T) {
-	s := &Server{sessionsDir: t.TempDir(), chatSender: &fakeSender{}}
+	s := &Server{sessionsDir: t.TempDir(), chatSender: &fakeSender{}, now: time.Now}
 	req := httptest.NewRequest(http.MethodGet, "/api/worker-status?id=session.jsonl", nil)
 	w := httptest.NewRecorder()
 	s.handleWorkerStatus(w, req)
@@ -504,7 +504,7 @@ func TestHandleWorkerStatusIgnoresStaleSessionStatusFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	s := &Server{sessionsDir: sessionsDir, chatSender: &fakeSender{}}
+	s := &Server{sessionsDir: sessionsDir, chatSender: &fakeSender{}, now: time.Now}
 	req := httptest.NewRequest(http.MethodGet, "/api/worker-status?id="+sessionID, nil)
 	w := httptest.NewRecorder()
 	s.handleWorkerStatus(w, req)
@@ -535,7 +535,7 @@ func TestHandleWorkerStatusFallsThroughForIdleStatusFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	s := &Server{agentDir: root, sessionsDir: sessionsDir, chatSender: &fakeSender{}}
+	s := &Server{agentDir: root, sessionsDir: sessionsDir, chatSender: &fakeSender{}, now: time.Now}
 	req := httptest.NewRequest(http.MethodGet, "/api/worker-status?id="+sessionID, nil)
 	w := httptest.NewRecorder()
 	s.handleWorkerStatus(w, req)
@@ -560,7 +560,7 @@ func TestHandleWorkerStatusReturnsModelAndThinkingLevel(t *testing.T) {
 			ThinkingLevel: "medium",
 		},
 	}
-	s := &Server{sessionsDir: root, chatSender: sender}
+	s := &Server{sessionsDir: root, chatSender: sender, now: time.Now}
 	req := httptest.NewRequest(http.MethodGet, "/api/worker-status?id=session.jsonl", nil)
 	w := httptest.NewRecorder()
 	s.handleWorkerStatus(w, req)
@@ -598,7 +598,7 @@ func TestHandleWorkerStatusDoesNotSpawnWorkerWhenModelUnknown(t *testing.T) {
 			ThinkingLevel: "medium",
 		},
 	}
-	s := &Server{sessionsDir: root, chatSender: sender}
+	s := &Server{sessionsDir: root, chatSender: sender, now: time.Now}
 	req := httptest.NewRequest(http.MethodGet, "/api/worker-status?id=session.jsonl", nil)
 	w := httptest.NewRecorder()
 	s.handleWorkerStatus(w, req)

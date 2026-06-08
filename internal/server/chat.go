@@ -194,12 +194,7 @@ func (s *Server) hasRecentSessionActivity(sessionID string) bool {
 	if sessionID == "" {
 		return false
 	}
-	var now time.Time
-	if s.now != nil {
-		now = s.now()
-	} else {
-		now = time.Now()
-	}
+	now := s.now()
 	s.fileModMu.RLock()
 	mod, ok := s.fileMod[sessionID]
 	s.fileModMu.RUnlock()
