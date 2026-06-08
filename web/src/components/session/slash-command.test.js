@@ -6,7 +6,7 @@ import {
   parseSlashTrigger,
   renderCommandList,
   setupSlashCommands,
-} from './ChatComposer.svelte';
+} from './chat/slash-command.js';
 
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
