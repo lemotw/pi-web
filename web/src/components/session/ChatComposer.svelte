@@ -29,6 +29,7 @@
   import { setupAskQuestionHandlers } from './chat/ask-question-handler.js';
   import { setupTextAttachmentViewer } from './chat/text-attachment-viewer.js';
   import { composeMessageWithTextAttachments, textAttachmentLabel } from './chat/text-attachments.js';
+  import { setupContextPopover } from './chat/context-popover.js';
 
   export {
     setupModelSelector,
@@ -627,98 +628,8 @@ export function runChatComposer({
       textarea.focus();
     }
 
-    // Setup Context Popover toggle
-    const usageCapsule = document.getElementById('pi-chat-context-usage');
-    const popover = document.getElementById('pi-chat-context-popover');
-    if (usageCapsule && popover) {
-      positionPopover = () => {
-        const capsuleRect = usageCapsule.getBoundingClientRect();
-        const shell = document.querySelector('.pi-chat-shell');
-        if (!shell) return;
-        const shellRect = shell.getBoundingClientRect();
-        
-        const capsuleCenter = capsuleRect.left + (capsuleRect.width / 2);
-        
-        // Center the 200px popover over the capsule
-        let popoverLeft = capsuleCenter - shellRect.left - 100;
-        
-        // Keep it within shell bounds
-        if (popoverLeft < 8) {
-          popoverLeft = 8;
-        }
-        const maxLeft = shellRect.width - 208; // popover width + bounds margin
-        if (popoverLeft > maxLeft) {
-          popoverLeft = maxLeft;
-        }
-        
-        popover.style.left = `${popoverLeft}px`;
-        
-        const popoverBottom = shellRect.bottom - capsuleRect.top + 8;
-        popover.style.bottom = `${popoverBottom}px`;
-        
-        // Position the pointer arrow to point to capsule center
-        const arrow = popover.querySelector('.pi-popover-arrow');
-        if (arrow) {
-          const arrowLeft = capsuleCenter - (shellRect.left + popoverLeft);
-          const boundedArrowLeft = Math.min(180, Math.max(20, arrowLeft));
-          arrow.style.left = `${boundedArrowLeft}px`;
-        }
-      };
-
-      usageCapsule.addEventListener('click', (e) => {
-        // Prevent click events inside the popover from triggering a toggle
-        if (e.target.closest('#pi-chat-context-popover')) {
-          e.stopPropagation();
-          return;
-        }
-        
-        // Handle close button
-        if (e.target.closest('.pi-popover-close')) {
-          popover.style.display = 'none';
-          e.stopPropagation();
-          return;
-        }
-
-        e.preventDefault();
-        e.stopPropagation();
-        
-        const isShown = popover.style.display !== 'none';
-        if (isShown) {
-          popover.style.display = 'none';
-        } else {
-          popover.style.display = 'block';
-          updateContextUsage(); // make sure it's fully populated and updated
-          positionPopover();
-        }
-      });
-
-      // The popover renders as a sibling of the capsule (outside the toolbar for
-      // overflow safety), so clicks inside it never reach the capsule listener
-      // above. Handle the close button — and swallow inner clicks so the
-      // document-level outside-click handler doesn't immediately reopen/close.
-      popover.addEventListener('click', (e) => {
-        if (e.target.closest('.pi-popover-close')) {
-          popover.style.display = 'none';
-        }
-        e.stopPropagation();
-      });
-
-      // Close popover when clicking anywhere else (excluding capsule and popover itself)
-      document.addEventListener('click', (e) => {
-        if (popover.style.display !== 'none') {
-          if (!e.target.closest('#pi-chat-context-usage') && !e.target.closest('#pi-chat-context-popover')) {
-            popover.style.display = 'none';
-          }
-        }
-      });
-
-      // Recalculate popover position on resize to keep arrow pointed at capsule
-      window.addEventListener('resize', () => {
-        if (popover.style.display !== 'none') {
-          positionPopover();
-        }
-      }, { passive: true });
-    }
+    const contextPopover = setupContextPopover({ documentImpl: document, windowImpl: window, updateContextUsage });
+    positionPopover = contextPopover.position;
 
     return true;
   }
