@@ -74,7 +74,7 @@ func (a *Middleware) Wrap(h http.HandlerFunc) http.HandlerFunc {
 				}
 				w.Header().Set("Content-Type", "text/html; charset=utf-8")
 				w.WriteHeader(http.StatusUnauthorized)
-				w.Write([]byte(ui.AuthPromptHTML))
+				ui.RenderAuthPrompt(w)
 				return
 			}
 			http.Error(w, "unauthorized", http.StatusUnauthorized)
