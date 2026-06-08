@@ -25,14 +25,7 @@
     handleSessionReload,
   } from '../../session/live/live-events.js';
   import { setupSessionLiveConnection } from '../../session/live/live-connection.js';
-  import {
-    createFollowButton,
-    isAtBottom,
-    removeFollowButton,
-    scrollElementAboveComposer,
-    scrollToBottom,
-    setFollowButtonText,
-  } from '../../session/live/live-scroll.js';
+  import { createFollowScrollController } from '../../session/live/live-follow.js';
   import { updateStatsDom } from '../../session/live/live-stats.js';
   import { sessionRuntime } from '../../session/session-runtime.js';
   import { getSessionRuntime } from '../../session/session-runtime-context.js';
@@ -82,109 +75,26 @@
       liveRendered: new Set(),
     };
 
-    // ── Follow mode (like terminal/chat) ───────────────────────────────────────
-    let FOLLOW = true;
-    let followBtn = null;
-    let pendingCount = 0;
-    let forcePreviewFollowUntil = 0;
-
-    // The scroll helpers default to the real document/window, so they're called
-    // directly here with the component-scoped dependencies only where needed.
-    function showFollowButton() {
-      if (followBtn) return;
-      followBtn = createFollowButton({
-        documentImpl,
-        requestAnimationFrameImpl: requestAnimationFrame,
-        onClick: () => {
-          FOLLOW = true;
-          pendingCount = 0;
-          scrollToBottom(true);
-          hideFollowButton();
-        },
-      });
-      setFollowButtonText(followBtn, pendingCount);
-    }
-    function hideFollowButton() {
-      if (!followBtn) return;
-      removeFollowButton(followBtn, { windowImpl });
-      followBtn = null;
-    }
-
-    let lastScrollTop = 0;
-    const contentEl = documentImpl.getElementById('content');
-
-    function getScrollPosition() {
-      let scrolled = windowImpl.scrollY || windowImpl.pageYOffset || documentImpl.documentElement.scrollTop || documentImpl.body.scrollTop;
-      if (contentEl && contentEl.scrollHeight > contentEl.clientHeight) {
-        scrolled = Math.max(scrolled, contentEl.scrollTop);
-      }
-      return scrolled;
-    }
-    lastScrollTop = getScrollPosition();
-
-    function disableFollowOnUserInteraction(e) {
-      if (e.type === 'keydown') {
-        const scrollingKeys = ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '];
-        if (scrollingKeys.indexOf(e.key) === -1) return;
-      }
-      forcePreviewFollowUntil = 0;
-      if (isAtBottom()) {
-        FOLLOW = true;
-        hideFollowButton();
-      } else {
-        FOLLOW = false;
-        showFollowButton();
-      }
-    }
-
-    function onScroll() {
-      const currentScroll = getScrollPosition();
-      const scrolledUp = currentScroll < lastScrollTop;
-      lastScrollTop = currentScroll;
-      FOLLOW = isAtBottom();
-      if (scrolledUp) {
-        // User manually scrolled up; release the forced follow so they can read
-        // previous messages without being yanked back down.
-        forcePreviewFollowUntil = 0;
-        FOLLOW = false;
-      }
-      if (FOLLOW) {
-        hideFollowButton();
-        pendingCount = 0;
-      } else {
-        showFollowButton();
-      }
-    }
-
-    on(windowImpl, 'scroll', onScroll, { passive: true });
-    if (contentEl) on(contentEl, 'scroll', onScroll, { passive: true });
-    on(windowImpl, 'wheel', disableFollowOnUserInteraction, { passive: true });
-    on(windowImpl, 'touchmove', disableFollowOnUserInteraction, { passive: true });
-    on(windowImpl, 'keydown', disableFollowOnUserInteraction, { passive: true });
-
-    function scrollAfterLayout(smooth, target) {
-      requestAnimationFrame(() => {
-        scrollElementAboveComposer(target, !!smooth);
-        setTimeout(() => { scrollElementAboveComposer(target, !!smooth); }, 40);
-      });
-    }
-    function forceFollowToBottom(smooth) {
-      FOLLOW = true;
-      pendingCount = 0;
-      hideFollowButton();
-      scrollAfterLayout(!!smooth);
-    }
+    // ── Follow mode (auto-scroll + follow-button decisions) ────────────────────
+    // The controller registers its own scroll/wheel/touch/keydown listeners and
+    // performs the initial scroll-to-bottom; we just dispose it on unmount.
+    const followScroll = createFollowScrollController({
+      documentImpl,
+      windowImpl,
+      requestAnimationFrameImpl: requestAnimationFrame,
+      setTimeoutImpl: setTimeout,
+    });
+    cleanups.push(followScroll.dispose);
+    const { shouldFollow, forceFollowToBottom, scrollAfterLayout, showFollowButton, incrementPending, isFollowing } = followScroll;
 
     on(windowImpl, 'pi-chat-message-sent', (event) => {
-      forcePreviewFollowUntil = Date.now() + 30000;
+      followScroll.extendPreviewFollow(30000);
       if (event && event.detail && event.detail.message) {
         renderPendingChat(event.detail.message);
       } else {
         forceFollowToBottom(true);
       }
     });
-
-    scrollToBottom(false);
 
     function updateStats(entries) {
       return updateStatsDom(entries, { documentImpl });
@@ -212,7 +122,6 @@
     function finishChatPreview() {
       finishChatPreviewState(CHAT_PREVIEW_STATE);
     }
-    const shouldFollow = () => FOLLOW || Date.now() < forcePreviewFollowUntil;
     function renderChatPreview(payload) {
       return renderChatPreviewState(payload, CHAT_PREVIEW_STATE, {
         documentImpl, windowImpl, renderMarkdown, shouldFollow, forceFollowToBottom, scrollAfterLayout,
@@ -234,9 +143,9 @@
         // Reactive mode: the Svelte model owns #messages, so no DOM patchers.
         updateStats,
         updateTitle,
-        isFollowing: () => FOLLOW,
+        isFollowing,
         scrollAfterLayout,
-        incrementPending: (count) => { pendingCount += count; },
+        incrementPending,
         showFollowButton,
         onReloaded: (data) => { reconcileEntries(data.entries); },
         onNewEntries: highlightNewEntries,
