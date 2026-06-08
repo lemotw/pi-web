@@ -142,6 +142,7 @@ export default {
   'composer.searchModels': 'Search models…',
   'composer.switchModel': 'Switch model',
   'composer.switchEffort': 'Switch effort',
+  'composer.modelPlaceholder': 'Model',
   'composer.disabledNotice':
     'This session can be viewed, but chat is disabled because its working directory no longer exists.',
   'composer.copyPath': 'Click to copy path',

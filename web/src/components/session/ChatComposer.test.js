@@ -4,6 +4,7 @@ import { JSDOM } from 'jsdom';
 // former chat-composer-runner.js); it keeps its DI signature so these behavioural
 // tests drive it directly.
 import { runChatComposer } from './ChatComposer.svelte';
+import { ChatToolbarState } from './chat/chat-toolbar-state.svelte.js';
 
 describe('chat composer runner', () => {
   it('returns without composer form', () => {
@@ -24,6 +25,7 @@ describe('chat composer runner', () => {
     const dom = new JSDOM(
       '<body><form id="pi-chat-composer" data-chat-available="false" data-chat-disabled-reason="no cwd"></form><span id="pi-chat-status"></span></body>',
     );
+    const toolbar = new ChatToolbarState();
     runChatComposer({
       documentImpl: dom.window.document,
       windowImpl: dom.window,
@@ -31,9 +33,12 @@ describe('chat composer runner', () => {
       chatSelectors: { THINKING_LEVELS: [] },
       modelSelector: {},
       thinkingSelector: {},
+      toolbar,
     });
     dom.window.document.dispatchEvent(new dom.window.Event('DOMContentLoaded'));
-    expect(dom.window.document.getElementById('pi-chat-status').textContent).toBe('unavailable');
+    // Status now lives in reactive toolbar state, not imperative DOM mutation.
+    expect(toolbar.statusText).toBe('unavailable');
+    expect(toolbar.statusClass).toBe('error');
     expect(dom.window.document.getElementById('pi-chat-composer').title).toBe('no cwd');
   });
 

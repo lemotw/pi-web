@@ -18,6 +18,7 @@
   import ChatToolbar from './chat/ChatToolbar.svelte';
   import ContextUsage from './chat/ContextUsage.svelte';
   import TextAttachmentModal from './chat/TextAttachmentModal.svelte';
+  import { ChatToolbarState } from './chat/chat-toolbar-state.svelte.js';
 
   let {
     sessionId = '',
@@ -26,6 +27,10 @@
     cwd = '',
     modelLabel = '',
   } = $props();
+
+  // Reactive toolbar state owned here so the live runtime can mutate it while
+  // <ChatToolbar> renders from it.
+  const toolbar = new ChatToolbarState();
 
   // The composer runtime lives in <script module> (runChatComposer). It reads the
   // shared model + navigateTo (owned by SessionPage runtime context) at mount —
@@ -51,6 +56,7 @@
       URLSearchParamsImpl: target.URLSearchParams,
       CustomEventImpl: target.CustomEvent,
       setIntervalImpl: target.setInterval.bind(target),
+      toolbar,
     });
   });
 </script>
@@ -87,7 +93,7 @@
     ></textarea>
     <div id="pi-chat-attachments" class="pi-chat-attachments"></div>
     <ChatSelectorPopups />
-    <ChatToolbar {chatAvailable} {modelLabel} />
+    <ChatToolbar {chatAvailable} {toolbar} {modelLabel} />
     <ContextUsage popover />
   </div>
   <TextAttachmentModal />

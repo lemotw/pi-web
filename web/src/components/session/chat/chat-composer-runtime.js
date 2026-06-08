@@ -20,7 +20,7 @@ import { setupComposerHeightVar } from './composer-height.js';
 import { createComposerSendState } from './composer-send-state.js';
 import { getComposerStorage } from './composer-storage.js';
 import { navigateInitialChatLeaf } from './initial-navigation.js';
-import { createChatToolbarState } from './toolbar-state.js';
+import { ChatToolbarState } from './chat-toolbar-state.svelte.js';
 import { setupChatSubmission } from './chat-submit.js';
 import { createChatSelectorLoaders } from './selector-loaders.js';
 
@@ -44,6 +44,7 @@ export function runChatComposer({
   URLSearchParamsImpl = URLSearchParams,
   CustomEventImpl = CustomEvent,
   setIntervalImpl = setInterval,
+  toolbar = new ChatToolbarState(),
 } = {}) {
   const document = documentImpl;
   const window = windowImpl;
@@ -60,18 +61,17 @@ export function runChatComposer({
   const CustomEvent = CustomEventImpl;
   const setInterval = setIntervalImpl;
   let onWorkerModelUpdate = null;
-  let knownModelLabel = '';
-  let knownThinkingLevel = '';
   let currentModelForThinking = null;
   let positionPopover = () => {};
   const contextUsage = createContextUsageController({
     documentImpl: document,
     entries,
     chatApi,
-    getKnownModelLabel: () => knownModelLabel,
+    getKnownModelLabel: () => toolbar.knownModelLabel,
     positionPopover: () => positionPopover(),
   });
   const updateContextUsage = () => contextUsage.update();
+  toolbar.updateContextUsage = updateContextUsage;
 
   function isMobileTextInputMode() {
     return !!(
@@ -79,14 +79,9 @@ export function runChatComposer({
     );
   }
 
-  const toolbarState = createChatToolbarState({
-    documentImpl: document,
-    isMobileTextInputMode,
-    updateContextUsage,
-  });
-  const setChatStatus = toolbarState.setStatus;
-  const setModelLabel = toolbarState.setModelLabel;
-  const setThinkingLabel = toolbarState.setThinkingLabel;
+  const setChatStatus = toolbar.setStatus;
+  const setModelLabel = toolbar.setModelLabel;
+  const setThinkingLabel = toolbar.setThinkingLabel;
   const selectorLoaders = createChatSelectorLoaders({
     documentImpl: document,
     windowImpl: window,
@@ -102,10 +97,8 @@ export function runChatComposer({
     setModelLabel,
     setChatStatus,
     setThinkingLabel,
-    setKnownModelLabel: (label) => {
-      knownModelLabel = label;
-    },
-    getKnownModelLabel: () => knownModelLabel,
+    setKnownModelLabel: toolbar.setKnownModelLabel,
+    getKnownModelLabel: toolbar.getKnownModelLabel,
     setCurrentModelForThinking: (model) => {
       currentModelForThinking = model;
     },
@@ -113,10 +106,8 @@ export function runChatComposer({
       onWorkerModelUpdate = handler;
     },
     getCurrentModelForThinking: () => currentModelForThinking,
-    getKnownThinkingLevel: () => knownThinkingLevel,
-    setKnownThinkingLevel: (level) => {
-      knownThinkingLevel = level;
-    },
+    getKnownThinkingLevel: toolbar.getKnownThinkingLevel,
+    setKnownThinkingLevel: toolbar.setKnownThinkingLevel,
   });
 
   function setupPiChatComposer() {
@@ -218,14 +209,10 @@ export function runChatComposer({
       setModelLabel,
       setThinkingLabel,
       updateContextUsage,
-      getKnownModelLabel: () => knownModelLabel,
-      setKnownModelLabel: (label) => {
-        knownModelLabel = label;
-      },
-      getKnownThinkingLevel: () => knownThinkingLevel,
-      setKnownThinkingLevel: (level) => {
-        knownThinkingLevel = level;
-      },
+      getKnownModelLabel: toolbar.getKnownModelLabel,
+      setKnownModelLabel: toolbar.setKnownModelLabel,
+      getKnownThinkingLevel: toolbar.getKnownThinkingLevel,
+      setKnownThinkingLevel: toolbar.setKnownThinkingLevel,
       getWorkerModelUpdate: () => onWorkerModelUpdate,
       setIntervalImpl: setInterval,
       CustomEventImpl: CustomEvent,
@@ -255,8 +242,6 @@ export function runChatComposer({
   function initPiChatControls() {
     setupCwdCopy({ documentImpl: document, windowImpl: window });
     if (!setupPiChatComposer()) return;
-
-    toolbarState.updateInitialTooltips();
 
     _modelSelectorApi = selectorLoaders.loadModelSelector();
     _thinkingSelectorApi = selectorLoaders.loadThinkingSelector();

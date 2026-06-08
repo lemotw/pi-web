@@ -1,9 +1,14 @@
 <script>
   import { icon, Paperclip } from '../../../shared/icons.js';
   import { t } from '../../../shared/i18n.js';
+  import { ChatToolbarState } from './chat-toolbar-state.svelte.js';
   import ContextUsage from './ContextUsage.svelte';
 
-  let { chatAvailable = true, modelLabel = '' } = $props();
+  let { chatAvailable = true, toolbar = new ChatToolbarState(), modelLabel = '' } = $props();
+
+  const statusText = $derived(
+    toolbar.statusText || (chatAvailable ? t('composer.idle') : t('composer.unavailable')),
+  );
 </script>
 
 <!-- eslint-disable svelte/no-at-html-tags -- trusted: Lucide icon SVG and rendered session markdown -->
@@ -18,24 +23,25 @@
       aria-label={t('composer.attachPhotos')}
       disabled={!chatAvailable}>{@html icon(Paperclip, { size: 15 })}</button
     >
-    <span id="pi-chat-status" class="pi-chat-status"
-      >{chatAvailable ? t('composer.idle') : t('composer.unavailable')}</span
-    >
+    <span id="pi-chat-status" class="pi-chat-status {toolbar.statusClass}">{statusText}</span>
     <button
       type="button"
       id="pi-chat-thinking-label"
-      class="pi-chat-thinking-label"
-      style="display: none"
+      class="pi-chat-thinking-label {toolbar.thinkingLevel
+        ? 'thinking-' + toolbar.thinkingLevel
+        : ''}"
+      style:display={toolbar.thinkingLevel ? '' : 'none'}
       title={t('composer.switchEffort')}
-      disabled={!chatAvailable}
-    ></button>
+      disabled={!chatAvailable}>{toolbar.thinkingLevel}</button
+    >
     <button
       type="button"
       id="pi-chat-model-label"
       class="pi-chat-model-label"
       title={t('composer.switchModel')}
-      style:display={modelLabel ? '' : 'none'}
-      disabled={!chatAvailable}>{modelLabel}</button
+      style:display={chatAvailable ? '' : 'none'}
+      disabled={!chatAvailable}
+      >{toolbar.modelLabel || modelLabel || t('composer.modelPlaceholder')}</button
     >
     <ContextUsage />
   </div>
@@ -44,10 +50,11 @@
       type="button"
       id="pi-chat-cancel"
       class="pi-chat-cancel"
-      style="display: none"
+      style:display={toolbar.isRunning ? '' : 'none'}
       title={t('composer.cancelRunning')}
       aria-label={t('composer.cancelRunning')}
-      disabled={!chatAvailable}>{t('composer.cancel')}</button
+      disabled={toolbar.statusText === 'cancelling' || !chatAvailable}
+      >{t('composer.cancel')}</button
     >
     <button type="submit" id="pi-chat-send" class="pi-chat-send" disabled
       >{t('composer.send')}</button
