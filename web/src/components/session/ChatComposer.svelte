@@ -27,6 +27,7 @@
   import { setupComposerExpansion } from './chat/composer-expand.js';
   import { setupWorkerStatusPolling } from './chat/worker-status.js';
   import { setupAskQuestionHandlers } from './chat/ask-question-handler.js';
+  import { setupTextAttachmentViewer } from './chat/text-attachment-viewer.js';
 
   export {
     setupModelSelector,
@@ -428,31 +429,8 @@ export function runChatComposer({
 
     attachButton.addEventListener('click', () => fileInput.click());
 
-    // ── text-attachment viewer ("take a look" at a Add-to-chat selection) ──────
-    const attachmentModal = document.getElementById('pi-chat-attachment-modal');
-    const attachmentQuote = attachmentModal ? attachmentModal.querySelector('.pi-chat-attachment-card-quote') : null;
-    const attachmentNote = attachmentModal ? attachmentModal.querySelector('.pi-chat-attachment-card-note') : null;
-
-    function openTextAttachment(att) {
-      if (!attachmentModal) return;
-      if (attachmentQuote) attachmentQuote.textContent = att.original || '';
-      if (attachmentNote) {
-        attachmentNote.textContent = att.note || '';
-        attachmentNote.hidden = !att.note;
-      }
-      attachmentModal.hidden = false;
-    }
-    function closeTextAttachment() {
-      if (attachmentModal) attachmentModal.hidden = true;
-    }
-    if (attachmentModal) {
-      attachmentModal.addEventListener('click', (event) => {
-        if (event.target.closest('[data-action="close-attachment"]')) closeTextAttachment();
-      });
-      document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && !attachmentModal.hidden) closeTextAttachment();
-      });
-    }
+    const textAttachmentViewer = setupTextAttachmentViewer({ documentImpl: document });
+    const openTextAttachment = textAttachmentViewer.open;
 
     // Selections handed off from the annotations layer ("Add to chat").
     window.addEventListener('pi-chat-attach-text', (event) => {
