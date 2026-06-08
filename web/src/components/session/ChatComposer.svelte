@@ -28,6 +28,7 @@
   import { setupWorkerStatusPolling } from './chat/worker-status.js';
   import { setupAskQuestionHandlers } from './chat/ask-question-handler.js';
   import { setupTextAttachmentViewer } from './chat/text-attachment-viewer.js';
+  import { composeMessageWithTextAttachments, textAttachmentLabel } from './chat/text-attachments.js';
 
   export {
     setupModelSelector,
@@ -389,7 +390,7 @@ export function runChatComposer({
         name.className = 'pi-chat-attachment-name';
         name.innerHTML = icon(TextQuote, { size: 12 });
         const label = document.createElement('span');
-        label.textContent = textAttachmentLabel(att);
+        label.textContent = textAttachmentLabel(att, t('composer.attachmentText'));
         name.appendChild(label);
         item.appendChild(name);
 
@@ -422,11 +423,6 @@ export function runChatComposer({
       updateSendEnabled();
     }
 
-    function textAttachmentLabel(att) {
-      const snippet = String(att.original || '').replace(/\s+/g, ' ').trim();
-      return snippet.length > 48 ? snippet.slice(0, 48) + '…' : (snippet || t('composer.attachmentText'));
-    }
-
     attachButton.addEventListener('click', () => fileInput.click());
 
     const textAttachmentViewer = setupTextAttachmentViewer({ documentImpl: document });
@@ -446,16 +442,8 @@ export function runChatComposer({
       if (textarea && typeof textarea.focus === 'function') textarea.focus();
     });
 
-    // Fold text attachments into the outgoing message: each selection becomes a
-    // blockquote (plus its note), with the typed message last.
     function composeMessage(typed) {
-      if (selectedTextAttachments.length === 0) return typed;
-      const blocks = selectedTextAttachments.map((att) => {
-        const quoted = att.original.split('\n').map((line) => '> ' + line).join('\n');
-        return att.note ? quoted + '\n\n' + att.note : quoted;
-      });
-      if (typed) blocks.push(typed);
-      return blocks.join('\n\n');
+      return composeMessageWithTextAttachments(typed, selectedTextAttachments);
     }
 
     let refreshWorkerStatus = async () => {};
