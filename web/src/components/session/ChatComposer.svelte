@@ -124,6 +124,36 @@ export function runChatComposer({
     return 128000;
   }
 
+  function usageTotalTokens(u) {
+    return u.totalTokens || (u.input || 0) + (u.output || 0) + (u.cacheRead || 0) + (u.cacheWrite || 0);
+  }
+
+  // chars/4 token estimate, matching pi's estimateTokens (compaction.js). Used
+  // to estimate post-compaction context size before the next measured turn.
+  function estimateTextTokens(text) {
+    return Math.ceil((text ? String(text).length : 0) / 4);
+  }
+
+  function estimateEntryTokens(entry) {
+    const m = entry && entry.message;
+    if (!m) return 0;
+    let chars = 0;
+    const c = m.content;
+    if (typeof c === 'string') {
+      chars = c.length;
+    } else if (Array.isArray(c)) {
+      for (const b of c) {
+        if (!b) continue;
+        if (b.type === 'text' && b.text) chars += b.text.length;
+        else if (b.type === 'thinking' && b.thinking) chars += b.thinking.length;
+        else if (b.type === 'toolCall') chars += (b.name ? b.name.length : 0) + JSON.stringify(b.arguments || {}).length;
+        else if (b.type === 'toolResult') chars += JSON.stringify(b.output != null ? b.output : b).length;
+        else if (b.type === 'image') chars += 4800;
+      }
+    }
+    return Math.ceil(chars / 4);
+  }
+
   function updateContextUsage() {
     const el = document.getElementById('pi-chat-context-usage');
     if (!el) return;
@@ -146,19 +176,55 @@ export function runChatComposer({
 
     const totalIOTokens = inputTokens + outputTokens + cacheReadTokens + cacheWriteTokens;
 
-    // Find the last assistant message with valid usage to compute context window
-    // pressure. Cumulative I/O across all turns double-counts cache reads (each
-    // turn's cacheRead overlaps with prior turns) and inflates the percentage.
-    // pi TUI uses the last assistant's totalTokens to estimate current context
-    // size (see getContextUsage -> estimateContextTokens in pi's compaction code).
+    // Context-window pressure. Mirrors pi's estimateContextTokens (compaction.js):
+    // the last assistant's totalTokens estimates current context size — EXCEPT a
+    // `compaction` entry collapses everything before its firstKeptEntryId into a
+    // summary, so pre-compaction assistant usage no longer reflects live context.
+    // After the last compaction, prefer a real post-compaction assistant usage
+    // (next turn → accurate); until one exists, estimate from the summary + kept
+    // entries with the same chars/4 heuristic pi uses.
     let contextTokens = 0;
+    let compactionIdx = -1;
     for (let i = entries.length - 1; i >= 0; i--) {
-      const entry = entries[i];
-      if (entry?.type !== 'message' || !entry.message) continue;
-      const msg = entry.message;
-      if (msg.role === 'assistant' && msg.usage) {
-        contextTokens = msg.usage.totalTokens || (msg.usage.input || 0) + (msg.usage.output || 0) + (msg.usage.cacheRead || 0) + (msg.usage.cacheWrite || 0);
-        break;
+      if (entries[i]?.type === 'compaction') { compactionIdx = i; break; }
+    }
+
+    if (compactionIdx >= 0) {
+      // Measured usage from a turn AFTER the compaction is accurate once it exists.
+      for (let i = entries.length - 1; i > compactionIdx; i--) {
+        const entry = entries[i];
+        if (entry?.type === 'message' && entry.message?.role === 'assistant' && entry.message.usage) {
+          contextTokens = usageTotalTokens(entry.message.usage);
+          break;
+        }
+      }
+      if (contextTokens <= 0) {
+        // Just compacted, no new turn yet: estimate summary + kept entries. Pre-
+        // compaction assistant usages are stale (they reflected the full context)
+        // so they must NOT be used here.
+        const comp = entries[compactionIdx];
+        let keptIdx = -1;
+        if (comp.firstKeptEntryId) {
+          for (let i = 0; i < entries.length; i++) {
+            if (entries[i]?.id === comp.firstKeptEntryId) { keptIdx = i; break; }
+          }
+        }
+        if (keptIdx < 0) keptIdx = compactionIdx; // fallback: summary only
+        let est = estimateTextTokens(comp.summary || '');
+        for (let i = keptIdx; i < entries.length; i++) {
+          if (entries[i]?.type === 'message') est += estimateEntryTokens(entries[i]);
+        }
+        contextTokens = est;
+      }
+    } else {
+      for (let i = entries.length - 1; i >= 0; i--) {
+        const entry = entries[i];
+        if (entry?.type !== 'message' || !entry.message) continue;
+        const msg = entry.message;
+        if (msg.role === 'assistant' && msg.usage) {
+          contextTokens = usageTotalTokens(msg.usage);
+          break;
+        }
       }
     }
 
@@ -688,8 +754,14 @@ export function runChatComposer({
           _thinkingSelectorApi.cycle();
         }
       }
-      // Ctrl+I or Ctrl+L: open model selector, focus returns to textarea after selection
-      if (event.ctrlKey && (event.key.toLowerCase() === 'i' || event.key.toLowerCase() === 'l')) {
+      // Cmd/Ctrl+L: compact context (/compact)
+      if ((event.metaKey || event.ctrlKey) && !event.shiftKey && event.key.toLowerCase() === 'l') {
+        event.preventDefault();
+        triggerCompact();
+        return;
+      }
+      // Ctrl+I: open model selector, focus returns to textarea after selection
+      if (event.ctrlKey && event.key.toLowerCase() === 'i') {
         event.preventDefault();
         if (_modelSelectorApi && _modelSelectorApi.open) {
           _modelSelectorApi.open();
@@ -761,6 +833,40 @@ export function runChatComposer({
         delete sendButton.dataset.sending;
         sendButton.disabled = false;
         updateSendEnabled();
+      }
+    }
+
+    // While true, the composer shows a "compacting…" banner above the input and
+    // pins the status label to "compacting" (so the 1.5s worker poll doesn't
+    // overwrite it with the generic "running"). Cleared when compaction finishes
+    // — the backend broadcasts pi-session-reload once session.compact() returns.
+    let compacting = false;
+    function setCompacting(on) {
+      compacting = on;
+      const banner = document.getElementById('pi-chat-compacting-banner');
+      if (banner) banner.hidden = !on;
+    }
+
+    // Compact the session context via the dedicated POST /api/compact endpoint
+    // (which runs pi's `compact` rpc command). NOT a chat message: sending
+    // "/compact" as a prompt would reach the model as literal text and never
+    // actually compact. The worker goes Running during compaction; the file
+    // watcher's pi-session-reload then refreshes the context-usage ring.
+    async function triggerCompact() {
+      if (lastWorkerState === 'running' || compacting) return;
+      const popover = document.getElementById('pi-chat-context-popover');
+      if (popover) popover.style.display = 'none';
+      setCompacting(true);
+      setStatus('compacting', 'running');
+      try {
+        const response = await __piChatApi.compact(sessionId);
+        if (!response.ok) {
+          const data = await response.json().catch(() => ({}));
+          throw new Error(data.error || 'compact request failed');
+        }
+      } catch (error) {
+        setCompacting(false);
+        setStatus(error.message || String(error), 'error');
       }
     }
 
@@ -875,15 +981,20 @@ export function runChatComposer({
         const apiModelLabel = data.model ? data.model + (data.modelProvider ? ' @ ' + data.modelProvider : '') : '';
         if (apiModelLabel) knownModelLabel = apiModelLabel;
         if (data.thinkingLevel) knownThinkingLevel = data.thinkingLevel;
-        if (data.state === 'running') setStatus('running', 'running');
-        if (data.state === 'idle') setStatus('idle', '');
-        if (data.state === 'error') setStatus(data.error || 'worker error', 'error');
+        // While compacting, keep the label pinned to "compacting" (running cls so
+        // the Cancel button stays available) regardless of the polled state.
+        if (data.state === 'running') setStatus(compacting ? 'compacting' : 'running', 'running');
+        if (data.state === 'idle') setStatus(compacting ? 'compacting' : 'idle', compacting ? 'running' : '');
+        if (data.state === 'error') { if (compacting) setCompacting(false); setStatus(data.error || 'worker error', 'error'); }
         if (lastWorkerState === 'running' && data.state === 'idle') {
+          if (compacting) setCompacting(false);
           try {
             window.dispatchEvent(new CustomEvent('pi-worker-done'));
           } catch (_) {}
         }
         if (data.state) lastWorkerState = data.state;
+        const compactBtn = document.getElementById('pi-chat-compact');
+        if (compactBtn) compactBtn.disabled = lastWorkerState === 'running';
         setModelLabel(knownModelLabel);
         setThinkingLabel(knownThinkingLevel);
         updateContextUsage();
@@ -913,6 +1024,10 @@ export function runChatComposer({
     // Without this, the Cancel button + "running" status linger until the
     // next poll tick, which feels broken right after a response completes.
     window.addEventListener('pi-session-reload', () => {
+      // Compaction is done: the backend broadcasts reload once session.compact()
+      // returns and the compacted session is written. Clear before refreshing so
+      // the status poll resolves to the real idle/running state.
+      if (compacting) setCompacting(false);
       refreshWorkerStatus();
       updateContextUsage();
     });
@@ -994,6 +1109,8 @@ export function runChatComposer({
       popover.addEventListener('click', (e) => {
         if (e.target.closest('.pi-popover-close')) {
           popover.style.display = 'none';
+        } else if (e.target.closest('#pi-chat-compact')) {
+          triggerCompact();
         }
         e.stopPropagation();
       });
@@ -1999,6 +2116,7 @@ export function setupMentionAutocomplete({
     <button type="button" id="pi-chat-expand" class="pi-chat-expand-button" title={t('composer.expand')} aria-label={t('composer.expand')} aria-pressed="false" disabled={!chatAvailable}>{@html icon(Maximize2, { size: 14 })}</button>
     {#if cwd}<div class="pi-chat-toolbar pi-chat-cwd-bar"><span class="pi-chat-cwd" title={t('composer.copyPath')} data-cwd={cwd}>cwd: {cwd}</span><span class="pi-chat-focus-shortcut">{t('composer.focusShortcut')}</span></div>{/if}
     {#if !chatAvailable}<div class="pi-chat-disabled-notice">{chatDisabledReason}</div>{/if}
+    <div id="pi-chat-compacting-banner" class="pi-compacting-banner" hidden><span class="pi-compacting-spinner" aria-hidden="true"></span><span>{t('composer.compacting')}</span></div>
     <textarea id="pi-chat-message" name="message" rows="1" placeholder={t('composer.placeholder')} disabled={!chatAvailable}></textarea>
     <div id="pi-chat-attachments" class="pi-chat-attachments"></div>
     <div id="pi-chat-model-popup" class="pi-chat-model-popup" style="display: none"><input type="text" id="pi-chat-model-search" class="pi-chat-model-search" placeholder={t('composer.searchModels')} autocomplete="off"><div id="pi-chat-model-list" class="pi-chat-model-list"></div></div>
@@ -2044,6 +2162,10 @@ export function setupMentionAutocomplete({
             <span class="pi-row-value" id="pi-popover-val-total">0</span>
           </div>
         </div>
+        <button type="button" id="pi-chat-compact" class="pi-popover-compact" title={t('composer.compact')}>
+          <span class="pi-compact-label">{t('composer.compactLabel')}</span>
+          <span class="pi-compact-kbd"><kbd>⌘</kbd><kbd>L</kbd></span>
+        </button>
       </div>
     </div>
   </div>
