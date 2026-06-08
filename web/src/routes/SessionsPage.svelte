@@ -47,7 +47,6 @@
   let projectsBusy = $state(false);
   let projectsError = $state('');
   let refreshInflight = false;
-  let modalOpen = $derived(newSessionOpen || projectsOpen);
 
   const totalSessionsLabel = $derived(
     sessions.length === 1
@@ -337,7 +336,3 @@
   onRegister={(path) => updateProject(path, 'register')}
   onRemove={(path) => updateProject(path, 'remove')}
 />
-
-{#if modalOpen}
-  <!-- class hook only; modals render their own overlays -->
-{/if}
