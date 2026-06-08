@@ -33,6 +33,7 @@
   import { setupCwdCopy } from './chat/cwd-copy.js';
   import { createChatToolbarState } from './chat/toolbar-state.js';
   import { setupChatSubmission } from './chat/chat-submit.js';
+  import { createChatSelectorLoaders } from './chat/selector-loaders.js';
 
   export {
     setupModelSelector,
@@ -112,6 +113,29 @@ export function runChatComposer({
   const setChatStatus = toolbarState.setStatus;
   const setModelLabel = toolbarState.setModelLabel;
   const setThinkingLabel = toolbarState.setThinkingLabel;
+  const selectorLoaders = createChatSelectorLoaders({
+    documentImpl: document,
+    windowImpl: window,
+    locationImpl: location,
+    URLSearchParamsImpl: URLSearchParams,
+    entries,
+    chatApi: __piChatApi,
+    escapeHtml,
+    modelSelector: __piModelSelector,
+    thinkingSelector: __piThinkingSelector,
+    slashSelector: __piSlashSelector,
+    mentionSelector: __piMentionSelector,
+    setModelLabel,
+    setChatStatus,
+    setThinkingLabel,
+    setKnownModelLabel: (label) => { knownModelLabel = label; },
+    getKnownModelLabel: () => knownModelLabel,
+    setCurrentModelForThinking: (model) => { currentModelForThinking = model; },
+    setWorkerModelUpdate: (handler) => { onWorkerModelUpdate = handler; },
+    getCurrentModelForThinking: () => currentModelForThinking,
+    getKnownThinkingLevel: () => knownThinkingLevel,
+    setKnownThinkingLevel: (level) => { knownThinkingLevel = level; },
+  });
 
   function setupPiChatComposer() {
     const form = document.getElementById('pi-chat-composer');
@@ -263,81 +287,16 @@ export function runChatComposer({
 
     toolbarState.updateInitialTooltips();
 
-    _modelSelectorApi = loadModelSelector();
-    _thinkingSelectorApi = loadThinkingSelector();
-    _slashSelectorApi = loadSlashSelector();
-    _mentionSelectorApi = loadMentionSelector();
+    _modelSelectorApi = selectorLoaders.loadModelSelector();
+    _thinkingSelectorApi = selectorLoaders.loadThinkingSelector();
+    _slashSelectorApi = selectorLoaders.loadSlashSelector();
+    _mentionSelectorApi = selectorLoaders.loadMentionSelector();
   }
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initPiChatControls);
   } else {
     initPiChatControls();
-  }
-
-  // Model selector
-  function loadModelSelector() {
-    const sessionId = new URLSearchParams(window.location.search).get('id') || (document.getElementById('pi-chat-composer') || {}).dataset?.sessionId || '';
-    return __piModelSelector.setupModelSelector({
-      documentImpl: document,
-      sessionId,
-      entries,
-      chatApi: __piChatApi,
-      escapeHtml,
-      setModelLabel,
-      setChatStatus,
-      setKnownModelLabel: (label) => { knownModelLabel = label; },
-      getKnownModelLabel: () => knownModelLabel,
-      setCurrentModelForThinking: (model) => { currentModelForThinking = model; },
-      setWorkerModelUpdate: (handler) => { onWorkerModelUpdate = handler; }
-    });
-  }
-
-  // ── Slash-command palette ────────────────────────────────────────────
-  function loadSlashSelector() {
-    if (!__piSlashSelector || typeof __piSlashSelector.setupSlashCommands !== 'function') {
-      return { handleKeydown: () => false };
-    }
-    const sessionId = new URLSearchParams(window.location.search).get('id') || (document.getElementById('pi-chat-composer') || {}).dataset?.sessionId || '';
-    return __piSlashSelector.setupSlashCommands({
-      documentImpl: document,
-      sessionId,
-      chatApi: __piChatApi,
-      escapeHtml
-    });
-  }
-
-  // ── @mention path autocomplete ───────────────────────────────────────
-  function loadMentionSelector() {
-    if (!__piMentionSelector || typeof __piMentionSelector.setupMentionAutocomplete !== 'function') {
-      return { handleKeydown: () => false };
-    }
-    const sessionId = new URLSearchParams(window.location.search).get('id') || (document.getElementById('pi-chat-composer') || {}).dataset?.sessionId || '';
-    return __piMentionSelector.setupMentionAutocomplete({
-      documentImpl: document,
-      windowImpl: window,
-      sessionId,
-      chatApi: __piChatApi,
-      escapeHtml
-    });
-  }
-
-  // ── Thinking level selector ──────────────────────────────────────────
-  function loadThinkingSelector() {
-    const sessionId = new URLSearchParams(window.location.search).get('id') || (document.getElementById('pi-chat-composer') || {}).dataset?.sessionId || '';
-    const api = __piThinkingSelector.setupThinkingLevelSelector({
-      documentImpl: document,
-      windowImpl: window,
-      sessionId,
-      entries,
-      getCurrentModel: () => currentModelForThinking,
-      getKnownThinkingLevel: () => knownThinkingLevel,
-      setKnownThinkingLevel: (level) => { knownThinkingLevel = level; },
-      setThinkingLabel,
-      setChatStatus,
-      chatApi: __piChatApi
-    });
-    return api;
   }
 
   // Initial render
