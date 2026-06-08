@@ -388,9 +388,13 @@ func LabelSessionEntry(path, targetID, label string, now func() time.Time) error
 		return ErrSessionEntryNotFound
 	}
 
+	entryID, err := randomEntryID()
+	if err != nil {
+		return err
+	}
 	entry := map[string]any{
 		"type":      "label",
-		"id":        randomEntryID(),
+		"id":        entryID,
 		"parentId":  parentID,
 		"timestamp": now().UTC().Format(time.RFC3339Nano),
 		"targetId":  targetID,
@@ -787,7 +791,10 @@ func CreateSessionFileWithSettings(sessionsDir, path string, settings InitialSet
 		return "", err
 	}
 
-	id := randomUUID()
+	id, err := randomUUID()
+	if err != nil {
+		return "", err
+	}
 	timestamp := time.Now().UTC().Format("2006-01-02T15-04-05.000Z")
 	filename := timestamp + "_" + id + ".jsonl"
 	filePath := filepath.Join(projectDir, filename)
@@ -808,7 +815,10 @@ func CreateSessionFileWithSettings(sessionsDir, path string, settings InitialSet
 	fileData = append(fileData, '\n')
 	var parentID any
 	if settings.ModelProvider != "" && settings.ModelID != "" {
-		entryID := randomEntryID()
+		entryID, err := randomEntryID()
+		if err != nil {
+			return "", err
+		}
 		line, err := json.Marshal(map[string]any{
 			"type":      "model_change",
 			"id":        entryID,
@@ -826,7 +836,10 @@ func CreateSessionFileWithSettings(sessionsDir, path string, settings InitialSet
 		parentID = entryID
 	}
 	if settings.ThinkingLevel != "" {
-		entryID := randomEntryID()
+		entryID, err := randomEntryID()
+		if err != nil {
+			return "", err
+		}
 		line, err := json.Marshal(map[string]any{
 			"type":          "thinking_level_change",
 			"id":            entryID,
@@ -947,7 +960,10 @@ func createBranchSessionFile(sessionsDir, sourcePath, targetEntryID string, now 
 		return "", err
 	}
 
-	id := randomUUID()
+	id, err := randomUUID()
+	if err != nil {
+		return "", err
+	}
 	timestamp := now().UTC().Format("2006-01-02T15-04-05.000Z")
 	filename := timestamp + "_" + id + ".jsonl"
 	filePath := filepath.Join(projectDir, filename)
@@ -987,20 +1003,20 @@ func createBranchSessionFile(sessionsDir, sourcePath, targetEntryID string, now 
 	return filename, nil
 }
 
-func randomUUID() string {
+func randomUUID() (string, error) {
 	b := make([]byte, 16)
 	if _, err := rand.Read(b); err != nil {
-		panic(err)
+		return "", err
 	}
 	b[6] = (b[6] & 0x0f) | 0x40
 	b[8] = (b[8] & 0x3f) | 0x80
-	return fmt.Sprintf("%x-%x-%x-%x-%x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:16])
+	return fmt.Sprintf("%x-%x-%x-%x-%x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:16]), nil
 }
 
-func randomEntryID() string {
+func randomEntryID() (string, error) {
 	b := make([]byte, 4)
 	if _, err := rand.Read(b); err != nil {
-		panic(err)
+		return "", err
 	}
-	return fmt.Sprintf("%x", b)
+	return fmt.Sprintf("%x", b), nil
 }
