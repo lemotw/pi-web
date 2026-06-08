@@ -30,6 +30,7 @@
   import { setupTextAttachmentViewer } from './chat/text-attachment-viewer.js';
   import { composeMessageWithTextAttachments, textAttachmentLabel } from './chat/text-attachments.js';
   import { setupContextPopover } from './chat/context-popover.js';
+  import { setupTextareaControls } from './chat/textarea-controls.js';
 
   export {
     setupModelSelector,
@@ -257,19 +258,6 @@ export function runChatComposer({
     // per-session in localStorage.
     const shell = form.querySelector('.pi-chat-shell');
 
-    // Auto-grow textarea: track scrollHeight up to the CSS max-height so the
-    // composer expands as the user types and shrinks when they delete content.
-    function autoResizeTextarea() {
-      if (!textarea || (shell && shell.classList.contains('expanded'))) return;
-      textarea.style.height = 'auto';
-      const cs = window.getComputedStyle(textarea);
-      const max = parseFloat(cs.maxHeight) || 200;
-      const min = parseFloat(cs.minHeight) || 48;
-      const next = Math.max(min, Math.min(textarea.scrollHeight, max));
-      textarea.style.height = next + 'px';
-      updateComposerHeightVar();
-    }
-
     // Enable Send only when there is text or an attachment.
     function hasComposerContent() {
       const v = textarea ? textarea.value : '';
@@ -284,15 +272,20 @@ export function runChatComposer({
       sendButton.disabled = !hasComposerContent();
     }
 
-    if (textarea) {
-      textarea.addEventListener('input', () => {
-        autoResizeTextarea();
-        updateSendEnabled();
-      });
-      // Initial sizing in case the textarea was pre-filled (e.g. browser autofill).
-      autoResizeTextarea();
-    }
-    updateSendEnabled();
+    const textareaControls = setupTextareaControls({
+      windowImpl: window,
+      textarea,
+      shell,
+      form,
+      isMobileTextInputMode,
+      getSlashSelector: () => _slashSelectorApi,
+      getMentionSelector: () => _mentionSelectorApi,
+      getThinkingSelector: () => _thinkingSelectorApi,
+      getModelSelector: () => _modelSelectorApi,
+      updateSendEnabled,
+      updateComposerHeight: updateComposerHeightVar,
+    });
+    const autoResizeTextarea = textareaControls.autoResize;
 
 
     let composerStorage = null;
@@ -476,32 +469,6 @@ export function runChatComposer({
       fileInput.value = '';
       renderAttachments();
     });
-    textarea.addEventListener('keydown', (event) => {
-      // Slash-command palette gets first dibs on navigation keys while open so
-      // Enter selects a command instead of submitting the message.
-      if (_slashSelectorApi && _slashSelectorApi.handleKeydown(event)) return;
-      if (_mentionSelectorApi && _mentionSelectorApi.handleKeydown(event)) return;
-      if (event.key === 'Enter' && !event.shiftKey) {
-        if (isMobileTextInputMode()) return;
-        event.preventDefault();
-        form.requestSubmit();
-      }
-      // Shift+Tab: cycle thinking level (matching pi CLI behavior)
-      if (event.key === 'Tab' && event.shiftKey) {
-        event.preventDefault();
-        if (_thinkingSelectorApi && _thinkingSelectorApi.cycle) {
-          _thinkingSelectorApi.cycle();
-        }
-      }
-      // Ctrl+I or Ctrl+L: open model selector, focus returns to textarea after selection
-      if (event.ctrlKey && (event.key.toLowerCase() === 'i' || event.key.toLowerCase() === 'l')) {
-        event.preventDefault();
-        if (_modelSelectorApi && _modelSelectorApi.open) {
-          _modelSelectorApi.open();
-        }
-      }
-    });
-
     textarea.addEventListener('paste', (event) => {
       const data = event.clipboardData;
       if (!data) return;
