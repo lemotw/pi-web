@@ -104,6 +104,21 @@ describe('live events', () => {
     expect(onError).toHaveBeenCalled();
   });
 
+  it('reconciles on a chat-preview done (covers a dropped first-write reload)', () => {
+    const eventSource = { addEventListener: vi.fn() };
+    const onReload = vi.fn();
+    const onChatPreview = vi.fn();
+    wireSessionEvents({ eventSource, onReload, onChatPreview });
+    const previewHandler = eventSource.addEventListener.mock.calls[0][1];
+
+    previewHandler({ data: JSON.stringify({ content: 'streaming', done: false }) });
+    expect(onReload).not.toHaveBeenCalled();
+
+    previewHandler({ data: JSON.stringify({ content: 'final', done: true }) });
+    expect(onChatPreview).toHaveBeenLastCalledWith({ content: 'final', done: true });
+    expect(onReload).toHaveBeenCalledTimes(1);
+  });
+
   it('dispatches pi-session-reload window event on reload', () => {
     const eventSource = { addEventListener: vi.fn() };
     const dispatched = [];

@@ -113,7 +113,14 @@ export function wireSessionEvents({
   };
   eventSource.addEventListener('chat-preview', (event) => {
     try {
-      onChatPreview(JSON.parse(event.data));
+      const payload = JSON.parse(event.data);
+      onChatPreview(payload);
+      // The file-watch 'reload' event is dropped for a brand-new session's first
+      // write (the watcher treats it as an initial observation, not a change), so
+      // the canonical entries would never reconcile until a manual refresh. The
+      // chat-preview stream is worker-driven and independent of the watcher, so
+      // its 'done' signal is a reliable trigger to pull the written entries.
+      if (payload && payload.done) onReload(event);
     } catch (error) {
       onError(error);
     }
