@@ -31,6 +31,7 @@
   import { setupTextareaControls } from './chat/textarea-controls.js';
   import { setupAttachmentManager } from './chat/attachment-manager.js';
   import { setupCwdCopy } from './chat/cwd-copy.js';
+  import { setupComposerHeightVar } from './chat/composer-height.js';
   import { createChatToolbarState } from './chat/toolbar-state.js';
   import { setupChatSubmission } from './chat/chat-submit.js';
   import { createChatSelectorLoaders } from './chat/selector-loaders.js';
@@ -156,16 +157,11 @@ export function runChatComposer({
     const sendButton = document.getElementById('pi-chat-send');
     const cancelButton = document.getElementById('pi-chat-cancel');
 
-    function updateComposerHeightVar() {
-      const height = Math.ceil(form.getBoundingClientRect().height || 0);
-      document.documentElement.style.setProperty('--pi-chat-composer-height', height + 'px');
-    }
-
-    updateComposerHeightVar();
-    window.addEventListener('resize', updateComposerHeightVar, { passive: true });
-    if (window.ResizeObserver) {
-      new ResizeObserver(updateComposerHeightVar).observe(form);
-    }
+    const { update: updateComposerHeightVar } = setupComposerHeightVar({
+      documentImpl: document,
+      windowImpl: window,
+      form,
+    });
 
     // Expand/collapse the composer for larger typing area. State persists
     // per-session in localStorage.
