@@ -400,11 +400,15 @@ func (w *piRPCWorker) consume(r io.Reader) {
 }
 
 func (w *piRPCWorker) handleRPCLine(line string) {
-	var raw map[string]any
-	if err := json.Unmarshal([]byte(line), &raw); err != nil {
+	var meta struct {
+		Type  string `json:"type"`
+		Level string `json:"level"`
+	}
+	if err := json.Unmarshal([]byte(line), &meta); err != nil {
 		return
 	}
-	if raw["type"] == "response" {
+	switch meta.Type {
+	case "response":
 		var res response
 		if err := json.Unmarshal([]byte(line), &res); err != nil {
 			return
@@ -416,33 +420,27 @@ func (w *piRPCWorker) handleRPCLine(line string) {
 		if ch != nil {
 			ch <- res
 		}
-		return
-	}
-	if raw["type"] == "message_update" {
+	case "message_update":
 		var msg struct {
 			AssistantMessageEvent assistantMessageEvent `json:"assistantMessageEvent"`
 		}
 		if err := json.Unmarshal([]byte(line), &msg); err == nil {
 			w.emitStreamPreview(msg.AssistantMessageEvent)
 		}
-	}
-	switch raw["type"] {
-	case "message_update", "message_end", "turn_end":
 		w.noteStreamActivity()
-		if raw["type"] == "message_end" || raw["type"] == "turn_end" {
-			w.completeStreamPreview()
-		}
+	case "message_end", "turn_end":
+		w.noteStreamActivity()
+		w.completeStreamPreview()
 	case "agent_end":
 		w.completeStreamPreview()
 		w.mu.Lock()
 		w.status = workers.WorkerStatus{State: workers.WorkerStateIdle}
 		w.mu.Unlock()
 		w.lastStreamActivity.Store(0)
-	}
-	if raw["type"] == "thinking_level_changed" {
-		if level, ok := raw["level"].(string); ok && level != "" {
+	case "thinking_level_changed":
+		if meta.Level != "" {
 			w.mu.Lock()
-			w.currentThinkingLevel = level
+			w.currentThinkingLevel = meta.Level
 			w.mu.Unlock()
 		}
 	}
