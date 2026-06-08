@@ -18,7 +18,6 @@ export function hydrateSessionModel({
 export function createLiveSessionRuntime({
   sessionModel,
   contentRuntime,
-  windowImpl = window,
   documentImpl = document,
 } = {}) {
   const navigator = createSessionNavigator({
@@ -35,5 +34,5 @@ export function createLiveSessionRuntime({
     navigateTo: navigator.navigateTo,
     reconcileEntries: (entries) => sessionModel.reconcile(entries),
     contentRuntime,
-  }, { windowImpl });
+  });
 }

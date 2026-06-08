@@ -33,7 +33,6 @@ describe('session page model helpers', () => {
     const runtime = createLiveSessionRuntime({
       sessionModel,
       contentRuntime: { afterRender: null },
-      windowImpl: window,
       documentImpl: document,
     });
 
@@ -44,6 +43,6 @@ describe('session page model helpers', () => {
     expect(sessionModel.currentTargetId).toBe('leaf');
     expect(sessionModel.reconcile).toHaveBeenCalledWith([{ id: 'next' }]);
 
-    resetSessionRuntimeContext({ windowImpl: window });
+    resetSessionRuntimeContext();
   });
 });

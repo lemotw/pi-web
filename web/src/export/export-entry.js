@@ -212,9 +212,6 @@ export function runExportApp({ target = window } = {}) {
   }
   ui.attachHeaderHandlers();
 
-  target.navigateTo = navigateTo;
-  target.__piSessionNavigator = navigatorInstance;
-
   setupKeyboardNav({ windowImpl: target, documentImpl });
   const imageModalHost = documentImpl.getElementById('image-modal-host');
   if (imageModalHost) mount(ImageModal, { target: imageModalHost });

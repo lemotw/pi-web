@@ -65,7 +65,7 @@
         chatDisabledReason = state.chatDisabledReason;
         modelLabel = state.modelLabel;
         hydrateSessionModel({ sessionModel, payloadBase64, locationSearch: window.location.search, windowImpl: window });
-        createLiveSessionRuntime({ sessionModel, contentRuntime, windowImpl: window, documentImpl: document });
+        createLiveSessionRuntime({ sessionModel, contentRuntime, documentImpl: document });
         loading = false;
         clearTimeout(loadingTimer);
         await tick();
@@ -94,7 +94,7 @@
       disposeRuntime?.();
       resetSessionModals();
       resetSessionRuntime();
-      resetSessionRuntimeContext({ windowImpl: window });
+      resetSessionRuntimeContext();
       document.title = previousTitle;
       disposeBodyClasses();
     };

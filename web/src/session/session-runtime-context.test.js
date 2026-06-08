@@ -7,19 +7,19 @@ import {
 
 describe('session runtime context', () => {
   afterEach(() => {
-    resetSessionRuntimeContext({ windowImpl: window });
+    resetSessionRuntimeContext();
   });
 
   it('stores an explicit runtime and derives navigateTo from the navigator', () => {
     const navigateTo = vi.fn();
     const model = { entries: [] };
-    const runtime = setSessionRuntime({ model, navigator: { navigateTo } }, { windowImpl: null });
+    const runtime = setSessionRuntime({ model, navigator: { navigateTo } });
 
     expect(runtime.navigateTo).toBe(navigateTo);
     expect(getSessionRuntime().model).toBe(model);
   });
 
-  it('installs and clears temporary window compatibility shims', () => {
+  it('resets the runtime without installing window compatibility shims', () => {
     const model = { entries: [] };
     const navigateTo = vi.fn();
     const reconcileEntries = vi.fn();
@@ -31,19 +31,17 @@ describe('session runtime context', () => {
       navigator: { navigateTo },
       reconcileEntries,
       contentRuntime,
-    }, { windowImpl: window });
+    });
 
-    expect(window.__piSessionDataModel).toBe(model);
-    expect(window.navigateTo).toBe(navigateTo);
-    expect(window.__piReconcileEntries).toBe(reconcileEntries);
-    expect(window.__piContentRuntime).toBe(contentRuntime);
-
-    resetSessionRuntimeContext({ windowImpl: window });
-
-    expect(getSessionRuntime().model).toBeUndefined();
+    expect(getSessionRuntime().model).toBe(model);
+    expect(getSessionRuntime().navigateTo).toBe(navigateTo);
     expect(window.__piSessionDataModel).toBeUndefined();
     expect(window.navigateTo).toBeUndefined();
     expect(window.__piReconcileEntries).toBeUndefined();
     expect(window.__piContentRuntime).toBeUndefined();
+
+    resetSessionRuntimeContext();
+
+    expect(getSessionRuntime().model).toBeUndefined();
   });
 });
