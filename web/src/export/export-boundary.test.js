@@ -31,11 +31,19 @@ function resolveImport(specifier, importer) {
 }
 
 function importsFor(file) {
-  const source = fs.readFileSync(file, 'utf8');
+  return importsForSource(fs.readFileSync(file, 'utf8'));
+}
+
+function importsForSource(source) {
   const specs = [];
-  const re = /\bimport\s+(?:[^'"]*?\s+from\s+)?['"]([^'"]+)['"]/g;
-  let match;
-  while ((match = re.exec(source))) specs.push(match[1]);
+  const patterns = [
+    /\bimport\s+(?:[^'"]*?\s+from\s+)?['"]([^'"]+)['"]/g,
+    /\bexport\s+(?:[^'"]*?\s+from\s+)?['"]([^'"]+)['"]/g,
+  ];
+  for (const re of patterns) {
+    let match;
+    while ((match = re.exec(source))) specs.push(match[1]);
+  }
   return specs;
 }
 
@@ -59,5 +67,10 @@ describe('export source boundary', () => {
     const graph = collectGraph(exportEntry);
     const leaks = graph.filter((file) => forbidden.some((prefix) => file.startsWith(prefix) || file === prefix));
     expect(leaks).toEqual([]);
+  });
+
+  it('collects re-export edges when walking the source graph', () => {
+    expect(importsFor(path.join(srcRoot, 'export', 'export-entry.js'))).toContain('../session/data/session-data.js');
+    expect(importsForSource("export { setup } from '../session/live/live-events.js';")).toEqual(['../session/live/live-events.js']);
   });
 });
