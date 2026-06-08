@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import { t } from '../../shared/i18n.js';
+  import { formatAnnotationsForPi } from '../../session/annotations/annotation-format.js';
   import { getSelectionInfo, applyHighlights } from '../../session/annotations/annotation-range.js';
   import { sessionRuntime } from '../../session/session-runtime.js';
 
@@ -83,71 +84,9 @@
     } catch { /* keep current */ }
   }
 
-  // ── send-to-pi formatting ─────────────────────────────────────────────────
-  function offsetToLine(content, offset) {
-    let line = 1;
-    const limit = Math.min(Math.max(0, offset), content.length);
-    for (let i = 0; i < limit; i += 1) {
-      if (content[i] === '\n') line += 1;
-    }
-    return line;
-  }
-
-  function lineLabel(content, start, end) {
-    if (typeof content !== 'string' || content.length === 0) return '';
-    const a = offsetToLine(content, start);
-    const b = offsetToLine(content, Math.max(start, end - 1));
-    return a === b ? `Line ${a}` : `Lines ${a}-${b}`;
-  }
-
-  function quote(s) {
-    return `"${String(s || '').replace(/\s+/g, ' ').trim()}"`;
-  }
-
-  function formatForPi() {
-    const fileGroups = new Map();
-    const convo = [];
-    for (const a of annotations) {
-      const anchorId = a.anchorId || '';
-      if (anchorId.indexOf('artifact-') === 0) {
-        const art = resolveArtifact ? resolveArtifact(anchorId.slice('artifact-'.length)) : null;
-        const path = (art && (art.filePath || art.title)) || '(artifact)';
-        const label = art ? lineLabel(art.content, a.startOffset, a.endOffset) : '';
-        if (!fileGroups.has(path)) fileGroups.set(path, []);
-        fileGroups.get(path).push({ label, original: a.original, text: a.text });
-      } else {
-        convo.push(a);
-      }
-    }
-
-    const out = [
-      "Here are my review notes on this session — changes I want you to make to the work we've already done together in this conversation. Please go through each note below and apply it. This is a continuation of our current task, not a new or separate request.",
-      '',
-    ];
-    for (const [path, items] of fileGroups) {
-      out.push(`In ${path}:`);
-      for (const it of items) {
-        out.push('');
-        out.push(it.label ? `${it.label} — ${quote(it.original)}` : quote(it.original));
-        if (it.text) out.push(`  ${it.text}`);
-      }
-      out.push('');
-    }
-    if (convo.length > 0) {
-      out.push('In this conversation:');
-      for (const a of convo) {
-        out.push('');
-        out.push(quote(a.original));
-        if (a.text) out.push(`  ${a.text}`);
-      }
-      out.push('');
-    }
-    return out.join('\n').trimEnd() + '\n';
-  }
-
   function sendToPi() {
     if (!composerEl || annotations.length === 0) return;
-    composerEl.value = formatForPi();
+    composerEl.value = formatAnnotationsForPi(annotations, { resolveArtifact });
     composerEl.dispatchEvent(new Event('input', { bubbles: true }));
     if (typeof onSend === 'function') onSend();
     composerEl.focus();
