@@ -22,6 +22,12 @@ test.describe("cat gatekeeper", () => {
     const { entries } = buildSession({ cwd });
     const id = writeSession(sessionsDir, uniqueSessionName(testInfo, "cat"), entries);
 
+    // Pin the browser clock to a non-bedtime hour. The gatekeeper's bedtime
+    // "sleep" overlay (default 23:00–07:00, read from the live Date.now()) would
+    // otherwise pre-empt skip-to-break whenever CI runs during that window. Use
+    // setFixedTime (not install) so the app's other timers keep running.
+    await page.clock.setFixedTime(new Date("2026-06-08T12:00:00"));
+
     await page.route("**/api/settings", async (route) => {
       if (route.request().method() === "GET") {
         await route.fulfill({
