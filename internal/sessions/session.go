@@ -288,12 +288,6 @@ func extractRawText(content json.RawMessage) string {
 	return ""
 }
 
-// ExtractMessageText pulls plain text from a message content value (string or
-// content-block array). Used by both the parser and the session page renderer.
-func ExtractMessageText(content any) string {
-	return extractMessageText(content)
-}
-
 func extractMessageText(content any) string {
 	switch v := content.(type) {
 	case string:
@@ -754,10 +748,6 @@ type InitialSettings struct {
 	ModelProvider string
 	ModelID       string
 	ThinkingLevel string
-}
-
-func CreateSessionFile(sessionsDir, path string) (string, error) {
-	return CreateSessionFileWithSettings(sessionsDir, path, InitialSettings{})
 }
 
 func CreateSessionFileWithSettings(sessionsDir, path string, settings InitialSettings) (string, error) {
