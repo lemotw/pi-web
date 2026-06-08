@@ -323,9 +323,10 @@
       });
       persistBtwResize(winEl, { windowImpl: window, saveGeometry: saveGeom });
     }
-    bodyEl?.addEventListener('scroll', () => {
+    const onBodyScroll = () => {
       nearBottom = atBottom();
-    });
+    };
+    bodyEl?.addEventListener('scroll', onBodyScroll);
 
     btnEl = document.getElementById('pi-btw-button');
     const onBtnClick = (e) => {
@@ -355,6 +356,7 @@
       stopSpinner();
       btnEl?.removeEventListener('click', onBtnClick);
       composerTextarea?.removeEventListener('focus', onComposerFocus);
+      bodyEl?.removeEventListener('scroll', onBodyScroll);
       // eslint-disable-next-line svelte/no-dom-manipulating -- imperatively-created popup window, not a Svelte-rendered node
       winEl?.remove();
     };
