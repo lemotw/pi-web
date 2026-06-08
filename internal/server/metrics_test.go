@@ -42,12 +42,14 @@ func (*sampleErr) Error() string { return "sample failed" }
 
 func newMetricsServer(sender ChatSender, sampler processSampler) *Server {
 	return &Server{
-		now:            time.Now,
-		startedAt:      time.Now().Add(-5 * time.Minute),
-		chatSender:     sender,
-		metricsSampler: sampler,
-		metricsCPULast: make(map[int]cpuMark),
-		auth:           auth.New(""),
+		now:        time.Now,
+		chatSender: sender,
+		auth:       auth.New(""),
+		metrics: metricsState{
+			startedAt: time.Now().Add(-5 * time.Minute),
+			sampler:   sampler,
+			cpuLast:   make(map[int]cpuMark),
+		},
 	}
 }
 
@@ -206,10 +208,10 @@ func TestPruneCPUMarksDropsDeadPIDs(t *testing.T) {
 	s.cpuPercent(1, 5, now)
 	s.cpuPercent(2, 5, now)
 	s.pruneCPUMarks(map[int]bool{1: true})
-	if _, ok := s.metricsCPULast[2]; ok {
+	if _, ok := s.metrics.cpuLast[2]; ok {
 		t.Error("dead PID 2 should have been pruned")
 	}
-	if _, ok := s.metricsCPULast[1]; !ok {
+	if _, ok := s.metrics.cpuLast[1]; !ok {
 		t.Error("live PID 1 should remain")
 	}
 }

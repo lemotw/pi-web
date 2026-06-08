@@ -90,21 +90,30 @@ type Server struct {
 	fileWalk     *fileWalkCache
 	fileWalkOnce sync.Once
 
-	// Metrics dashboard (see metrics.go). startedAt drives process uptime;
-	// metricsSampler is swappable for tests; metricsCPULast holds per-PID CPU
-	// baselines for delta-based %CPU.
-	startedAt      time.Time
-	metricsSampler processSampler
-	metricsCPUMu   sync.Mutex
-	metricsCPULast map[int]cpuMark
+	// Metrics dashboard (see metrics.go) and auto-title bookkeeping (see
+	// auto_title.go), grouped so each subsystem owns its own fields + lock.
+	metrics   metricsState
+	autoTitle autoTitleState
+}
 
-	// Auto-title bookkeeping (see auto_title.go). Guards against re-titling
-	// loops and clobbering user-set names.
-	titleMu        sync.Mutex
-	titleInFlight  map[string]bool
-	titledName     map[string]string // sessID -> the title pi-web last set
-	titledCount    map[string]int    // sessID -> user-msg count at last titling
-	titleUserOwned map[string]bool   // sessID -> user named it; never auto-title
+// metricsState backs the metrics dashboard. startedAt drives process uptime;
+// sampler is swappable for tests; cpuLast holds per-PID CPU baselines for
+// delta-based %CPU (guarded by cpuMu).
+type metricsState struct {
+	startedAt time.Time
+	sampler   processSampler
+	cpuMu     sync.Mutex
+	cpuLast   map[int]cpuMark
+}
+
+// autoTitleState guards auto-titling against re-titling loops and clobbering
+// user-set names.
+type autoTitleState struct {
+	mu        sync.Mutex
+	inFlight  map[string]bool
+	name      map[string]string // sessID -> the title pi-web last set
+	count     map[string]int    // sessID -> user-msg count at last titling
+	userOwned map[string]bool   // sessID -> user named it; never auto-title
 }
 
 func New(deps Deps) (*Server, error) {
@@ -139,17 +148,21 @@ func New(deps Deps) (*Server, error) {
 		renderAppShell:      deps.RenderAppShell,
 		models:              deps.Models,
 		lastKnown:           make(map[string]struct{}),
-		titleInFlight:       make(map[string]bool),
-		titledName:          make(map[string]string),
-		titledCount:         make(map[string]int),
-		titleUserOwned:      make(map[string]bool),
 		stopCh:              make(chan struct{}),
 		db:                  db,
 		updater:             deps.Updater,
 		runInstall:          deps.RunInstall,
 		runRestart:          deps.RunRestart,
-		startedAt:           now(),
-		metricsCPULast:      make(map[int]cpuMark),
+		metrics: metricsState{
+			startedAt: now(),
+			cpuLast:   make(map[int]cpuMark),
+		},
+		autoTitle: autoTitleState{
+			inFlight:  make(map[string]bool),
+			name:      make(map[string]string),
+			count:     make(map[string]int),
+			userOwned: make(map[string]bool),
+		},
 	}
 	if pm, err := NewPushManager(agentDir); err != nil {
 		fmt.Fprintf(os.Stderr, "push notifications unavailable: %v\n", err)

@@ -50,17 +50,17 @@ func (s *Server) maybeAutoTitle(sessID string) {
 	eachTurn := s.autoTitleEachTurn()
 
 	// Cheap pre-parse gate.
-	s.titleMu.Lock()
-	if s.titleInFlight[sessID] || s.titleUserOwned[sessID] {
-		s.titleMu.Unlock()
+	s.autoTitle.mu.Lock()
+	if s.autoTitle.inFlight[sessID] || s.autoTitle.userOwned[sessID] {
+		s.autoTitle.mu.Unlock()
 		return
 	}
-	_, titledBefore := s.titledName[sessID]
+	_, titledBefore := s.autoTitle.name[sessID]
 	if !eachTurn && titledBefore {
-		s.titleMu.Unlock()
+		s.autoTitle.mu.Unlock()
 		return
 	}
-	s.titleMu.Unlock()
+	s.autoTitle.mu.Unlock()
 
 	resolved, err := sessions.ResolveByID(s.sessionsDir, sessID)
 	if err != nil {
@@ -71,31 +71,31 @@ func (s *Server) maybeAutoTitle(sessID string) {
 		return
 	}
 
-	s.titleMu.Lock()
+	s.autoTitle.mu.Lock()
 	// An explicit name pi-web didn't write (a manual rename or a header name)
 	// means the user owns the title — back off for good.
 	if inputs.HasExplicitName && !inputs.AutoTitled {
-		s.titleUserOwned[sessID] = true
-		s.titleMu.Unlock()
+		s.autoTitle.userOwned[sessID] = true
+		s.autoTitle.mu.Unlock()
 		return
 	}
 	if !eachTurn {
 		// Title once: skip if already titled this run, or marked on disk.
-		if _, done := s.titledName[sessID]; done || inputs.AutoTitled {
-			s.titleMu.Unlock()
+		if _, done := s.autoTitle.name[sessID]; done || inputs.AutoTitled {
+			s.autoTitle.mu.Unlock()
 			return
 		}
-	} else if inputs.UserMsgCount <= s.titledCount[sessID] {
+	} else if inputs.UserMsgCount <= s.autoTitle.count[sessID] {
 		// Each turn: only re-title when a new user message has arrived.
-		s.titleMu.Unlock()
+		s.autoTitle.mu.Unlock()
 		return
 	}
-	if s.titleInFlight[sessID] {
-		s.titleMu.Unlock()
+	if s.autoTitle.inFlight[sessID] {
+		s.autoTitle.mu.Unlock()
 		return
 	}
-	s.titleInFlight[sessID] = true
-	s.titleMu.Unlock()
+	s.autoTitle.inFlight[sessID] = true
+	s.autoTitle.mu.Unlock()
 
 	// In each-turn mode the title tracks the current focus (latest message);
 	// otherwise it summarizes the opening message.
@@ -105,13 +105,13 @@ func (s *Server) maybeAutoTitle(sessID string) {
 	}
 	title := strings.ToValidUTF8(s.generateTitle(basis), "")
 
-	s.titleMu.Lock()
-	delete(s.titleInFlight, sessID)
+	s.autoTitle.mu.Lock()
+	delete(s.autoTitle.inFlight, sessID)
 	if title != "" {
-		s.titledName[sessID] = title
-		s.titledCount[sessID] = inputs.UserMsgCount
+		s.autoTitle.name[sessID] = title
+		s.autoTitle.count[sessID] = inputs.UserMsgCount
 	}
-	s.titleMu.Unlock()
+	s.autoTitle.mu.Unlock()
 
 	if title == "" {
 		return
