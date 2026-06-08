@@ -53,9 +53,9 @@ func TestSessionToggleButtonsReflectPersistedActiveState(t *testing.T) {
 func TestToolsVisibilityAndOutputExpansionAreSeparateStates(t *testing.T) {
 	src := readSrc(t, "web/src/session/ui/toggle-state.js")
 	checks := []string{
-		"node.querySelectorAll('.tool-execution, .compaction').forEach(el => {",
+		"node.querySelectorAll('.tool-execution, .compaction').forEach((el) => {",
 		"el.style.display = state.toolsVisible ? '' : 'none';",
-		"node.querySelectorAll('.tool-output.expandable').forEach(el => {",
+		"node.querySelectorAll('.tool-output.expandable').forEach((el) => {",
 		"el.classList.toggle('expanded', state.toolOutputsExpanded);",
 		"toggleToolsVisibility: () => toggle('toolsVisible'),",
 		"toggleToolOutputs: () => toggle('toolOutputsExpanded'),",
