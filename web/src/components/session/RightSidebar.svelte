@@ -7,6 +7,7 @@
   import { sessionRuntime } from '../../session/session-runtime.js';
   import { createScratchpadController } from './right-sidebar-scratchpad.js';
   import { createRightSidebarTabs } from './right-sidebar-tabs.js';
+  import { createRightSidebarVisibility } from './right-sidebar-visibility.js';
 
   let { scratchpad = '', projectPath = '' } = $props();
 
@@ -55,19 +56,15 @@
       };
     }
 
-    function isCollapsed() {
-      return documentImpl.body.classList.contains('right-sidebar-collapsed');
-    }
-    function isExpanded() {
-      return documentImpl.body.classList.contains('right-sidebar-expanded');
-    }
-    function setCollapsed(collapsed) {
-      documentImpl.body.classList.toggle('right-sidebar-collapsed', collapsed);
-      try { storage?.setItem(RIGHT_SIDEBAR_COLLAPSED_KEY, String(collapsed)); } catch {}
-    }
-    function setExpanded(expanded) {
-      documentImpl.body.classList.toggle('right-sidebar-expanded', expanded);
-    }
+    // ── Scratchpad load/save ─────────────────────────────────────────────────
+    const scratchpadController = createScratchpadController({
+      projectPath,
+      textarea,
+      statusEl,
+      fetchImpl: fetch,
+    });
+    const loadScratchpad = scratchpadController.load;
+    if (textarea) cleanups.push(scratchpadController.bind());
 
     function getRightSidebarBounds() {
       const rootStyles = windowImpl.getComputedStyle(documentImpl.documentElement);
@@ -96,49 +93,16 @@
       try { storage?.setItem(RIGHT_SIDEBAR_WIDTH_KEY, String(Math.round(clampWidth(width)))); } catch {}
     }
 
-    function toggleSidebar() {
-      if (isCollapsed()) {
-        setCollapsed(false);
-        loadScratchpad();
-      } else {
-        setCollapsed(true);
-        setExpanded(false);
-      }
-    }
-    function openSidebar() {
-      if (isCollapsed()) {
-        setCollapsed(false);
-        loadScratchpad();
-      }
-    }
-    function collapseSidebar() {
-      setExpanded(false);
-      setCollapsed(true);
-    }
-
-    const onToggleBtn = () => toggleSidebar();
-    toggleBtn?.addEventListener('click', onToggleBtn);
-    if (toggleBtn) cleanups.push(() => toggleBtn.removeEventListener('click', onToggleBtn));
-
-    const onCloseBtn = () => { setExpanded(false); setCollapsed(true); };
-    closeBtn?.addEventListener('click', onCloseBtn);
-    if (closeBtn) cleanups.push(() => closeBtn.removeEventListener('click', onCloseBtn));
-
-    const onExpandBtn = () => {
-      if (isExpanded()) {
-        setExpanded(false);
-      } else {
-        if (isCollapsed()) setCollapsed(false);
-        setExpanded(true);
-        loadScratchpad();
-      }
-    };
-    expandBtn?.addEventListener('click', onExpandBtn);
-    if (expandBtn) cleanups.push(() => expandBtn.removeEventListener('click', onExpandBtn));
-
-    const onBackdrop = () => { setExpanded(false); setCollapsed(true); };
-    backdrop?.addEventListener('click', onBackdrop);
-    if (backdrop) cleanups.push(() => backdrop.removeEventListener('click', onBackdrop));
+    const visibilityController = createRightSidebarVisibility({
+      documentImpl,
+      storage,
+      collapsedStorageKey: RIGHT_SIDEBAR_COLLAPSED_KEY,
+      loadScratchpad,
+    });
+    const toggleSidebar = visibilityController.toggle;
+    const openSidebar = visibilityController.open;
+    const collapseSidebar = visibilityController.collapse;
+    cleanups.push(visibilityController.bindControls({ toggleBtn, closeBtn, expandBtn, backdrop }));
 
     // ── Resize (drag left edge) ──────────────────────────────────────────────
     if (resizer) {
@@ -191,16 +155,6 @@
       windowImpl.addEventListener('resize', onWindowResize);
       cleanups.push(() => windowImpl.removeEventListener('resize', onWindowResize));
     }
-
-    // ── Scratchpad load/save ─────────────────────────────────────────────────
-    const scratchpadController = createScratchpadController({
-      projectPath,
-      textarea,
-      statusEl,
-      fetchImpl: fetch,
-    });
-    const loadScratchpad = scratchpadController.load;
-    if (textarea) cleanups.push(scratchpadController.bind());
 
     // Scratchpad content is server/prop-rendered into the textarea, so adopt it
     // as the baseline instead of re-fetching (which would blank then refill it).
