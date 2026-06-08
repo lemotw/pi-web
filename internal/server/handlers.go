@@ -100,7 +100,7 @@ func (s *Server) handleApiForkSession(w http.ResponseWriter, r *http.Request) {
 
 	if s.chatSender != nil {
 		if resolved, err := sessions.ResolveByID(s.sessionsDir, id); err == nil {
-			go s.initializeNewSessionWorker(r.Context(), resolved.Session.ID, resolved.Path, sessions.InitialSettings{})
+			go s.initializeNewSessionWorker(context.Background(), resolved.Session.ID, resolved.Path, sessions.InitialSettings{})
 		}
 	}
 
@@ -148,7 +148,7 @@ func (s *Server) handleApiCloneSession(w http.ResponseWriter, r *http.Request) {
 
 	if s.chatSender != nil {
 		if resolved, err := sessions.ResolveByID(s.sessionsDir, id); err == nil {
-			go s.initializeNewSessionWorker(r.Context(), resolved.Session.ID, resolved.Path, sessions.InitialSettings{})
+			go s.initializeNewSessionWorker(context.Background(), resolved.Session.ID, resolved.Path, sessions.InitialSettings{})
 		}
 	}
 
