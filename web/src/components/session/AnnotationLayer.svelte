@@ -1,7 +1,10 @@
 <script>
   import { onMount } from 'svelte';
   import { t } from '../../shared/i18n.js';
+  import { icon, X } from '../../shared/icons.js';
+  import { formatAnnotationsForPi } from '../../session/annotations/annotation-format.js';
   import { getSelectionInfo, applyHighlights } from '../../session/annotations/annotation-range.js';
+  import { sessionRuntime } from '../../session/session-runtime.js';
 
   // Reactive view state. The notes list, floating "Comment" popover, and note
   // modal are rendered declaratively; the selection/highlight machinery and API
@@ -13,19 +16,28 @@
   let modalOpen = $state(false);
   let modalQuote = $state('');
 
-  const noteNoun = $derived(annotations.length === 1 ? t('annotation.noteOne') : t('annotation.noteMany'));
+  const noteNoun = $derived(
+    annotations.length === 1 ? t('annotation.noteOne') : t('annotation.noteMany'),
+  );
 
-  // Runtime deps supplied by session.js via init() (live-only wiring).
-  let api = null;
-  let scopes = [];
-  let composerEl = null;
-  let countEl = null;
-  let onSelectArtifact = null;
-  let onCreate = null;
-  let onSend = null;
-  let onAddToChat = null;
-  let resolveArtifact = null;
-  let selectionDelayMs = 250;
+  // Runtime deps supplied by <SessionPage> via init() (live-only wiring).
+  // Config is supplied declaratively by the parent. `api` + the callbacks are
+  // stable; `scopes`/`composerEl`/`countEl` are live DOM anchors the parent
+  // resolves after mount (so they may arrive a tick later, which the setup
+  // $effect below handles). Standalone/tests pass them directly.
+  let {
+    api = null,
+    scopes = [],
+    composerEl = null,
+    countEl = null,
+    onSelectArtifact = null,
+    onCreate = null,
+    onSend = null,
+    onAddToChat = null,
+    resolveArtifact = null,
+    selectionDelayMs = 250,
+  } = $props();
+  const FLASH_DURATION_MS = 1200;
 
   let pending = null; // selection info awaiting a note
   let observer = null;
@@ -42,12 +54,12 @@
   // ── highlight (re)application ─────────────────────────────────────────────
   function reapply() {
     observer?.disconnect();
-    for (const scope of scopes) {
+    for (const scope of activeScopes) {
       applyHighlights(scope, annotations, { documentImpl: document });
     }
     observer?.takeRecords?.();
     if (observer) {
-      for (const scope of scopes) observer.observe(scope, { childList: true, subtree: true });
+      for (const scope of activeScopes) observer.observe(scope, { childList: true, subtree: true });
     }
   }
 
@@ -79,74 +91,14 @@
       if (seq !== loadSeq) return; // a newer update superseded this load
       annotations = Array.isArray(list) ? list : [];
       render();
-    } catch { /* keep current */ }
-  }
-
-  // ── send-to-pi formatting ─────────────────────────────────────────────────
-  function offsetToLine(content, offset) {
-    let line = 1;
-    const limit = Math.min(Math.max(0, offset), content.length);
-    for (let i = 0; i < limit; i += 1) {
-      if (content[i] === '\n') line += 1;
+    } catch {
+      /* keep current */
     }
-    return line;
-  }
-
-  function lineLabel(content, start, end) {
-    if (typeof content !== 'string' || content.length === 0) return '';
-    const a = offsetToLine(content, start);
-    const b = offsetToLine(content, Math.max(start, end - 1));
-    return a === b ? `Line ${a}` : `Lines ${a}-${b}`;
-  }
-
-  function quote(s) {
-    return `"${String(s || '').replace(/\s+/g, ' ').trim()}"`;
-  }
-
-  function formatForPi() {
-    const fileGroups = new Map();
-    const convo = [];
-    for (const a of annotations) {
-      const anchorId = a.anchorId || '';
-      if (anchorId.indexOf('artifact-') === 0) {
-        const art = resolveArtifact ? resolveArtifact(anchorId.slice('artifact-'.length)) : null;
-        const path = (art && (art.filePath || art.title)) || '(artifact)';
-        const label = art ? lineLabel(art.content, a.startOffset, a.endOffset) : '';
-        if (!fileGroups.has(path)) fileGroups.set(path, []);
-        fileGroups.get(path).push({ label, original: a.original, text: a.text });
-      } else {
-        convo.push(a);
-      }
-    }
-
-    const out = [
-      "Here are my review notes on this session — changes I want you to make to the work we've already done together in this conversation. Please go through each note below and apply it. This is a continuation of our current task, not a new or separate request.",
-      '',
-    ];
-    for (const [path, items] of fileGroups) {
-      out.push(`In ${path}:`);
-      for (const it of items) {
-        out.push('');
-        out.push(it.label ? `${it.label} — ${quote(it.original)}` : quote(it.original));
-        if (it.text) out.push(`  ${it.text}`);
-      }
-      out.push('');
-    }
-    if (convo.length > 0) {
-      out.push('In this conversation:');
-      for (const a of convo) {
-        out.push('');
-        out.push(quote(a.original));
-        if (a.text) out.push(`  ${a.text}`);
-      }
-      out.push('');
-    }
-    return out.join('\n').trimEnd() + '\n';
   }
 
   function sendToPi() {
     if (!composerEl || annotations.length === 0) return;
-    composerEl.value = formatForPi();
+    composerEl.value = formatAnnotationsForPi(annotations, { resolveArtifact });
     composerEl.dispatchEvent(new Event('input', { bubbles: true }));
     if (typeof onSend === 'function') onSend();
     composerEl.focus();
@@ -155,7 +107,11 @@
   async function deleteNote(id) {
     if (!id) return;
     setAnnotations(annotations.filter((a) => a.id !== id)); // optimistic
-    try { await api?.remove(id); } finally { refresh(); }
+    try {
+      await api?.remove(id);
+    } finally {
+      refresh();
+    }
   }
 
   // ── popover / modal ───────────────────────────────────────────────────────
@@ -172,12 +128,17 @@
   function openNoteInput() {
     if (!pending) return;
     hidePopover();
-    modalQuote = `"${String(pending.text || '').replace(/\s+/g, ' ').trim()}"`;
+    modalQuote = `"${String(pending.text || '')
+      .replace(/\s+/g, ' ')
+      .trim()}"`;
     modalOpen = true;
     // Toggle the attribute synchronously so focus() lands within the tap gesture
     // (mobile keyboard) before Svelte's async flush sets the same value.
     if (modalEl) modalEl.hidden = false;
-    if (noteInputEl) { noteInputEl.value = ''; noteInputEl.focus(); }
+    if (noteInputEl) {
+      noteInputEl.value = '';
+      noteInputEl.focus();
+    }
   }
 
   function closeNote() {
@@ -225,7 +186,11 @@
     window.getSelection?.()?.removeAllRanges?.();
     setAnnotations([...annotations, optimistic]); // optimistic; bumps the load guard
     if (typeof onCreate === 'function') onCreate();
-    try { await api.create(payload); } finally { refresh(); }
+    try {
+      await api.create(payload);
+    } finally {
+      refresh();
+    }
   }
 
   // ── selection detection ───────────────────────────────────────────────────
@@ -234,13 +199,17 @@
     if (popoverEl && popoverEl.contains(document.activeElement)) return;
     const sel = window.getSelection?.();
     const info = getSelectionInfo(sel, { documentImpl: document });
-    if (!info || !scopes.some((s) => s.contains(info.anchorEl))) {
+    if (!info || !activeScopes.some((s) => s.contains(info.anchorEl))) {
       if (popoverVisible) hidePopover();
       return;
     }
     pending = info;
     let rect = { bottom: 0, left: 0 };
-    try { rect = sel.getRangeAt(0).getBoundingClientRect(); } catch { /* default */ }
+    try {
+      rect = sel.getRangeAt(0).getBoundingClientRect();
+    } catch {
+      /* default */
+    }
     showCommentButton(rect);
   }
 
@@ -251,7 +220,8 @@
 
   function onSelectionChange() {
     if (window.clearTimeout) window.clearTimeout(selectionTimer);
-    if (window.setTimeout) selectionTimer = window.setTimeout(maybeShowFromSelection, selectionDelayMs);
+    if (window.setTimeout)
+      selectionTimer = window.setTimeout(maybeShowFromSelection, selectionDelayMs);
     else maybeShowFromSelection();
   }
 
@@ -283,36 +253,33 @@
       if (anchor) {
         anchor.scrollIntoView({ block: 'center', behavior: 'smooth' });
         anchor.classList.add('annotation-flash');
-        window.setTimeout(() => anchor.classList.remove('annotation-flash'), 1200);
+        window.setTimeout(() => anchor.classList.remove('annotation-flash'), FLASH_DURATION_MS);
       }
     }
   }
 
-  function init(cfg = {}) {
-    api = cfg.api || null;
-    scopes = (Array.isArray(cfg.scopes) ? cfg.scopes : []).filter(Boolean);
-    composerEl = cfg.composerEl || null;
-    countEl = cfg.countEl || null;
-    onSelectArtifact = cfg.onSelectArtifact || null;
-    onCreate = cfg.onCreate || null;
-    onSend = cfg.onSend || null;
-    onAddToChat = cfg.onAddToChat || null;
-    resolveArtifact = cfg.resolveArtifact || null;
-    if (cfg.selectionDelayMs != null) selectionDelayMs = cfg.selectionDelayMs;
-    if (!api || scopes.length === 0) return;
-    if (window.MutationObserver) {
+  // Active scopes after filtering out any null DOM anchors the parent hasn't
+  // resolved yet.
+  const activeScopes = $derived((Array.isArray(scopes) ? scopes : []).filter(Boolean));
+
+  // (Re)load + observe whenever the api or the resolved scopes change. Document
+  // listeners attach once in onMount; the handlers read the reactive config, so
+  // they no-op until a scope/api is present.
+  $effect(() => {
+    if (!api || activeScopes.length === 0) return;
+    if (window.MutationObserver && !observer) {
       observer = new window.MutationObserver(() => {
         if (window.requestAnimationFrame) window.requestAnimationFrame(reapply);
         else reapply();
       });
     }
+    refresh();
+  });
+
+  onMount(() => {
     document.addEventListener('mouseup', onMouseUp);
     document.addEventListener('selectionchange', onSelectionChange);
     document.addEventListener('keydown', onKeyDown);
-    refresh();
-  }
-
-  onMount(() => {
     // Relocate the popover + note modal to <body> so their fixed positioning is
     // viewport-relative (the right sidebar uses transforms, which would otherwise
     // become their containing block). Svelte keeps patching them by reference.
@@ -331,7 +298,7 @@
       else if (action === 'cancel-note') closeNote();
     });
 
-    window.__piAnnotationLayer = { init, setAnnotations, reapply, refresh };
+    sessionRuntime.annotations = { setAnnotations, reapply, refresh };
 
     return () => {
       observer?.disconnect();
@@ -339,13 +306,16 @@
       document.removeEventListener('mouseup', onMouseUp);
       document.removeEventListener('selectionchange', onSelectionChange);
       document.removeEventListener('keydown', onKeyDown);
+      // eslint-disable-next-line svelte/no-dom-manipulating -- imperatively-created popover, not a Svelte-rendered node
       popoverEl?.remove();
+      // eslint-disable-next-line svelte/no-dom-manipulating -- imperatively-created modal, not a Svelte-rendered node
       modalEl?.remove();
-      delete window.__piAnnotationLayer;
+      sessionRuntime.annotations = null;
     };
   });
 </script>
 
+<!-- eslint-disable svelte/no-at-html-tags -- trusted: Lucide icon SVG markup -->
 <div id="annotation-list-host" class="annotation-list-host" bind:this={listRootEl}>
   {#if annotations.length === 0}
     <div class="annotation-empty">{t('annotation.empty')}</div>
@@ -353,29 +323,63 @@
     <div class="annotation-list">
       {#each annotations as a (a.id)}
         <div class="annotation-item" data-annotation-id={a.id} data-anchor-id={a.anchorId}>
-          <button type="button" class="annotation-delete" data-action="delete" title={t('annotation.deleteNote')}>×</button>
+          <button
+            type="button"
+            class="annotation-delete"
+            data-action="delete"
+            title={t('annotation.deleteNote')}>{@html icon(X, { size: 14 })}</button
+          >
           {#if a.original}<div class="annotation-quote">{a.original}</div>{/if}
           {#if a.text}<div class="annotation-note">{a.text}</div>{/if}
         </div>
       {/each}
     </div>
-    <div class="annotation-footer"><button type="button" class="annotation-send" data-action="send-to-pi">{t('annotation.sendNotesToPi', { count: annotations.length, noun: noteNoun })}</button></div>
+    <div class="annotation-footer">
+      <button type="button" class="annotation-send" data-action="send-to-pi"
+        >{t('annotation.sendNotesToPi', { count: annotations.length, noun: noteNoun })}</button
+      >
+    </div>
   {/if}
 </div>
 
-<div class="annotation-popover" bind:this={popoverEl} hidden={!popoverVisible} style:top={`${popoverTop}px`} style:left={`${popoverLeft}px`} style:position="fixed">
-  <button type="button" class="annotation-pop-btn" data-action="start-comment">{t('annotation.comment')}</button>
+<div
+  class="annotation-popover"
+  bind:this={popoverEl}
+  hidden={!popoverVisible}
+  style:top={`${popoverTop}px`}
+  style:left={`${popoverLeft}px`}
+  style:position="fixed"
+>
+  <button type="button" class="annotation-pop-btn" data-action="start-comment"
+    >{t('annotation.comment')}</button
+  >
 </div>
 
 <div class="annotation-note-modal" bind:this={modalEl} hidden={!modalOpen}>
   <div class="annotation-note-backdrop" data-action="cancel-note"></div>
-  <div class="annotation-note-card" role="dialog" aria-modal="true" aria-label={t('annotation.addNote')}>
+  <div
+    class="annotation-note-card"
+    role="dialog"
+    aria-modal="true"
+    aria-label={t('annotation.addNote')}
+  >
     <div class="annotation-note-quote">{modalQuote}</div>
-    <textarea class="annotation-note-input" bind:this={noteInputEl} placeholder={t('annotation.addNotePlaceholder')} rows="3"></textarea>
+    <textarea
+      class="annotation-note-input"
+      bind:this={noteInputEl}
+      placeholder={t('annotation.addNotePlaceholder')}
+      rows="3"
+    ></textarea>
     <div class="annotation-note-actions">
-      <button type="button" class="annotation-note-cancel" data-action="cancel-note">{t('annotation.cancel')}</button>
-      <button type="button" class="annotation-note-addchat" data-action="add-to-chat">{t('annotation.addToChat')}</button>
-      <button type="button" class="annotation-note-save" data-action="save-note">{t('annotation.saveNote')}</button>
+      <button type="button" class="annotation-note-cancel" data-action="cancel-note"
+        >{t('annotation.cancel')}</button
+      >
+      <button type="button" class="annotation-note-addchat" data-action="add-to-chat"
+        >{t('annotation.addToChat')}</button
+      >
+      <button type="button" class="annotation-note-save" data-action="save-note"
+        >{t('annotation.saveNote')}</button
+      >
     </div>
   </div>
 </div>

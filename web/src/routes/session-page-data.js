@@ -16,7 +16,10 @@ export function readSessionBootstrap({ documentImpl, atobImpl, TextDecoderImpl }
   }
 }
 
-export function encodePayload(payload, { btoaImpl = globalThis.btoa, TextEncoderImpl = globalThis.TextEncoder } = {}) {
+export function encodePayload(
+  payload,
+  { btoaImpl = globalThis.btoa, TextEncoderImpl = globalThis.TextEncoder } = {},
+) {
   const json = JSON.stringify(payload);
   const bytes = new TextEncoderImpl().encode(json);
   let binary = '';
@@ -35,10 +38,11 @@ export function firstMessageStub(entries = []) {
   const entry = entries.find((item) => item?.type === 'message' && item.message?.role === 'user');
   let content = entry?.message?.content;
   if (Array.isArray(content)) {
-    content = content.map((part) => typeof part === 'string' ? part : (part?.text || '')).join('');
+    content = content.map((part) => (typeof part === 'string' ? part : part?.text || '')).join('');
   }
   if (!content) return '';
-  const text = String(content).slice(0, 500)
+  const text = String(content)
+    .slice(0, 500)
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;');
@@ -48,7 +52,9 @@ export function firstMessageStub(entries = []) {
 export async function loadScratchpad(projectPath, { fetchImpl = fetch } = {}) {
   if (!projectPath) return '';
   try {
-    const resp = await fetchImpl(`/api/scratchpad?project=${encodeURIComponent(projectPath)}`, { headers: { Accept: 'application/json' } });
+    const resp = await fetchImpl(`/api/scratchpad?project=${encodeURIComponent(projectPath)}`, {
+      headers: { Accept: 'application/json' },
+    });
     if (!resp.ok) return '';
     const data = await resp.json();
     return data?.content || '';
@@ -57,7 +63,13 @@ export async function loadScratchpad(projectPath, { fetchImpl = fetch } = {}) {
   }
 }
 
-export function buildSessionPageState({ sessionId, data, scratchpad = '', btoaImpl, TextEncoderImpl } = {}) {
+export function buildSessionPageState({
+  sessionId,
+  data,
+  scratchpad = '',
+  btoaImpl,
+  TextEncoderImpl,
+} = {}) {
   const entries = Array.isArray(data?.entries) ? data.entries : [];
   const header = data?.header || {};
   const cwd = header.cwd || '';
@@ -68,7 +80,8 @@ export function buildSessionPageState({ sessionId, data, scratchpad = '', btoaIm
   const chatAvailable = data?.chatAvailable ?? data?.ChatAvailable ?? true;
   let chatDisabledReason = data?.chatDisabledReason || data?.ChatDisabledReason || '';
   if (!chatAvailable && !chatDisabledReason) {
-    chatDisabledReason = 'This session can be viewed, but chat is disabled because its working directory no longer exists.';
+    chatDisabledReason =
+      'This session can be viewed, but chat is disabled because its working directory no longer exists.';
   }
   const model = data?.model || data?.Model || '';
   const provider = data?.modelProvider || data?.ModelProvider || '';
@@ -81,22 +94,33 @@ export function buildSessionPageState({ sessionId, data, scratchpad = '', btoaIm
     chatAvailable,
     chatDisabledReason,
     modelLabel: model && provider ? `${model} @ ${provider}` : model,
-    payloadBase64: encodePayload({
-      header,
-      entries,
-      name: title,
-      leafId,
-      systemPrompt: null,
-      tools: null,
-      renderedTools: null,
-      total,
-      from,
-      truncated: entries.length < total,
-    }, { btoaImpl, TextEncoderImpl }),
+    payloadBase64: encodePayload(
+      {
+        header,
+        entries,
+        name: title,
+        leafId,
+        systemPrompt: null,
+        tools: null,
+        renderedTools: null,
+        total,
+        from,
+        truncated: entries.length < total,
+      },
+      { btoaImpl, TextEncoderImpl },
+    ),
   };
 }
 
-export async function loadSessionPageState({ locationSearch = '', fetchImpl = fetch, btoaImpl, TextEncoderImpl, documentImpl, atobImpl, TextDecoderImpl } = {}) {
+export async function loadSessionPageState({
+  locationSearch = '',
+  fetchImpl = fetch,
+  btoaImpl,
+  TextEncoderImpl,
+  documentImpl,
+  atobImpl,
+  TextDecoderImpl,
+} = {}) {
   const params = new URLSearchParams(locationSearch);
   const sessionId = params.get('id') || '';
   if (!sessionId) throw new Error(t('session.missingId'));
@@ -104,11 +128,20 @@ export async function loadSessionPageState({ locationSearch = '', fetchImpl = fe
   // Prefer the payload embedded in the page shell — no fetch on first paint.
   const boot = readSessionBootstrap({ documentImpl, atobImpl, TextDecoderImpl });
   if (boot && boot.id === sessionId && boot.data) {
-    return buildSessionPageState({ sessionId, data: boot.data, scratchpad: boot.scratchpad || '', btoaImpl, TextEncoderImpl });
+    return buildSessionPageState({
+      sessionId,
+      data: boot.data,
+      scratchpad: boot.scratchpad || '',
+      btoaImpl,
+      TextEncoderImpl,
+    });
   }
 
-  const resp = await fetchImpl(`/api/session?id=${encodeURIComponent(sessionId)}&paginate=1`, { headers: { Accept: 'application/json' } });
-  if (!resp.ok) throw new Error(resp.status === 404 ? t('session.notFound') : t('session.loadFailed'));
+  const resp = await fetchImpl(`/api/session?id=${encodeURIComponent(sessionId)}&paginate=1`, {
+    headers: { Accept: 'application/json' },
+  });
+  if (!resp.ok)
+    throw new Error(resp.status === 404 ? t('session.notFound') : t('session.loadFailed'));
   const data = await resp.json();
   const scratchpad = await loadScratchpad(data?.header?.cwd || '', { fetchImpl });
   return buildSessionPageState({ sessionId, data, scratchpad, btoaImpl, TextEncoderImpl });

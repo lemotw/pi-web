@@ -2,11 +2,17 @@ export const SIDEBAR_WIDTH_STORAGE_KEY = 'pi-share:v1:sidebar-width';
 export const SIDEBAR_COLLAPSED_STORAGE_KEY = 'pi-share:v1:sidebar-collapsed';
 export const MIN_CONTENT_WIDTH = 320;
 
+// Width at/below which the session UI switches to the mobile layout (drawer
+// sidebars instead of inline panels). Shared so the media query lives in one
+// place; see isMobileLayout.
+export const MOBILE_BREAKPOINT_PX = 900;
+export const MOBILE_MEDIA_QUERY = `(max-width: ${MOBILE_BREAKPOINT_PX}px)`;
+
 export function isMobileLayout({ windowImpl = window } = {}) {
   if (!windowImpl || typeof windowImpl.matchMedia !== 'function') {
     return false;
   }
-  return windowImpl.matchMedia('(max-width: 900px)').matches;
+  return windowImpl.matchMedia(MOBILE_MEDIA_QUERY).matches;
 }
 
 export function getSidebarBounds({ documentImpl = document, windowImpl = window } = {}) {
@@ -16,7 +22,7 @@ export function getSidebarBounds({ documentImpl = document, windowImpl = window 
   const viewportMaxWidth = windowImpl.innerWidth - MIN_CONTENT_WIDTH;
   return {
     minWidth,
-    maxWidth: Math.max(minWidth, Math.min(maxWidth, viewportMaxWidth))
+    maxWidth: Math.max(minWidth, Math.min(maxWidth, viewportMaxWidth)),
   };
 }
 
@@ -27,7 +33,10 @@ export function clampSidebarWidth(width, env = {}) {
 
 export function applySidebarWidth(width, env = {}) {
   const { documentImpl = document } = env;
-  documentImpl.documentElement.style.setProperty('--sidebar-width', `${Math.round(clampSidebarWidth(width, env))}px`);
+  documentImpl.documentElement.style.setProperty(
+    '--sidebar-width',
+    `${Math.round(clampSidebarWidth(width, env))}px`,
+  );
 }
 
 export function loadSidebarWidth({ storage = globalThis.localStorage } = {}) {
@@ -77,7 +86,10 @@ export function saveSidebarCollapsed(collapsed, { storage = globalThis.localStor
   }
 }
 
-export function setSidebarCollapsed(collapsed, { documentImpl = document, windowImpl = window } = {}) {
+export function setSidebarCollapsed(
+  collapsed,
+  { documentImpl = document, windowImpl = window } = {},
+) {
   const hamburger = documentImpl.getElementById('hamburger');
   documentImpl.body?.classList.toggle('sidebar-collapsed', collapsed);
   if (hamburger) {
@@ -89,8 +101,11 @@ export function setSidebarCollapsed(collapsed, { documentImpl = document, window
   }
 }
 
-export function setupSidebarCollapse({ documentImpl = document, windowImpl = window, storage = globalThis.localStorage } = {}) {
-  const env = { documentImpl, windowImpl, storage };
+export function setupSidebarCollapse({
+  documentImpl = document,
+  windowImpl = window,
+  storage = globalThis.localStorage,
+} = {}) {
   const collapsed = loadSidebarCollapsed({ storage });
   if (!isMobileLayout({ windowImpl })) {
     setSidebarCollapsed(collapsed, { documentImpl, windowImpl });
@@ -144,7 +159,11 @@ export function setupSidebarCollapse({ documentImpl = document, windowImpl = win
   syncTreeToggle();
 }
 
-export function setupSidebarResize({ documentImpl = document, windowImpl = window, storage = globalThis.localStorage } = {}) {
+export function setupSidebarResize({
+  documentImpl = document,
+  windowImpl = window,
+  storage = globalThis.localStorage,
+} = {}) {
   const sidebar = documentImpl.getElementById('sidebar');
   const sidebarResizer = documentImpl.getElementById('sidebar-resizer');
   const env = { documentImpl, windowImpl, storage };
@@ -153,8 +172,6 @@ export function setupSidebarResize({ documentImpl = document, windowImpl = windo
   if (!sidebar || !sidebarResizer) return;
 
   let cleanupDrag = null;
-  let didDrag = false;
-  let dragStartX = 0;
 
   const stopDrag = (pointerId) => {
     if (cleanupDrag) {
@@ -168,17 +185,12 @@ export function setupSidebarResize({ documentImpl = document, windowImpl = windo
     if (e.button !== 0) return;
 
     e.preventDefault();
-    didDrag = false;
-    dragStartX = e.clientX;
     const startX = e.clientX;
     const startWidth = sidebar.getBoundingClientRect().width;
     documentImpl.body.classList.add('sidebar-resizing');
     sidebarResizer.setPointerCapture?.(e.pointerId);
 
     const onPointerMove = (event) => {
-      if (Math.abs(event.clientX - dragStartX) > 3) {
-        didDrag = true;
-      }
       applySidebarWidth(startWidth + (event.clientX - startX), env);
     };
 

@@ -9,23 +9,41 @@ const mockEntries = [
   {
     type: 'message',
     message: {
-      role: 'assistant', model: 'claude-sonnet-4-20250514', provider: 'anthropic',
-      usage: { input: 5000, output: 2000, cacheRead: 1000, cacheWrite: 500, cost: { input: 0.015, output: 0.006, cacheRead: 0.001, cacheWrite: 0.001 } },
+      role: 'assistant',
+      model: 'claude-sonnet-4-20250514',
+      provider: 'anthropic',
+      usage: {
+        input: 5000,
+        output: 2000,
+        cacheRead: 1000,
+        cacheWrite: 500,
+        cost: { input: 0.015, output: 0.006, cacheRead: 0.001, cacheWrite: 0.001 },
+      },
       content: [{ type: 'toolCall' }, { type: 'toolCall' }],
     },
   },
   {
     type: 'message',
     message: {
-      role: 'assistant', model: 'claude-sonnet-4-20250514', provider: 'anthropic',
-      usage: { input: 3000, output: 1000, cacheRead: 500, cacheWrite: 200, cost: { input: 0.009, output: 0.003, cacheRead: 0.0005, cacheWrite: 0.0002 } },
+      role: 'assistant',
+      model: 'claude-sonnet-4-20250514',
+      provider: 'anthropic',
+      usage: {
+        input: 3000,
+        output: 1000,
+        cacheRead: 500,
+        cacheWrite: 200,
+        cost: { input: 0.009, output: 0.003, cacheRead: 0.0005, cacheWrite: 0.0002 },
+      },
       content: [],
     },
   },
   {
     type: 'message',
     message: {
-      role: 'assistant', model: 'deepseek-v4-pro', provider: 'deepseek',
+      role: 'assistant',
+      model: 'deepseek-v4-pro',
+      provider: 'deepseek',
       usage: { input: 1000, output: 500, cost: { input: 0.001, output: 0.0005 } },
       content: [{ type: 'toolCall' }],
     },
@@ -55,14 +73,25 @@ describe('ModelUsageModal', () => {
 
   it('uses the raw model name as the title attribute', async () => {
     await open(mockEntries);
-    const titles = [...document.querySelectorAll('.mu-model-name')].map((el) => el.getAttribute('title'));
+    const titles = [...document.querySelectorAll('.mu-model-name')].map((el) =>
+      el.getAttribute('title'),
+    );
     expect(titles).toContain('anthropic/claude-sonnet-4-20250514');
     expect(titles).toContain('deepseek/deepseek-v4-pro');
   });
 
   it('filters out zero-value token rows', async () => {
     await open([
-      { type: 'message', message: { role: 'assistant', model: 'm', provider: 'p', usage: { input: 1000 }, content: [] } },
+      {
+        type: 'message',
+        message: {
+          role: 'assistant',
+          model: 'm',
+          provider: 'p',
+          usage: { input: 1000 },
+          content: [],
+        },
+      },
     ]);
     const text = document.querySelector('.pi-sheet-body').textContent;
     expect(text).toContain('Input');
@@ -72,7 +101,15 @@ describe('ModelUsageModal', () => {
 
   it('escapes model names (no raw script element)', async () => {
     await open([
-      { type: 'message', message: { role: 'assistant', model: 'evil/<script>alert(1)</script>', usage: { input: 100 }, content: [] } },
+      {
+        type: 'message',
+        message: {
+          role: 'assistant',
+          model: 'evil/<script>alert(1)</script>',
+          usage: { input: 100 },
+          content: [],
+        },
+      },
     ]);
     const body = document.querySelector('.pi-sheet-body');
     // The model name is rendered as text (Svelte auto-escapes), so no real
@@ -84,10 +121,12 @@ describe('ModelUsageModal', () => {
   });
 
   it('does not throw on malformed entries', async () => {
-    await expect(open([
-      { type: 'message' },
-      { type: 'message', message: {} },
-      { type: 'message', message: { role: 'assistant', model: 'x', content: 'not-array' } },
-    ])).resolves.toBeTruthy();
+    await expect(
+      open([
+        { type: 'message' },
+        { type: 'message', message: {} },
+        { type: 'message', message: { role: 'assistant', model: 'x', content: 'not-array' } },
+      ]),
+    ).resolves.toBeTruthy();
   });
 });

@@ -1,13 +1,19 @@
 export const TOGGLE_STATE_STORAGE_KEY = 'pi.sessionDetail.toggleState';
-export const toggleStateDefaults = { thinkingExpanded: true, toolsVisible: true, toolOutputsExpanded: false };
+export const toggleStateDefaults = {
+  thinkingExpanded: true,
+  toolsVisible: true,
+  toolOutputsExpanded: false,
+};
 
 export function loadToggleState({ storage = globalThis.localStorage } = {}) {
   const state = { ...toggleStateDefaults };
   try {
     const saved = JSON.parse(storage?.getItem(TOGGLE_STATE_STORAGE_KEY) || '{}');
-    if (typeof saved.thinkingExpanded === 'boolean') state.thinkingExpanded = saved.thinkingExpanded;
+    if (typeof saved.thinkingExpanded === 'boolean')
+      state.thinkingExpanded = saved.thinkingExpanded;
     if (typeof saved.toolsVisible === 'boolean') state.toolsVisible = saved.toolsVisible;
-    if (typeof saved.toolOutputsExpanded === 'boolean') state.toolOutputsExpanded = saved.toolOutputsExpanded;
+    if (typeof saved.toolOutputsExpanded === 'boolean')
+      state.toolOutputsExpanded = saved.toolOutputsExpanded;
   } catch (_) {}
   return state;
 }
@@ -20,19 +26,19 @@ export function saveToggleState(state, { storage = globalThis.localStorage } = {
 
 export function applyToggleStateToNode(node, state) {
   if (!node) return;
-  node.querySelectorAll('.thinking-text').forEach(el => {
+  node.querySelectorAll('.thinking-text').forEach((el) => {
     el.style.display = state.thinkingExpanded ? '' : 'none';
   });
-  node.querySelectorAll('.thinking-collapsed').forEach(el => {
+  node.querySelectorAll('.thinking-collapsed').forEach((el) => {
     el.style.display = state.thinkingExpanded ? 'none' : 'block';
   });
-  node.querySelectorAll('.tool-execution, .compaction').forEach(el => {
+  node.querySelectorAll('.tool-execution, .compaction').forEach((el) => {
     el.style.display = state.toolsVisible ? '' : 'none';
   });
-  node.querySelectorAll('.tool-output.expandable').forEach(el => {
+  node.querySelectorAll('.tool-output.expandable').forEach((el) => {
     el.classList.toggle('expanded', state.toolOutputsExpanded);
   });
-  node.querySelectorAll('.compaction').forEach(el => {
+  node.querySelectorAll('.compaction').forEach((el) => {
     el.classList.toggle('expanded', state.toolOutputsExpanded);
   });
 }
@@ -53,7 +59,7 @@ export function syncToggleButtons(documentImpl, state) {
 export function createToggleController({
   documentImpl = document,
   storage = globalThis.localStorage,
-  initialState = loadToggleState({ storage })
+  initialState = loadToggleState({ storage }),
 } = {}) {
   const state = initialState;
   const applyToNode = (node) => applyToggleStateToNode(node, state);
@@ -68,19 +74,31 @@ export function createToggleController({
 
   return {
     state,
-    get thinkingExpanded() { return state.thinkingExpanded; },
-    get toolsVisible() { return state.toolsVisible; },
-    get toolOutputsExpanded() { return state.toolOutputsExpanded; },
+    get thinkingExpanded() {
+      return state.thinkingExpanded;
+    },
+    get toolsVisible() {
+      return state.toolsVisible;
+    },
+    get toolOutputsExpanded() {
+      return state.toolOutputsExpanded;
+    },
     applyToNode,
     syncButtons,
     toggleThinking: () => toggle('thinkingExpanded'),
     toggleToolsVisibility: () => toggle('toolsVisible'),
     toggleToolOutputs: () => toggle('toolOutputsExpanded'),
     attachHeaderHandlers() {
-      documentImpl.querySelector('[data-action="toggle-thinking"]')?.addEventListener('click', this.toggleThinking);
-      documentImpl.querySelector('[data-action="toggle-tools"]')?.addEventListener('click', this.toggleToolsVisibility);
-      documentImpl.querySelector('[data-action="toggle-tool-output"]')?.addEventListener('click', this.toggleToolOutputs);
+      documentImpl
+        .querySelector('[data-action="toggle-thinking"]')
+        ?.addEventListener('click', this.toggleThinking);
+      documentImpl
+        .querySelector('[data-action="toggle-tools"]')
+        ?.addEventListener('click', this.toggleToolsVisibility);
+      documentImpl
+        .querySelector('[data-action="toggle-tool-output"]')
+        ?.addEventListener('click', this.toggleToolOutputs);
       syncButtons();
-    }
+    },
   };
 }

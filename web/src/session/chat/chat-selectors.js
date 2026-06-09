@@ -21,7 +21,11 @@ export function groupModelsByProvider(models, filter = '') {
 }
 
 export function findModel(models, provider, modelId) {
-  return models.find((model) => (model.provider || '') === provider && ((model.id || '') === modelId || (model.modelId || '') === modelId));
+  return models.find(
+    (model) =>
+      (model.provider || '') === provider &&
+      ((model.id || '') === modelId || (model.modelId || '') === modelId),
+  );
 }
 
 export function detectCurrentModel(entries) {
@@ -33,7 +37,12 @@ export function detectCurrentModel(entries) {
 
   for (let i = entries.length - 1; i >= 0; i--) {
     const entry = entries[i];
-    if (entry.type === 'message' && entry.message && entry.message.role === 'assistant' && entry.message.model) {
+    if (
+      entry.type === 'message' &&
+      entry.message &&
+      entry.message.role === 'assistant' &&
+      entry.message.model
+    ) {
       return { provider: entry.message.provider || '', modelId: entry.message.model || '' };
     }
   }

@@ -90,24 +90,33 @@ type Server struct {
 	fileWalk     *fileWalkCache
 	fileWalkOnce sync.Once
 
-	// Metrics dashboard (see metrics.go). startedAt drives process uptime;
-	// metricsSampler is swappable for tests; metricsCPULast holds per-PID CPU
-	// baselines for delta-based %CPU.
-	startedAt      time.Time
-	metricsSampler processSampler
-	metricsCPUMu   sync.Mutex
-	metricsCPULast map[int]cpuMark
-
-	// Auto-title bookkeeping (see auto_title.go). Guards against re-titling
-	// loops and clobbering user-set names.
-	titleMu        sync.Mutex
-	titleInFlight  map[string]bool
-	titledName     map[string]string // sessID -> the title pi-web last set
-	titledCount    map[string]int    // sessID -> user-msg count at last titling
-	titleUserOwned map[string]bool   // sessID -> user named it; never auto-title
+	// Metrics dashboard (see metrics.go) and auto-title bookkeeping (see
+	// auto_title.go), grouped so each subsystem owns its own fields + lock.
+	metrics   metricsState
+	autoTitle autoTitleState
 }
 
-func New(deps Deps) *Server {
+// metricsState backs the metrics dashboard. startedAt drives process uptime;
+// sampler is swappable for tests; cpuLast holds per-PID CPU baselines for
+// delta-based %CPU (guarded by cpuMu).
+type metricsState struct {
+	startedAt time.Time
+	sampler   processSampler
+	cpuMu     sync.Mutex
+	cpuLast   map[int]cpuMark
+}
+
+// autoTitleState guards auto-titling against re-titling loops and clobbering
+// user-set names.
+type autoTitleState struct {
+	mu        sync.Mutex
+	inFlight  map[string]bool
+	name      map[string]string // sessID -> the title pi-web last set
+	count     map[string]int    // sessID -> user-msg count at last titling
+	userOwned map[string]bool   // sessID -> user named it; never auto-title
+}
+
+func New(deps Deps) (*Server, error) {
 	now := deps.Now
 	if now == nil {
 		now = time.Now
@@ -117,55 +126,13 @@ func New(deps Deps) *Server {
 		agentDir = agentdir.Path()
 	}
 
-	// Ensure the agentDir exists
 	if err := os.MkdirAll(agentDir, 0755); err != nil {
-		fmt.Fprintf(os.Stderr, "failed to create agent directory %s: %v\n", agentDir, err)
+		return nil, fmt.Errorf("create agent directory %s: %w", agentDir, err)
 	}
 
-	var db *sql.DB
-	dbPath := filepath.Join(agentDir, "pi-web.sqlite")
-	var dbErr error
-	db, dbErr = sql.Open("sqlite", dbPath)
-	if dbErr != nil {
-		fmt.Fprintf(os.Stderr, "failed to open sqlite database: %v\n", dbErr)
-	} else {
-		// SQLite allows only one writer at a time; multiple pooled connections
-		// racing to write surface as "database is locked" errors (e.g. concurrent
-		// annotation writes). Serialize on a single connection so writes queue
-		// instead of failing.
-		db.SetMaxOpenConns(1)
-		_, err := db.Exec(`CREATE TABLE IF NOT EXISTS scratchpads (
-			project_path TEXT PRIMARY KEY,
-			content TEXT,
-			updated_at DATETIME
-		)`)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "failed to create scratchpads table: %v\n", err)
-		}
-		_, err = db.Exec(`CREATE TABLE IF NOT EXISTS settings (
-			key        TEXT PRIMARY KEY,
-			value      TEXT,
-			updated_at DATETIME
-		)`)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "failed to create settings table: %v\n", err)
-		}
-		if _, err := db.Exec(projectPrefsSchema); err != nil {
-			fmt.Fprintf(os.Stderr, "failed to create project_prefs table: %v\n", err)
-		}
-		if _, err := db.Exec(appSettingsSchema); err != nil {
-			fmt.Fprintf(os.Stderr, "failed to create app_settings table: %v\n", err)
-		}
-		if _, err := db.Exec(btwSessionsSchema); err != nil {
-			fmt.Fprintf(os.Stderr, "failed to create btw_sessions table: %v\n", err)
-		}
-		if _, err := db.Exec(annotationsSchema); err != nil {
-			fmt.Fprintf(os.Stderr, "failed to create annotations table: %v\n", err)
-		}
-		if _, err := db.Exec(annotationsIndex); err != nil {
-			fmt.Fprintf(os.Stderr, "failed to create annotations index: %v\n", err)
-		}
-		migrateLegacyBtwSession(db)
+	db, err := initDB(agentDir)
+	if err != nil {
+		return nil, err
 	}
 
 	s := &Server{
@@ -181,17 +148,21 @@ func New(deps Deps) *Server {
 		renderAppShell:      deps.RenderAppShell,
 		models:              deps.Models,
 		lastKnown:           make(map[string]struct{}),
-		titleInFlight:       make(map[string]bool),
-		titledName:          make(map[string]string),
-		titledCount:         make(map[string]int),
-		titleUserOwned:      make(map[string]bool),
 		stopCh:              make(chan struct{}),
 		db:                  db,
 		updater:             deps.Updater,
 		runInstall:          deps.RunInstall,
 		runRestart:          deps.RunRestart,
-		startedAt:           now(),
-		metricsCPULast:      make(map[int]cpuMark),
+		metrics: metricsState{
+			startedAt: now(),
+			cpuLast:   make(map[int]cpuMark),
+		},
+		autoTitle: autoTitleState{
+			inFlight:  make(map[string]bool),
+			name:      make(map[string]string),
+			count:     make(map[string]int),
+			userOwned: make(map[string]bool),
+		},
 	}
 	if pm, err := NewPushManager(agentDir); err != nil {
 		fmt.Fprintf(os.Stderr, "push notifications unavailable: %v\n", err)
@@ -207,7 +178,52 @@ func New(deps Deps) *Server {
 		defer s.wg.Done()
 		s.runStatusSweeper(s.stopCh, time.Second)
 	}()
-	return s
+	return s, nil
+}
+
+// initDB opens the SQLite database and creates the schema. Any failure is
+// returned so the server refuses to start rather than running with a
+// half-initialized database that fails opaquely on first use.
+func initDB(agentDir string) (*sql.DB, error) {
+	dbPath := filepath.Join(agentDir, "pi-web.sqlite")
+	db, err := sql.Open("sqlite", dbPath)
+	if err != nil {
+		return nil, fmt.Errorf("open sqlite database: %w", err)
+	}
+	// SQLite allows only one writer at a time; multiple pooled connections
+	// racing to write surface as "database is locked" errors (e.g. concurrent
+	// annotation writes). Serialize on a single connection so writes queue
+	// instead of failing.
+	db.SetMaxOpenConns(1)
+
+	schema := []struct {
+		name string
+		stmt string
+	}{
+		{"scratchpads table", `CREATE TABLE IF NOT EXISTS scratchpads (
+			project_path TEXT PRIMARY KEY,
+			content TEXT,
+			updated_at DATETIME
+		)`},
+		{"settings table", `CREATE TABLE IF NOT EXISTS settings (
+			key        TEXT PRIMARY KEY,
+			value      TEXT,
+			updated_at DATETIME
+		)`},
+		{"project_prefs table", projectPrefsSchema},
+		{"app_settings table", appSettingsSchema},
+		{"btw_sessions table", btwSessionsSchema},
+		{"annotations table", annotationsSchema},
+		{"annotations index", annotationsIndex},
+	}
+	for _, s := range schema {
+		if _, err := db.Exec(s.stmt); err != nil {
+			db.Close()
+			return nil, fmt.Errorf("create %s: %w", s.name, err)
+		}
+	}
+	migrateLegacyBtwSession(db)
+	return db, nil
 }
 
 // Shutdown stops background goroutines and waits for them to exit.
@@ -228,13 +244,11 @@ func (s *Server) Register(mux *http.ServeMux) {
 	mux.HandleFunc("/", s.auth.Wrap(s.handleIndex))
 	mux.HandleFunc("/session", s.auth.Wrap(s.handleSession))
 	mux.HandleFunc("/settings", s.auth.Wrap(s.handleSettingsPage))
-	mux.HandleFunc("/login", s.auth.Wrap(func(w http.ResponseWriter, r *http.Request) {
-		s.handleAppShell(w, r, "")
-	}))
 	mux.HandleFunc("/api/session", s.auth.Wrap(s.handleApiSession))
 	mux.HandleFunc("/api/sessions", s.auth.Wrap(s.handleApiSessions))
 	mux.HandleFunc("/api/chat", s.auth.Wrap(s.handleChat))
 	mux.HandleFunc("/api/chat/cancel", s.auth.Wrap(s.handleCancelChat))
+	mux.HandleFunc("/api/compact", s.auth.Wrap(s.handleCompact))
 	mux.HandleFunc("/api/set-model", s.auth.Wrap(s.handleSetModel))
 	mux.HandleFunc("/api/set-thinking-level", s.auth.Wrap(s.handleSetThinkingLevel))
 	mux.HandleFunc("/api/models", s.auth.Wrap(s.handleAvailableModels))
@@ -252,7 +266,10 @@ func (s *Server) Register(mux *http.ServeMux) {
 	mux.HandleFunc("/api/files", s.auth.Wrap(s.handleApiFiles))
 	mux.HandleFunc("/api/git/info", s.auth.Wrap(s.handleGitInfo))
 	mux.HandleFunc("/api/git/rename-branch", s.auth.Wrap(s.handleGitRenameBranch))
-	mux.HandleFunc("/custom-themes.css", s.auth.Wrap(s.handleCustomThemes))
+	// Public (no auth): the login gate needs the custom palette to theme
+	// correctly before the user authenticates. Contents are non-secret color
+	// variables only.
+	mux.HandleFunc("/custom-themes.css", s.handleCustomThemes)
 	mux.HandleFunc("/api/scratchpad", s.getPostHandler(s.handleGetScratchpad, s.handleSaveScratchpad))
 	mux.HandleFunc("/api/annotations", s.auth.Wrap(s.handleAnnotations))
 	mux.HandleFunc("/api/settings", s.getPostHandler(s.handleGetSettings, s.handleSaveSettings))

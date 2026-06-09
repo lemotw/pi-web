@@ -20,10 +20,25 @@ function makeView() {
     timerText: null,
     message: null,
     snooze: null,
-    showBreak(text) { v.visible = true; v.variant = 'break'; v.timerText = text; v.message = null; v.snooze = false; },
-    setBreakTimer(text) { v.timerText = text; },
-    showSleep({ locked, showSnooze, message }) { v.visible = true; v.variant = locked ? 'locked' : 'sleep'; v.message = message; v.snooze = showSnooze; },
-    hide() { v.visible = false; },
+    showBreak(text) {
+      v.visible = true;
+      v.variant = 'break';
+      v.timerText = text;
+      v.message = null;
+      v.snooze = false;
+    },
+    setBreakTimer(text) {
+      v.timerText = text;
+    },
+    showSleep({ locked, showSnooze, message }) {
+      v.visible = true;
+      v.variant = locked ? 'locked' : 'sleep';
+      v.message = message;
+      v.snooze = showSnooze;
+    },
+    hide() {
+      v.visible = false;
+    },
   };
   return v;
 }
@@ -50,8 +65,13 @@ function harness({ hour = 10, minute = 0, settings } = {}) {
     clearIntervalImpl: () => {},
   });
 
-  const advance = (ms) => { clock.ms += ms; };
-  const tick = (ms = 1000) => { advance(ms); controller.tick(); };
+  const advance = (ms) => {
+    clock.ms += ms;
+  };
+  const tick = (ms = 1000) => {
+    advance(ms);
+    controller.tick();
+  };
 
   return { storage, controller, focusState, advance, tick, view };
 }
@@ -141,7 +161,11 @@ describe('cat gatekeeper bedtime', () => {
   });
 
   it('snoozes the soft warning once, then brings the cat back and locks', () => {
-    const h = harness({ hour: 23, minute: 0, settings: { bedtime: '23:00', wakeup: '07:00', sleepMin: 2 } });
+    const h = harness({
+      hour: 23,
+      minute: 0,
+      settings: { bedtime: '23:00', wakeup: '07:00', sleepMin: 2 },
+    });
     h.controller.start();
     expect(h.controller.getState().phase).toBe('sleep');
     expect(h.view.snooze).toBe(true);

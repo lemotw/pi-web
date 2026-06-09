@@ -1,7 +1,9 @@
 <script module>
   // Pure helpers shared with SessionPage's open-bridge (for the empty check).
   export function normalizeText(text) {
-    return String(text || '').replace(/\s+/g, ' ').trim();
+    return String(text || '')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
   function truncateText(text, maxLength = 96) {
@@ -17,7 +19,10 @@
     const content = msg.content;
     if (typeof content === 'string') return content;
     if (Array.isArray(content)) {
-      return content.filter((b) => b?.type === 'text').map((b) => b.text).join(' ');
+      return content
+        .filter((b) => b?.type === 'text')
+        .map((b) => b.text)
+        .join(' ');
     }
     return '';
   }
@@ -51,10 +56,13 @@
   const filtered = $derived.by(() => {
     const q = normalizeText(query).toLowerCase();
     if (!q) return userMessages;
-    return userMessages.filter((m) =>
-      m.text.toLowerCase().includes(q) || String(m.number).includes(q.replace(/^#/, '')));
+    return userMessages.filter(
+      (m) => m.text.toLowerCase().includes(q) || String(m.number).includes(q.replace(/^#/, '')),
+    );
   });
-  const selected = $derived(filtered.length ? filtered[Math.min(selectedIndex, filtered.length - 1)] : null);
+  const selected = $derived(
+    filtered.length ? filtered[Math.min(selectedIndex, filtered.length - 1)] : null,
+  );
 
   function move(delta, focus) {
     if (filtered.length === 0) return;
@@ -71,13 +79,23 @@
   }
 
   function navKey(e, focus) {
-    if (e.key === 'ArrowDown') { e.preventDefault(); move(1, focus); }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); move(-1, focus); }
-    else if (e.key === 'Enter') { e.preventDefault(); choose(filtered[selectedIndex]); }
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      move(1, focus);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      move(-1, focus);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      choose(filtered[selectedIndex]);
+    }
   }
 
   // Reset the highlight whenever the query changes.
-  $effect(() => { void query; selectedIndex = 0; });
+  $effect(() => {
+    void query;
+    selectedIndex = 0;
+  });
 
   // Focus the search box shortly after open (parity with the old rAF focus).
   $effect(() => {
@@ -108,10 +126,17 @@
         autocomplete="off"
         spellcheck="false"
         aria-label="Search messages to fork from"
-      >
+      />
     </div>
     <div class="fork-palette-content">
-      <div class="fork-message-list" role="listbox" aria-label="Messages" tabindex="-1" bind:this={listEl} onkeydown={(e) => navKey(e, true)}>
+      <div
+        class="fork-message-list"
+        role="listbox"
+        aria-label="Messages"
+        tabindex="-1"
+        bind:this={listEl}
+        onkeydown={(e) => navKey(e, true)}
+      >
         {#if filtered.length === 0}
           <div class="fork-empty-state">No matching messages</div>
         {:else}

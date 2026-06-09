@@ -96,11 +96,13 @@ func writeAutoTitleSession(t *testing.T, sessionsDir, userText, name string) str
 func newAutoTitleServer(t *testing.T, settings map[string]string) *Server {
 	t.Helper()
 	s := &Server{
-		sessionsDir:    t.TempDir(),
-		titleInFlight:  make(map[string]bool),
-		titledName:     make(map[string]string),
-		titledCount:    make(map[string]int),
-		titleUserOwned: make(map[string]bool),
+		sessionsDir: t.TempDir(),
+		autoTitle: autoTitleState{
+			inFlight:  make(map[string]bool),
+			name:      make(map[string]string),
+			count:     make(map[string]int),
+			userOwned: make(map[string]bool),
+		},
 	}
 	if settings != nil {
 		s.db = newSettingsTestDB(t)

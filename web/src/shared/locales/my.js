@@ -35,7 +35,8 @@ export default {
   'index.loadingSessions': 'ဆက်ရှင်များ ဖွင့်နေ…',
   'index.loadingSessionsHint': 'နောက်ဆုံးဆက်ရှင်စာရင်းကို ရယူနေသည်။',
   'index.noSessions': 'ပြသရန် ဆက်ရှင်မရှိ',
-  'index.noSessionsHint': 'ပရောဂျက်များ၏ ဆက်ရှင်များ မြင်ရန် မီနူး (⋯ → ပရောဂျက်များ စီမံ) မှ ဖွင့်ပါ။',
+  'index.noSessionsHint':
+    'ပရောဂျက်များ၏ ဆက်ရှင်များ မြင်ရန် မီနူး (⋯ → ပရောဂျက်များ စီမံ) မှ ဖွင့်ပါ။',
   'index.noSessionsYet': 'ဆက်ရှင်မရှိသေး',
   'index.noSessionsYetHint': 'စတင်ရန် ဆက်ရှင်အသစ်တစ်ခု စတင်ပါ။',
   'index.importSession': 'ဆက်ရှင် တင်သွင်း',
@@ -118,7 +119,8 @@ export default {
   'composer.searchModels': 'မော်ဒယ်များ ရှာဖွေ…',
   'composer.switchModel': 'မော်ဒယ် ပြောင်း',
   'composer.switchEffort': 'ကြိုးစားမှုအဆင့် ပြောင်း',
-  'composer.disabledNotice': 'ဤဆက်ရှင်ကို ကြည့်ရှုနိုင်သော်လည်း ၎င်း၏ အလုပ်လုပ်လမ်းကြောင်း မရှိတော့သဖြင့် ချတ်ကို ပိတ်ထားသည်။',
+  'composer.disabledNotice':
+    'ဤဆက်ရှင်ကို ကြည့်ရှုနိုင်သော်လည်း ၎င်း၏ အလုပ်လုပ်လမ်းကြောင်း မရှိတော့သဖြင့် ချတ်ကို ပိတ်ထားသည်။',
   'composer.copyPath': 'လမ်းကြောင်း ကူးယူရန် နှိပ်ပါ',
   'composer.focusShortcut': 'အာရုံစိုက်ရန် Shift + i',
   'composer.cancelRunning': 'အလုပ်လုပ်နေသော တုံ့ပြန်မှု ပယ်ဖျက်',
@@ -134,17 +136,21 @@ export default {
   'settings.interfaceFont': 'အင်တာဖေ့စ် ဖောင့်',
   'settings.interfaceFontHint': 'အက်ပ် UI အတွက် ဖောင့် — မီနူး၊ စာရင်း၊ ခေါင်းစီးများ။',
   'settings.contentFont': 'အကြောင်းအရာ ဖောင့်',
-  'settings.contentFontHint': 'ပြသထားသော မက်ဆေ့ချ်စာသားအတွက် ဖောင့်။ ကုဒ်သည် ကုဒ်ဖောင့်ကို အသုံးပြုသည်။',
+  'settings.contentFontHint':
+    'ပြသထားသော မက်ဆေ့ချ်စာသားအတွက် ဖောင့်။ ကုဒ်သည် ကုဒ်ဖောင့်ကို အသုံးပြုသည်။',
   'settings.codeFont': 'ကုဒ် ဖောင့်',
-  'settings.codeFontHint': 'ကုဒ်၊ command များနှင့် tool output အတွက် ဖောင့်။ မူရင်းအားဖြင့် monospace။',
+  'settings.codeFontHint':
+    'ကုဒ်၊ command များနှင့် tool output အတွက် ဖောင့်။ မူရင်းအားဖြင့် monospace။',
   'settings.interfaceFontSize': 'အင်တာဖေ့စ် ဖောင့်အရွယ်',
   'settings.interfaceFontSizeHint': 'အက်ပ် UI စာသား အရွယ် (px)။',
   'settings.contentFontSize': 'အကြောင်းအရာ ဖောင့်အရွယ်',
   'settings.contentFontSizeHint': 'ပြသထားသော မက်ဆေ့ချ်စာသား အရွယ် (px)။',
   'settings.fontBuiltIn': 'အတွင်းပါ',
   'settings.fontInstalled': 'Installed',
-  'settings.fontDetectUnsupported': 'This browser cannot list installed fonts. Use Custom… to type a font name.',
-  'settings.fontDetectDenied': 'Could not read installed fonts (permission denied). Use Custom… to type a font name.',
+  'settings.fontDetectUnsupported':
+    'This browser cannot list installed fonts. Use Custom… to type a font name.',
+  'settings.fontDetectDenied':
+    'Could not read installed fonts (permission denied). Use Custom… to type a font name.',
   'settings.fontActions': 'လုပ်ဆောင်ချက်များ',
   'settings.fontMono': 'Monospace',
   'settings.fontSystem': 'စနစ်',
@@ -157,7 +163,8 @@ export default {
   'settings.language': 'ဘာသာစကား',
   'settings.languageHint': 'အက်ပ်အင်တာဖေ့စ်အတွက် ဘာသာစကား။ ပြောင်းလျှင် စာမျက်နှာ ပြန်ဖွင့်မည်။',
   'settings.customLanguages': 'စိတ်ကြိုက် ဘာသာစကားများ',
-  'settings.customLanguagesHint': 'ဘာသာစကားများကို JSON အဖြစ် ထည့်ပါ သို့မဟုတ် အစားထိုးပါ — { "code", "label", "strings": { … } } ၏ array တစ်ခု။ ပျောက်နေသော key များသည် အင်္ဂလိပ်သို့ ပြန်လည်ကျသည်။ စတင်ပုံစံအတွက် "အင်္ဂလိပ် key များ ကူးယူ" ကိုသုံးပြီး "သိမ်း၍ အသုံးပြု" ကိုနှိပ်ပါ။',
+  'settings.customLanguagesHint':
+    'ဘာသာစကားများကို JSON အဖြစ် ထည့်ပါ သို့မဟုတ် အစားထိုးပါ — { "code", "label", "strings": { … } } ၏ array တစ်ခု။ ပျောက်နေသော key များသည် အင်္ဂလိပ်သို့ ပြန်လည်ကျသည်။ စတင်ပုံစံအတွက် "အင်္ဂလိပ် key များ ကူးယူ" ကိုသုံးပြီး "သိမ်း၍ အသုံးပြု" ကိုနှိပ်ပါ။',
   'settings.copyEnglishKeys': 'အင်္ဂလိပ် key များ ကူးယူ',
   'settings.saveApply': 'သိမ်း၍ အသုံးပြု',
 
@@ -167,24 +174,29 @@ export default {
   'settings.defaultLayout': 'မူရင်း အပြင်အဆင်',
   'settings.defaultLayoutHint': 'ဖွင့်စဉ် ဆက်ရှင်စာရင်းကို မည်သို့ အုပ်စုဖွဲ့သည်။',
   'settings.showBtw': 'စာရင်းတွင် btw ချတ်များ ပြ',
-  'settings.showBtwHint': 'တစ်ခါသုံး btw မှတ်စုချတ်များကို ဆက်ရှင်စာရင်းတွင် ထည့်သွင်းပါ။ မူရင်းအတိုင်း ဖျောက်ထားသည်။',
+  'settings.showBtwHint':
+    'တစ်ခါသုံး btw မှတ်စုချတ်များကို ဆက်ရှင်စာရင်းတွင် ထည့်သွင်းပါ။ မူရင်းအတိုင်း ဖျောက်ထားသည်။',
 
   'settings.sessionTitles': 'ဆက်ရှင် ခေါင်းစဉ်များ',
   'settings.autoTitle': 'ခေါင်းစဉ်များ အလိုအလျောက် ဖန်တီး',
   'settings.autoTitleHint': 'ပထမမက်ဆေ့ချ်မှ ဆက်ရှင်များကို pi-web အလိုအလျောက် အမည်ပေးပါစေ။',
   'settings.whenToTitle': 'မည်သည့်အခါ ခေါင်းစဉ်တပ်မည်',
-  'settings.whenToTitleHint': 'ဆက်ရှင်ကို တစ်ကြိမ် ခေါင်းစဉ်တပ်ပါ၊ သို့မဟုတ် အာရုံပြောင်းသည်နှင့်အမျှ ပြန်လည်ဆန်းသစ်ပါ။',
+  'settings.whenToTitleHint':
+    'ဆက်ရှင်ကို တစ်ကြိမ် ခေါင်းစဉ်တပ်ပါ၊ သို့မဟုတ် အာရုံပြောင်းသည်နှင့်အမျှ ပြန်လည်ဆန်းသစ်ပါ။',
   'settings.titleOnce': 'ဆက်ရှင်တစ်ခုလျှင် တစ်ကြိမ်',
   'settings.titleEachTurn': 'မက်ဆေ့ချ်အသစ်တိုင်း',
   'settings.titleModel': 'ခေါင်းစဉ် မော်ဒယ်',
-  'settings.titleModelHint': 'အတွင်းပါသည် အခမဲ့၊ ချက်ချင်း စကားလုံး heuristic (AI မပါ)။ ပိုမိုဉာဏ်ရှိသော ခေါင်းစဉ်များအတွက် မော်ဒယ်တစ်ခု ရွေးပါ — သေးငယ်၍ မြန်သည်က အကောင်းဆုံး။',
+  'settings.titleModelHint':
+    'အတွင်းပါသည် အခမဲ့၊ ချက်ချင်း စကားလုံး heuristic (AI မပါ)။ ပိုမိုဉာဏ်ရှိသော ခေါင်းစဉ်များအတွက် မော်ဒယ်တစ်ခု ရွေးပါ — သေးငယ်၍ မြန်သည်က အကောင်းဆုံး။',
   'settings.titleBuiltin': 'အတွင်းပါ heuristic (AI မပါ)',
 
   'settings.artifacts': 'အာတိဖက်များ',
   'settings.showArtifacts': 'အာတိဖက် အကန့် ပြ',
-  'settings.showArtifactsHint': 'အေးဂျင့်ရေးသားသော ဖိုင်များနှင့် အရွယ်အစားကြီးသော ကုဒ်ဘလောက်များကို ညာဘက်ဘေးဘားတန်း တက်ဘ်တွင် ဖော်ပြသည်။ ပိတ်ထားလျှင် တက်ဘ်ကို ဖျောက်ထားသည်။',
+  'settings.showArtifactsHint':
+    'အေးဂျင့်ရေးသားသော ဖိုင်များနှင့် အရွယ်အစားကြီးသော ကုဒ်ဘလောက်များကို ညာဘက်ဘေးဘားတန်း တက်ဘ်တွင် ဖော်ပြသည်။ ပိတ်ထားလျှင် တက်ဘ်ကို ဖျောက်ထားသည်။',
   'settings.includeFilter': 'ထည့်သွင်းရန် စစ်ထုတ်ကိရိယာ',
-  'settings.includeFilterHint': 'ကော်မာဖြင့်ခွဲထားသော glob များ (ဥပမာ *.md, *.html, artifacts/**)။ ကိုက်ညီသော ဖိုင်များသာ ပြသသည်။ အားလုံးပြရန် အလွတ်ထားပါ၊ မည်သည့်စစ်ထုတ်ကိရိယာမဆို လွတ်လပ်သော ချတ်ကုဒ်အပိုင်းအစများကိုလည်း ဖျောက်ပါသည်။',
+  'settings.includeFilterHint':
+    'ကော်မာဖြင့်ခွဲထားသော glob များ (ဥပမာ *.md, *.html, artifacts/**)။ ကိုက်ညီသော ဖိုင်များသာ ပြသသည်။ အားလုံးပြရန် အလွတ်ထားပါ၊ မည်သည့်စစ်ထုတ်ကိရိယာမဆို လွတ်လပ်သော ချတ်ကုဒ်အပိုင်းအစများကိုလည်း ဖျောက်ပါသည်။',
 
   'settings.notifications': 'အကြောင်းကြားချက်များ',
   'settings.notifyReady': 'တုံ့ပြန်မှု အသင့်ဖြစ်သောအခါ အကြောင်းကြား',
@@ -214,7 +226,8 @@ export default {
   'settings.githubHint': 'pi-web သည် သင့်အတွက် အသုံးဝင်ပါက repo ကို ⭐ ပေးပါ။',
   'settings.starGithub': 'GitHub တွင် ကြယ်ပေး',
   'settings.sponsor': 'ပံ့ပိုးသူ',
-  'settings.sponsorHint': 'ဖန်တီးသူကို ပံ့ပိုးခြင်းဖြင့် pi-web ၏ ဆက်လက်ဖွံ့ဖြိုးတိုးတက်မှုကို ပံ့ပိုးပါ။',
+  'settings.sponsorHint':
+    'ဖန်တီးသူကို ပံ့ပိုးခြင်းဖြင့် pi-web ၏ ဆက်လက်ဖွံ့ဖြိုးတိုးတက်မှုကို ပံ့ပိုးပါ။',
   'settings.becomeSponsor': 'ပံ့ပိုးသူ ဖြစ်လာပါ',
 
   'shortcuts.title': 'ကီးဘုတ် ဖြတ်လမ်းများ',
@@ -262,11 +275,16 @@ export default {
   'btw.emptyHasSession': 'မက်ဆေ့ချ်မရှိသေး — နှုတ်ဆက်လိုက်ပါ။',
   'btw.emptyNoSession': 'btw ချတ် စတင်ရန် မက်ဆေ့ချ်တစ်ခု ရိုက်ပါ၊ သို့မဟုတ် "အသစ်" ကိုနှိပ်ပါ။',
 
-  'artifactHelp.intro': '<strong>အာတိဖက်များ</strong> သည် အေးဂျင့်ရေးသားသော ဖိုင်များနှင့် ၎င်းမျှဝေသော ကြီးမားသော ကုဒ်ဘလောက်များဖြစ်ပြီး စကားဝိုင်းမှ ဆွဲထုတ်ထားသဖြင့် နေရာတစ်ခုတည်းတွင် ရှာဖွေ၊ ဖတ်ရှု၊ ကူးယူ သို့မဟုတ် ဒေါင်းလုဒ်လုပ်နိုင်သည်။',
-  'artifactHelp.viewing': '<strong>ကြည့်ရှုခြင်း။</strong> ၎င်း၏ source ကိုကြည့်ရန် စာရင်းမှ တစ်ခု ရွေးပါ။ HTML, SVG နှင့် Markdown ဖိုင်များတွင် <em>အစမ်းကြည့်</em> ခလုတ်လည်း ရှိသည် — HTML/SVG သည် လုံခြုံသော sandbox တွင် လုပ်ဆောင်ပြီး Markdown ကို ပုံစံချထားသော စာသားအဖြစ် ပြသသည်။',
-  'artifactHelp.annotating': '<strong>မှတ်ချက်ရေးခြင်း။</strong> မှတ်ချက်ထားရန် အာတိဖက်တစ်ခု၏ source ရှိ စာသားကို ရွေးပါ။ သင့်မှတ်ချက်များသည် <em>မှတ်ချက်များ</em> တက်ဘ်တွင် စုဆောင်းပြီး ၎င်းတို့သို့ ပြန်သွားနိုင်သည် သို့မဟုတ် အေးဂျင့်ထံ ပို့နိုင်သည်။',
-  'artifactHelp.upToDate': '<strong>အမြဲမွမ်းမံထားခြင်း။</strong> အေးဂျင့် <em>ရေးသား</em> သို့မဟုတ် <em>တည်းဖြတ်</em> သော ဖိုင်များသည် အလိုအလျောက် မွမ်းမံပြီး ရိုးရှင်းသော အမည်ပြောင်းခြင်း သို့မဟုတ် ဖျက်ခြင်း (<code>mv</code>, <code>git mv</code>, <code>rm</code>) ကိုလည်း ခြေရာခံသည်။ သို့သော် အခြား shell command များ — <code>sed</code> သို့မဟုတ် output redirect ကဲ့သို့ — မှ ပြုလုပ်သော ပြောင်းလဲမှုများကို စကားဝိုင်းမှ မခြေရာခံနိုင်သဖြင့် တစ်ခါတစ်ရံ အာတိဖက်သည် ဗားရှင်းဟောင်းကို ပြသနိုင်သည်။ သံသယရှိပါက ဒစ်ခ်ပေါ်ရှိ ဖိုင်ကို စစ်ဆေးပါ။',
-  'artifactHelp.note': 'အာတိဖက်များသည် တိုက်ရိုက်မြင်ကွင်း၏ အစိတ်အပိုင်းသာဖြစ်ပြီး ထုတ်ယူသော snapshot များတွင် မပါဝင်ပါ။',
+  'artifactHelp.intro':
+    '<strong>အာတိဖက်များ</strong> သည် အေးဂျင့်ရေးသားသော ဖိုင်များနှင့် ၎င်းမျှဝေသော ကြီးမားသော ကုဒ်ဘလောက်များဖြစ်ပြီး စကားဝိုင်းမှ ဆွဲထုတ်ထားသဖြင့် နေရာတစ်ခုတည်းတွင် ရှာဖွေ၊ ဖတ်ရှု၊ ကူးယူ သို့မဟုတ် ဒေါင်းလုဒ်လုပ်နိုင်သည်။',
+  'artifactHelp.viewing':
+    '<strong>ကြည့်ရှုခြင်း။</strong> ၎င်း၏ source ကိုကြည့်ရန် စာရင်းမှ တစ်ခု ရွေးပါ။ HTML, SVG နှင့် Markdown ဖိုင်များတွင် <em>အစမ်းကြည့်</em> ခလုတ်လည်း ရှိသည် — HTML/SVG သည် လုံခြုံသော sandbox တွင် လုပ်ဆောင်ပြီး Markdown ကို ပုံစံချထားသော စာသားအဖြစ် ပြသသည်။',
+  'artifactHelp.annotating':
+    '<strong>မှတ်ချက်ရေးခြင်း။</strong> မှတ်ချက်ထားရန် အာတိဖက်တစ်ခု၏ source ရှိ စာသားကို ရွေးပါ။ သင့်မှတ်ချက်များသည် <em>မှတ်ချက်များ</em> တက်ဘ်တွင် စုဆောင်းပြီး ၎င်းတို့သို့ ပြန်သွားနိုင်သည် သို့မဟုတ် အေးဂျင့်ထံ ပို့နိုင်သည်။',
+  'artifactHelp.upToDate':
+    '<strong>အမြဲမွမ်းမံထားခြင်း။</strong> အေးဂျင့် <em>ရေးသား</em> သို့မဟုတ် <em>တည်းဖြတ်</em> သော ဖိုင်များသည် အလိုအလျောက် မွမ်းမံပြီး ရိုးရှင်းသော အမည်ပြောင်းခြင်း သို့မဟုတ် ဖျက်ခြင်း (<code>mv</code>, <code>git mv</code>, <code>rm</code>) ကိုလည်း ခြေရာခံသည်။ သို့သော် အခြား shell command များ — <code>sed</code> သို့မဟုတ် output redirect ကဲ့သို့ — မှ ပြုလုပ်သော ပြောင်းလဲမှုများကို စကားဝိုင်းမှ မခြေရာခံနိုင်သဖြင့် တစ်ခါတစ်ရံ အာတိဖက်သည် ဗားရှင်းဟောင်းကို ပြသနိုင်သည်။ သံသယရှိပါက ဒစ်ခ်ပေါ်ရှိ ဖိုင်ကို စစ်ဆေးပါ။',
+  'artifactHelp.note':
+    'အာတိဖက်များသည် တိုက်ရိုက်မြင်ကွင်း၏ အစိတ်အပိုင်းသာဖြစ်ပြီး ထုတ်ယူသော snapshot များတွင် မပါဝင်ပါ။',
 
   'common.back': 'နောက်သို့',
   'common.copied': 'ကူးယူပြီး',
@@ -291,7 +309,8 @@ export default {
   'artifact.preview': 'အစမ်းကြည့်',
   'artifact.runPreview': 'အစမ်းကြည့် လုပ်ဆောင်',
   'artifact.showSource': 'source ပြ',
-  'artifact.emptyHidden': 'သင့် filter ကြောင့် {count} {noun} ဖျောက်ထားသည် — <a href="/settings">ဆက်တင်များ</a> တွင် ချိန်ညှိပါ။',
+  'artifact.emptyHidden':
+    'သင့် filter ကြောင့် {count} {noun} ဖျောက်ထားသည် — <a href="/settings">ဆက်တင်များ</a> တွင် ချိန်ညှိပါ။',
   'artifact.emptyNone': 'ဤ session တွင် အာတိဖက် မရှိသေးပါ။',
   'artifact.nounOne': 'အာတိဖက်',
   'artifact.nounMany': 'အာတိဖက်များ',
@@ -312,7 +331,8 @@ export default {
   'version.couldNotCheck': 'အပ်ဒိတ်များ စစ်ဆေး၍ မရပါ။',
   'version.devBuild': 'သင်သည် ဒေသတွင်း ဖွံ့ဖြိုးရေး build ကို လုပ်ဆောင်နေသည်။',
   'version.latestPublished': 'နောက်ဆုံး ထုတ်ဝေသည်− {version}',
-  'version.devUpdateDisabled': 'ဒေသတွင်း ပြောင်းလဲမှုများကို မဖျက်စီးစေရန် ဤနေရာတွင် အက်ပ်တွင်း အပ်ဒိတ်ကို ပိတ်ထားသည်။',
+  'version.devUpdateDisabled':
+    'ဒေသတွင်း ပြောင်းလဲမှုများကို မဖျက်စီးစေရန် ဤနေရာတွင် အက်ပ်တွင်း အပ်ဒိတ်ကို ပိတ်ထားသည်။',
   'version.updateAvailable': 'အပ်ဒိတ် ရရှိနိုင်−',
   'version.releaseNotes': 'ထုတ်ဝေမှု မှတ်စုများ',
   'version.updateRestart': 'အပ်ဒိတ်လုပ်၍ ပြန်စ',
@@ -328,5 +348,6 @@ export default {
   'settings.copiedTemplate': 'အင်္ဂလိပ် template ကို clipboard သို့ ကူးယူပြီး။',
   'settings.clipboardUnavailable': 'Clipboard မရရှိနိုင် — template ကို အောက်တွင် ထည့်သွင်းပြီး။',
   'settings.invalidJson': 'JSON မမှန်ကန်− {error}',
-  'settings.expectedArray': '{ "code", "label", "strings" } object များ၏ array တစ်ခု မျှော်လင့်ထားသည်။',
+  'settings.expectedArray':
+    '{ "code", "label", "strings" } object များ၏ array တစ်ခု မျှော်လင့်ထားသည်။',
 };

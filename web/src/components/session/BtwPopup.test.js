@@ -9,30 +9,40 @@ class FakeEventSource {
     this.listeners = {};
     FakeEventSource.instances.push(this);
   }
-  addEventListener(type, fn) { this.listeners[type] = fn; }
+  addEventListener(type, fn) {
+    this.listeners[type] = fn;
+  }
   emit(type, data) {
     if (type === 'message' && this.onmessage) this.onmessage({ data });
     else if (this.listeners[type]) this.listeners[type]({ data });
   }
-  close() { this.closed = true; }
+  close() {
+    this.closed = true;
+  }
 }
 FakeEventSource.instances = [];
 
 const flush = () => new Promise((r) => setTimeout(r, 0));
 const settle = async () => {
-  for (let i = 0; i < 5; i++) { await flush(); await tick(); }
+  for (let i = 0; i < 5; i++) {
+    await flush();
+    await tick();
+  }
 };
 
 // A fetch router that covers every endpoint the popup touches.
 function router(overrides = {}) {
-  return vi.fn((url, opts) => {
+  return vi.fn((url) => {
     const json = (body, ok = true) => Promise.resolve({ ok, json: () => Promise.resolve(body) });
     if (url.startsWith('/api/btw/new')) return json(overrides.new || { id: 'new-sess.jsonl' });
     if (url.startsWith('/api/btw')) return json(overrides.btw || { sessionId: '' });
     if (url.startsWith('/api/worker-status')) return json(overrides.status || { state: 'idle' });
     if (url.startsWith('/api/session')) return json(overrides.session || { entries: [] });
     if (url.startsWith('/api/chat/cancel')) return json({ ok: true });
-    if (url.startsWith('/api/chat')) { (overrides.sent || []).push(url); return json({ status: 'queued' }); }
+    if (url.startsWith('/api/chat')) {
+      (overrides.sent || []).push(url);
+      return json({ status: 'queued' });
+    }
     return json({});
   });
 }
@@ -51,7 +61,10 @@ function setupEnv({ fetchImpl, mobile = false, button = true, composer = false }
   }
   window.fetch = fetchImpl || router();
   window.EventSource = FakeEventSource;
-  window.ResizeObserver = class { observe() {} disconnect() {} };
+  window.ResizeObserver = class {
+    observe() {}
+    disconnect() {}
+  };
   if (mobile) window.matchMedia = () => ({ matches: true });
   else delete window.matchMedia;
 }
@@ -98,7 +111,11 @@ describe('BtwPopup', () => {
       session: {
         entries: [
           { id: 'a', type: 'message', message: { role: 'user', content: 'hi' } },
-          { id: 'b', type: 'message', message: { role: 'assistant', content: [{ type: 'text', text: '**bold** answer' }] } },
+          {
+            id: 'b',
+            type: 'message',
+            message: { role: 'assistant', content: [{ type: 'text', text: '**bold** answer' }] },
+          },
         ],
       },
     });
@@ -197,7 +214,9 @@ describe('BtwPopup', () => {
 
     send.click();
     await settle();
-    expect(fetchImpl.mock.calls.some((c) => String(c[0]).startsWith('/api/chat/cancel'))).toBe(true);
+    expect(fetchImpl.mock.calls.some((c) => String(c[0]).startsWith('/api/chat/cancel'))).toBe(
+      true,
+    );
   });
 
   it('renders streaming assistant text from chat-preview events', async () => {

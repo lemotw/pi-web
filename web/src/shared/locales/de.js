@@ -35,7 +35,8 @@ export default {
   'index.loadingSessions': 'Sitzungen werden geladen…',
   'index.loadingSessionsHint': 'Die neueste Sitzungsliste wird abgerufen.',
   'index.noSessions': 'Keine Sitzungen anzuzeigen',
-  'index.noSessionsHint': 'Aktiviere Projekte über das Menü (⋯ → Projekte verwalten), um ihre Sitzungen zu sehen.',
+  'index.noSessionsHint':
+    'Aktiviere Projekte über das Menü (⋯ → Projekte verwalten), um ihre Sitzungen zu sehen.',
   'index.noSessionsYet': 'Noch keine Sitzungen',
   'index.noSessionsYetHint': 'Starte eine neue Sitzung, um zu beginnen.',
   'index.importSession': 'Sitzung importieren',
@@ -118,7 +119,8 @@ export default {
   'composer.searchModels': 'Modelle suchen…',
   'composer.switchModel': 'Modell wechseln',
   'composer.switchEffort': 'Aufwand wechseln',
-  'composer.disabledNotice': 'Diese Sitzung kann angezeigt werden, aber der Chat ist deaktiviert, weil ihr Arbeitsverzeichnis nicht mehr existiert.',
+  'composer.disabledNotice':
+    'Diese Sitzung kann angezeigt werden, aber der Chat ist deaktiviert, weil ihr Arbeitsverzeichnis nicht mehr existiert.',
   'composer.copyPath': 'Klicken, um den Pfad zu kopieren',
   'composer.focusShortcut': 'Umschalt + i zum Fokussieren',
   'composer.cancelRunning': 'Laufende Antwort abbrechen',
@@ -136,15 +138,18 @@ export default {
   'settings.contentFont': 'Inhaltsschrift',
   'settings.contentFontHint': 'Schrift für den Nachrichtentext. Code verwendet die Code-Schrift.',
   'settings.codeFont': 'Code-Schrift',
-  'settings.codeFontHint': 'Schrift für Code, Befehle und Tool-Ausgaben. Standardmäßig dicktengleich.',
+  'settings.codeFontHint':
+    'Schrift für Code, Befehle und Tool-Ausgaben. Standardmäßig dicktengleich.',
   'settings.interfaceFontSize': 'Schriftgröße der Oberfläche',
   'settings.interfaceFontSizeHint': 'Größe des Oberflächentexts (px).',
   'settings.contentFontSize': 'Schriftgröße des Inhalts',
   'settings.contentFontSizeHint': 'Größe des gerenderten Nachrichtentexts (px).',
   'settings.fontBuiltIn': 'Integriert',
   'settings.fontInstalled': 'Installiert',
-  'settings.fontDetectUnsupported': 'Dieser Browser kann installierte Schriften nicht auflisten. Verwende Benutzerdefiniert…',
-  'settings.fontDetectDenied': 'Installierte Schriften konnten nicht gelesen werden (Berechtigung verweigert).',
+  'settings.fontDetectUnsupported':
+    'Dieser Browser kann installierte Schriften nicht auflisten. Verwende Benutzerdefiniert…',
+  'settings.fontDetectDenied':
+    'Installierte Schriften konnten nicht gelesen werden (Berechtigung verweigert).',
   'settings.fontActions': 'Aktionen',
   'settings.fontMono': 'Dicktengleich',
   'settings.fontSystem': 'System',
@@ -157,7 +162,8 @@ export default {
   'settings.language': 'Sprache',
   'settings.languageHint': 'Sprache der App-Oberfläche. Eine Änderung lädt die Seite neu.',
   'settings.customLanguages': 'Benutzerdefinierte Sprachen',
-  'settings.customLanguagesHint': 'Sprachen als JSON hinzufügen oder überschreiben — ein Array aus { "code", "label", "strings": { … } }. Fehlende Schlüssel greifen auf Englisch zurück. Nutze „Englische Schlüssel kopieren“ für eine Startvorlage, dann „Speichern & anwenden“.',
+  'settings.customLanguagesHint':
+    'Sprachen als JSON hinzufügen oder überschreiben — ein Array aus { "code", "label", "strings": { … } }. Fehlende Schlüssel greifen auf Englisch zurück. Nutze „Englische Schlüssel kopieren“ für eine Startvorlage, dann „Speichern & anwenden“.',
   'settings.copyEnglishKeys': 'Englische Schlüssel kopieren',
   'settings.saveApply': 'Speichern & anwenden',
 
@@ -167,7 +173,8 @@ export default {
   'settings.defaultLayout': 'Standardlayout',
   'settings.defaultLayoutHint': 'Wie die Sitzungsliste beim Laden gruppiert wird.',
   'settings.showBtw': 'btw-Chats in der Liste anzeigen',
-  'settings.showBtwHint': 'Die kurzlebigen btw-Notiz-Chats in der Sitzungsliste einschließen. Standardmäßig ausgeblendet.',
+  'settings.showBtwHint':
+    'Die kurzlebigen btw-Notiz-Chats in der Sitzungsliste einschließen. Standardmäßig ausgeblendet.',
 
   'settings.sessionTitles': 'Sitzungstitel',
   'settings.autoTitle': 'Titel automatisch erzeugen',
@@ -177,18 +184,22 @@ export default {
   'settings.titleOnce': 'Einmal pro Sitzung',
   'settings.titleEachTurn': 'Bei jeder neuen Nachricht',
   'settings.titleModel': 'Titelmodell',
-  'settings.titleModelHint': 'Integriert ist eine kostenlose, sofortige Wort-Heuristik (keine KI). Wähle ein Modell für bessere Titel — ein kleines, schnelles ist ideal.',
+  'settings.titleModelHint':
+    'Integriert ist eine kostenlose, sofortige Wort-Heuristik (keine KI). Wähle ein Modell für bessere Titel — ein kleines, schnelles ist ideal.',
   'settings.titleBuiltin': 'Integrierte Heuristik (keine KI)',
 
   'settings.artifacts': 'Artefakte',
   'settings.showArtifacts': 'Artefakte-Panel anzeigen',
-  'settings.showArtifactsHint': 'Zeigt vom Agenten geschriebene Dateien und größere Codeblöcke in einem Tab der rechten Seitenleiste. Wenn aus, ist der Tab ausgeblendet.',
+  'settings.showArtifactsHint':
+    'Zeigt vom Agenten geschriebene Dateien und größere Codeblöcke in einem Tab der rechten Seitenleiste. Wenn aus, ist der Tab ausgeblendet.',
   'settings.includeFilter': 'Einschlussfilter',
-  'settings.includeFilterHint': 'Kommagetrennte Globs (z. B. *.md, *.html, artifacts/**). Nur passende Dateien werden angezeigt. Leer lassen, um alles zu zeigen; jeder Filter blendet auch lose Chat-Codeschnipsel aus.',
+  'settings.includeFilterHint':
+    'Kommagetrennte Globs (z. B. *.md, *.html, artifacts/**). Nur passende Dateien werden angezeigt. Leer lassen, um alles zu zeigen; jeder Filter blendet auch lose Chat-Codeschnipsel aus.',
 
   'settings.notifications': 'Benachrichtigungen',
   'settings.notifyReady': 'Benachrichtigen, wenn eine Antwort bereit ist',
-  'settings.notifyReadyHint': 'Spielt einen Ton ab und zeigt eine Benachrichtigung, wenn der Chat fertig ist.',
+  'settings.notifyReadyHint':
+    'Spielt einen Ton ab und zeigt eine Benachrichtigung, wenn der Chat fertig ist.',
   'settings.doneSound': 'Fertig-Ton',
   'settings.doneSoundHint': 'Ton, der abgespielt wird, wenn eine Antwort bereit ist.',
 
@@ -214,7 +225,8 @@ export default {
   'settings.githubHint': 'Wenn pi-web dir nützlich ist, gib dem Repo bitte einen ⭐.',
   'settings.starGithub': 'Auf GitHub mit Stern markieren',
   'settings.sponsor': 'Sponsern',
-  'settings.sponsorHint': 'Unterstütze die Weiterentwicklung von pi-web, indem du den Ersteller sponserst.',
+  'settings.sponsorHint':
+    'Unterstütze die Weiterentwicklung von pi-web, indem du den Ersteller sponserst.',
   'settings.becomeSponsor': 'Sponsor werden',
 
   'shortcuts.title': 'Tastenkürzel',
@@ -260,13 +272,19 @@ export default {
   'btw.working': 'Arbeitet…',
   'btw.stop': 'Stopp',
   'btw.emptyHasSession': 'Noch keine Nachrichten — sag Hallo.',
-  'btw.emptyNoSession': 'Schreibe eine Nachricht, um einen btw-Chat zu starten, oder tippe auf „neu“.',
+  'btw.emptyNoSession':
+    'Schreibe eine Nachricht, um einen btw-Chat zu starten, oder tippe auf „neu“.',
 
-  'artifactHelp.intro': '<strong>Artefakte</strong> sind die vom Agenten geschriebenen Dateien und die größeren Codeblöcke, die er geteilt hat — aus dem Gespräch herausgezogen, damit du sie an einem Ort finden, lesen, kopieren oder herunterladen kannst.',
-  'artifactHelp.viewing': '<strong>Ansehen.</strong> Wähle eines aus der Liste, um seinen Quelltext zu sehen. HTML-, SVG- und Markdown-Dateien haben zudem einen <em>Vorschau</em>-Schalter — HTML/SVG laufen in einer sicheren Sandbox, Markdown wird als formatierter Text dargestellt.',
-  'artifactHelp.annotating': '<strong>Annotieren.</strong> Markiere Text im Quelltext eines Artefakts, um eine Notiz zu hinterlassen. Deine Notizen sammeln sich im Tab <em>Annotationen</em>, von wo aus du zu ihnen zurückspringen oder sie an den Agenten senden kannst.',
-  'artifactHelp.upToDate': '<strong>Aktuell bleiben.</strong> Dateien, die der Agent <em>schreibt</em> oder <em>bearbeitet</em>, werden automatisch aktualisiert, und einfache Umbenennungen oder Löschungen (<code>mv</code>, <code>git mv</code>, <code>rm</code>) werden ebenfalls verfolgt. Aber Änderungen über andere Shell-Befehle — wie <code>sed</code> oder Ausgabe-Umleitungen — lassen sich aus dem Gespräch nicht nachverfolgen, sodass ein Artefakt gelegentlich eine ältere Version zeigen kann. Im Zweifel prüfe die Datei auf der Festplatte.',
-  'artifactHelp.note': 'Artefakte sind nur Teil der Live-Ansicht und werden nicht in exportierte Snapshots aufgenommen.',
+  'artifactHelp.intro':
+    '<strong>Artefakte</strong> sind die vom Agenten geschriebenen Dateien und die größeren Codeblöcke, die er geteilt hat — aus dem Gespräch herausgezogen, damit du sie an einem Ort finden, lesen, kopieren oder herunterladen kannst.',
+  'artifactHelp.viewing':
+    '<strong>Ansehen.</strong> Wähle eines aus der Liste, um seinen Quelltext zu sehen. HTML-, SVG- und Markdown-Dateien haben zudem einen <em>Vorschau</em>-Schalter — HTML/SVG laufen in einer sicheren Sandbox, Markdown wird als formatierter Text dargestellt.',
+  'artifactHelp.annotating':
+    '<strong>Annotieren.</strong> Markiere Text im Quelltext eines Artefakts, um eine Notiz zu hinterlassen. Deine Notizen sammeln sich im Tab <em>Annotationen</em>, von wo aus du zu ihnen zurückspringen oder sie an den Agenten senden kannst.',
+  'artifactHelp.upToDate':
+    '<strong>Aktuell bleiben.</strong> Dateien, die der Agent <em>schreibt</em> oder <em>bearbeitet</em>, werden automatisch aktualisiert, und einfache Umbenennungen oder Löschungen (<code>mv</code>, <code>git mv</code>, <code>rm</code>) werden ebenfalls verfolgt. Aber Änderungen über andere Shell-Befehle — wie <code>sed</code> oder Ausgabe-Umleitungen — lassen sich aus dem Gespräch nicht nachverfolgen, sodass ein Artefakt gelegentlich eine ältere Version zeigen kann. Im Zweifel prüfe die Datei auf der Festplatte.',
+  'artifactHelp.note':
+    'Artefakte sind nur Teil der Live-Ansicht und werden nicht in exportierte Snapshots aufgenommen.',
 
   'common.back': 'Zurück',
   'common.copied': 'Kopiert',
@@ -291,11 +309,13 @@ export default {
   'artifact.preview': 'Vorschau',
   'artifact.runPreview': 'Vorschau ausführen',
   'artifact.showSource': 'Quelltext anzeigen',
-  'artifact.emptyHidden': '{count} {noun} durch deinen Filter ausgeblendet — in <a href="/settings">Einstellungen</a> anpassen.',
+  'artifact.emptyHidden':
+    '{count} {noun} durch deinen Filter ausgeblendet — in <a href="/settings">Einstellungen</a> anpassen.',
   'artifact.emptyNone': 'Noch keine Artefakte in dieser Sitzung.',
   'artifact.nounOne': 'Artefakt',
   'artifact.nounMany': 'Artefakte',
-  'annotation.empty': 'Markiere Text in einer Nachricht oder einem Artefakt, um eine Notiz hinzuzufügen.',
+  'annotation.empty':
+    'Markiere Text in einer Nachricht oder einem Artefakt, um eine Notiz hinzuzufügen.',
   'annotation.deleteNote': 'Notiz löschen',
   'annotation.sendNotesToPi': '{count} {noun} an pi senden',
   'annotation.noteOne': 'Notiz',
@@ -312,7 +332,8 @@ export default {
   'version.couldNotCheck': 'Nach Updates konnte nicht gesucht werden.',
   'version.devBuild': 'Du führst einen lokalen Entwicklungs-Build aus.',
   'version.latestPublished': 'Zuletzt veröffentlicht: {version}',
-  'version.devUpdateDisabled': 'Das In-App-Update ist hier deaktiviert, damit es lokale Änderungen nicht überschreibt.',
+  'version.devUpdateDisabled':
+    'Das In-App-Update ist hier deaktiviert, damit es lokale Änderungen nicht überschreibt.',
   'version.updateAvailable': 'Update verfügbar:',
   'version.releaseNotes': 'Versionshinweise',
   'version.updateRestart': 'Aktualisieren & neu starten',
@@ -326,7 +347,8 @@ export default {
   'version.reconnecting': 'Verbindung wird wiederhergestellt…',
   'version.serverNotBack': 'Der Server ist nicht zurückgekehrt. Lade die Seite manuell neu.',
   'settings.copiedTemplate': 'Eine englische Vorlage wurde in die Zwischenablage kopiert.',
-  'settings.clipboardUnavailable': 'Zwischenablage nicht verfügbar — die Vorlage wurde unten eingefügt.',
+  'settings.clipboardUnavailable':
+    'Zwischenablage nicht verfügbar — die Vorlage wurde unten eingefügt.',
   'settings.invalidJson': 'Ungültiges JSON: {error}',
   'settings.expectedArray': 'Ein Array aus { "code", "label", "strings" }-Objekten wurde erwartet.',
 };

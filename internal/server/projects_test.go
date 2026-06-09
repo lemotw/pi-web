@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"pi-web/internal/sessions"
 
@@ -41,7 +42,7 @@ func enabledSet(t *testing.T, s *Server) map[string]bool {
 }
 
 func TestSyncProjectPrefs_FirstRunEnablesAll(t *testing.T) {
-	s := &Server{db: newProjectPrefsDB(t)}
+	s := &Server{db: newProjectPrefsDB(t), now: time.Now}
 	s.syncProjectPrefs([]string{"/a", "/b"})
 
 	set := enabledSet(t, s)
@@ -51,7 +52,7 @@ func TestSyncProjectPrefs_FirstRunEnablesAll(t *testing.T) {
 }
 
 func TestSyncProjectPrefs_NewProjectsHiddenAfterBootstrap(t *testing.T) {
-	s := &Server{db: newProjectPrefsDB(t)}
+	s := &Server{db: newProjectPrefsDB(t), now: time.Now}
 	s.syncProjectPrefs([]string{"/a"}) // bootstrap: /a enabled
 
 	s.syncProjectPrefs([]string{"/a", "/c"}) // /c appears later
@@ -65,7 +66,7 @@ func TestSyncProjectPrefs_NewProjectsHiddenAfterBootstrap(t *testing.T) {
 }
 
 func TestSyncProjectPrefs_PreservesExistingState(t *testing.T) {
-	s := &Server{db: newProjectPrefsDB(t)}
+	s := &Server{db: newProjectPrefsDB(t), now: time.Now}
 	s.syncProjectPrefs([]string{"/a"})
 	// User disables /a.
 	if _, err := s.db.Exec("UPDATE project_prefs SET enabled = 0 WHERE project_path = ?", "/a"); err != nil {
@@ -80,7 +81,7 @@ func TestSyncProjectPrefs_PreservesExistingState(t *testing.T) {
 }
 
 func TestFilterEnabledSummaries(t *testing.T) {
-	s := &Server{db: newProjectPrefsDB(t)}
+	s := &Server{db: newProjectPrefsDB(t), now: time.Now}
 	s.setProjectFilterEnabled(true)
 	// Seed: /a enabled, /b disabled.
 	s.syncProjectPrefs([]string{"/a"})
@@ -110,7 +111,7 @@ func TestFilterEnabledSummaries_NoDBIsNoOp(t *testing.T) {
 }
 
 func TestFilterDisabledShowsEverything(t *testing.T) {
-	s := &Server{db: newProjectPrefsDB(t)}
+	s := &Server{db: newProjectPrefsDB(t), now: time.Now}
 	// /b is disabled in prefs, but the master filter is off (default).
 	s.syncProjectPrefs([]string{"/a"})
 	s.syncProjectPrefs([]string{"/a", "/b"})
@@ -127,7 +128,7 @@ func TestFilterDisabledShowsEverything(t *testing.T) {
 }
 
 func TestHandleUpdateProject_FilterToggle(t *testing.T) {
-	s := &Server{db: newProjectPrefsDB(t)}
+	s := &Server{db: newProjectPrefsDB(t), now: time.Now}
 	if s.projectFilterEnabled() {
 		t.Fatal("filter should default off")
 	}
@@ -153,7 +154,7 @@ func TestHandleUpdateProject_FilterToggle(t *testing.T) {
 }
 
 func TestHandleUpdateProject(t *testing.T) {
-	s := &Server{db: newProjectPrefsDB(t)}
+	s := &Server{db: newProjectPrefsDB(t), now: time.Now}
 
 	post := func(path, action string) *httptest.ResponseRecorder {
 		body, _ := json.Marshal(map[string]string{"path": path, "action": action})
@@ -207,7 +208,7 @@ func TestHandleUpdateProject(t *testing.T) {
 }
 
 func TestHandleUpdateProject_BulkToggle(t *testing.T) {
-	s := &Server{db: newProjectPrefsDB(t), cache: sessions.NewCache(), sessionsDir: t.TempDir()}
+	s := &Server{db: newProjectPrefsDB(t), cache: sessions.NewCache(), sessionsDir: t.TempDir(), now: time.Now}
 	s.syncProjectPrefs([]string{"/a", "/b", "/c"})
 
 	post := func(action string) *httptest.ResponseRecorder {
@@ -240,7 +241,7 @@ func TestHandleApiProjects(t *testing.T) {
 	writeSessionWithCWD(t, filepath.Join(sessionsDir, "sub1"), "b.jsonl", "/home/user/project-a")
 	writeSessionWithCWD(t, filepath.Join(sessionsDir, "sub2"), "c.jsonl", "/home/user/project-b")
 
-	s := &Server{db: newProjectPrefsDB(t), sessionsDir: sessionsDir, cache: sessions.NewCache()}
+	s := &Server{db: newProjectPrefsDB(t), sessionsDir: sessionsDir, cache: sessions.NewCache(), now: time.Now}
 
 	req := httptest.NewRequest(http.MethodGet, "/api/projects", nil)
 	w := httptest.NewRecorder()

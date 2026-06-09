@@ -77,8 +77,7 @@ func (s *Server) handleApiFiles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	_, cwd, err := s.resolveSessionCwd(r.URL.Query().Get("id"))
-	if err != nil {
-		writeSessionLookupError(w, err)
+	if resolveOrWriteError(w, err) {
 		return
 	}
 

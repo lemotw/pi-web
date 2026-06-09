@@ -5,7 +5,16 @@ describe('session stats', () => {
   it('computes message/tool/model stats', () => {
     const stats = computeSessionStats([
       { type: 'message', message: { role: 'user' } },
-      { type: 'message', message: { role: 'assistant', provider: 'p', model: 'm', usage: { input: 1000 }, content: [{ type: 'toolCall' }] } },
+      {
+        type: 'message',
+        message: {
+          role: 'assistant',
+          provider: 'p',
+          model: 'm',
+          usage: { input: 1000 },
+          content: [{ type: 'toolCall' }],
+        },
+      },
       { type: 'message', message: { role: 'toolResult' } },
       { type: 'model_change', provider: 'q', modelId: 'n' },
       { type: 'compaction' },
@@ -27,10 +36,19 @@ describe('session stats', () => {
   });
 
   it('summarizes stats into header strings', () => {
-    const summary = summarizeSessionStats(computeSessionStats([
-      { type: 'message', message: { role: 'user' } },
-      { type: 'message', message: { role: 'assistant', model: 'm', usage: { input: 1200, output: 500, cost: { input: 0.01 } } } },
-    ]));
+    const summary = summarizeSessionStats(
+      computeSessionStats([
+        { type: 'message', message: { role: 'user' } },
+        {
+          type: 'message',
+          message: {
+            role: 'assistant',
+            model: 'm',
+            usage: { input: 1200, output: 500, cost: { input: 0.01 } },
+          },
+        },
+      ]),
+    );
     expect(summary.messagesText).toBe('1 user, 1 assistant');
     expect(summary.tokensText).toBe('↑1.2k ↓500');
     expect(summary.modelsText).toBe('m');

@@ -33,7 +33,7 @@ Frontend (`web/src/session/annotations/` helpers + the `<AnnotationLayer>` compo
 - `annotation-api.js` — `list` / `create` / `remove` against `/api/annotations`
 - `components/session/AnnotationLayer.svelte` — orchestration: selection popover,
   the note modal, highlight application, the Annotations tab list, and send-to-pi
-  (runtime deps supplied via `window.__piAnnotationLayer.init({...})`)
+  (runtime deps supplied by `SessionPage` through `sessionRuntime.annotations`)
 
 Backend: `internal/server/annotations.go` (table, handlers, SSE broadcast),
 wired in `server.go`.
@@ -90,10 +90,12 @@ Key points:
 
 ## Load flow
 
-On session page init (`SessionPage`'s `startSessionRuntime()`),
-`annotationLayer.init()` calls
-`refresh()` → `GET /api/annotations?session=<id>` → `applyHighlights` across all
-scopes + render the Annotations tab list + update the tab count badge.
+`SessionShell` assembles the annotation config (api, DOM scopes resolved after
+mount, and the runtime-routed callbacks) and passes it as props to
+`<AnnotationLayer>` (via `<RightSidebar>`). A setup `$effect` runs once the api +
+scopes are present: `refresh()` → `GET /api/annotations?session=<id>` →
+`applyHighlights` across all scopes + render the Annotations tab list + update the
+tab count badge.
 
 ## Delete flow
 
@@ -125,7 +127,7 @@ Every POST/DELETE calls `broadcastAnnotations(sessionID)`.
 A **snapshot** (full set) is sent rather than granular add/remove events — the
 client just calls `setAnnotations(...)` and re-renders. Wiring: the SSE
 `annotations` handler lives in `<LiveReload>` (`wireSessionEvents`'s
-`onAnnotations: (list) => window.__piAnnotationLayer?.setAnnotations(list)`).
+`onAnnotations: (list) => sessionRuntime.annotations?.setAnnotations(list)`).
 
 ## Highlight (re)application
 

@@ -35,7 +35,8 @@ export default {
   'index.loadingSessions': 'Naglo-load ng mga session…',
   'index.loadingSessionsHint': 'Kinukuha ang pinakabagong listahan ng session.',
   'index.noSessions': 'Walang session na ipapakita',
-  'index.noSessionsHint': 'I-enable ang mga proyekto mula sa menu (⋯ → Pamahalaan ang mga Proyekto) para makita ang kanilang mga session.',
+  'index.noSessionsHint':
+    'I-enable ang mga proyekto mula sa menu (⋯ → Pamahalaan ang mga Proyekto) para makita ang kanilang mga session.',
   'index.noSessionsYet': 'Wala pang session',
   'index.noSessionsYetHint': 'Magsimula ng bagong session para magsimula.',
   'index.importSession': 'Mag-import ng session',
@@ -118,7 +119,8 @@ export default {
   'composer.searchModels': 'Maghanap ng model…',
   'composer.switchModel': 'Palitan ang model',
   'composer.switchEffort': 'Palitan ang antas ng effort',
-  'composer.disabledNotice': 'Matitingnan ang session na ito, pero naka-disable ang chat dahil wala na ang working directory nito.',
+  'composer.disabledNotice':
+    'Matitingnan ang session na ito, pero naka-disable ang chat dahil wala na ang working directory nito.',
   'composer.copyPath': 'I-click para kopyahin ang path',
   'composer.focusShortcut': 'Shift + i para mag-focus',
   'composer.cancelRunning': 'Kanselahin ang tumatakbong tugon',
@@ -136,15 +138,18 @@ export default {
   'settings.contentFont': 'Font ng nilalaman',
   'settings.contentFontHint': 'Font para sa teksto ng mensahe. Gumagamit ang code ng code font.',
   'settings.codeFont': 'Font ng code',
-  'settings.codeFontHint': 'Font para sa code, mga command, at output ng tool. Monospace bilang default.',
+  'settings.codeFontHint':
+    'Font para sa code, mga command, at output ng tool. Monospace bilang default.',
   'settings.interfaceFontSize': 'Laki ng font ng interface',
   'settings.interfaceFontSizeHint': 'Laki ng teksto ng app UI (px).',
   'settings.contentFontSize': 'Laki ng font ng nilalaman',
   'settings.contentFontSizeHint': 'Laki ng naka-render na teksto ng mensahe (px).',
   'settings.fontBuiltIn': 'Built-in',
   'settings.fontInstalled': 'Installed',
-  'settings.fontDetectUnsupported': 'This browser cannot list installed fonts. Use Custom… to type a font name.',
-  'settings.fontDetectDenied': 'Could not read installed fonts (permission denied). Use Custom… to type a font name.',
+  'settings.fontDetectUnsupported':
+    'This browser cannot list installed fonts. Use Custom… to type a font name.',
+  'settings.fontDetectDenied':
+    'Could not read installed fonts (permission denied). Use Custom… to type a font name.',
   'settings.fontActions': 'Mga Aksyon',
   'settings.fontMono': 'Monospace',
   'settings.fontSystem': 'System',
@@ -155,9 +160,11 @@ export default {
   'settings.fontFamilyPlaceholder': 'Pangalan ng font family',
 
   'settings.language': 'Wika',
-  'settings.languageHint': 'Wika para sa interface ng app. Ang pagbabago nito ay magre-reload ng pahina.',
+  'settings.languageHint':
+    'Wika para sa interface ng app. Ang pagbabago nito ay magre-reload ng pahina.',
   'settings.customLanguages': 'Mga custom na wika',
-  'settings.customLanguagesHint': 'Magdagdag o mag-override ng mga wika bilang JSON — isang array ng { "code", "label", "strings": { … } }. Ang nawawalang mga key ay babalik sa Ingles. Gamitin ang "Kopyahin ang mga English key" para sa panimulang template, tapos "I-save at ilapat".',
+  'settings.customLanguagesHint':
+    'Magdagdag o mag-override ng mga wika bilang JSON — isang array ng { "code", "label", "strings": { … } }. Ang nawawalang mga key ay babalik sa Ingles. Gamitin ang "Kopyahin ang mga English key" para sa panimulang template, tapos "I-save at ilapat".',
   'settings.copyEnglishKeys': 'Kopyahin ang mga English key',
   'settings.saveApply': 'I-save at ilapat',
 
@@ -167,28 +174,35 @@ export default {
   'settings.defaultLayout': 'Default na layout',
   'settings.defaultLayoutHint': 'Kung paano pinangkat ang listahan ng session sa pag-load.',
   'settings.showBtw': 'Ipakita ang mga btw chat sa listahan',
-  'settings.showBtwHint': 'Isama ang mga pang-isang-gamit na btw scratch-chat sa listahan ng session. Nakatago bilang default.',
+  'settings.showBtwHint':
+    'Isama ang mga pang-isang-gamit na btw scratch-chat sa listahan ng session. Nakatago bilang default.',
 
   'settings.sessionTitles': 'Mga Pamagat ng Session',
   'settings.autoTitle': 'Awtomatikong gumawa ng pamagat',
-  'settings.autoTitleHint': 'Hayaan ang pi-web na awtomatikong pangalanan ang mga session mula sa unang mensahe.',
+  'settings.autoTitleHint':
+    'Hayaan ang pi-web na awtomatikong pangalanan ang mga session mula sa unang mensahe.',
   'settings.whenToTitle': 'Kailan magbibigay ng pamagat',
-  'settings.whenToTitleHint': 'Bigyan ng pamagat ang session nang isang beses, o i-refresh habang lumilipat ang pokus.',
+  'settings.whenToTitleHint':
+    'Bigyan ng pamagat ang session nang isang beses, o i-refresh habang lumilipat ang pokus.',
   'settings.titleOnce': 'Isang beses bawat session',
   'settings.titleEachTurn': 'Bawat bagong mensahe',
   'settings.titleModel': 'Model ng pamagat',
-  'settings.titleModelHint': 'Ang built-in ay libre, instant na heuristic ng salita (walang AI). Pumili ng model para sa mas matalinong pamagat — mainam ang maliit at mabilis.',
+  'settings.titleModelHint':
+    'Ang built-in ay libre, instant na heuristic ng salita (walang AI). Pumili ng model para sa mas matalinong pamagat — mainam ang maliit at mabilis.',
   'settings.titleBuiltin': 'Built-in na heuristic (walang AI)',
 
   'settings.artifacts': 'Mga Artifact',
   'settings.showArtifacts': 'Ipakita ang panel ng Artifact',
-  'settings.showArtifactsHint': 'Ipakita ang mga file na isinulat ng agent at malalaking code block sa isang tab sa kanang sidebar. Kapag naka-off, nakatago ang tab.',
+  'settings.showArtifactsHint':
+    'Ipakita ang mga file na isinulat ng agent at malalaking code block sa isang tab sa kanang sidebar. Kapag naka-off, nakatago ang tab.',
   'settings.includeFilter': 'Include filter',
-  'settings.includeFilterHint': 'Mga glob na pinaghihiwalay ng kuwit (hal. *.md, *.html, artifacts/**). Tanging tumutugmang mga file ang ipinapakita. Iwang blanko para ipakita ang lahat; ang anumang filter ay nagtatago rin ng mga maluwag na code snippet ng chat.',
+  'settings.includeFilterHint':
+    'Mga glob na pinaghihiwalay ng kuwit (hal. *.md, *.html, artifacts/**). Tanging tumutugmang mga file ang ipinapakita. Iwang blanko para ipakita ang lahat; ang anumang filter ay nagtatago rin ng mga maluwag na code snippet ng chat.',
 
   'settings.notifications': 'Mga Notification',
   'settings.notifyReady': 'Mag-notify kapag handa na ang tugon',
-  'settings.notifyReadyHint': 'Nagpapatugtog ng tunog at nagpapakita ng notification kapag tapos na ang chat.',
+  'settings.notifyReadyHint':
+    'Nagpapatugtog ng tunog at nagpapakita ng notification kapag tapos na ang chat.',
   'settings.doneSound': 'Tunog ng pagkatapos',
   'settings.doneSoundHint': 'Tunog na pinapatugtog kapag handa na ang tugon.',
 
@@ -214,7 +228,8 @@ export default {
   'settings.githubHint': 'Kung kapaki-pakinabang sa iyo ang pi-web, bigyan ng ⭐ ang repo.',
   'settings.starGithub': 'Mag-star sa GitHub',
   'settings.sponsor': 'Sponsor',
-  'settings.sponsorHint': 'Suportahan ang patuloy na pag-develop ng pi-web sa pamamagitan ng pag-sponsor sa creator.',
+  'settings.sponsorHint':
+    'Suportahan ang patuloy na pag-develop ng pi-web sa pamamagitan ng pag-sponsor sa creator.',
   'settings.becomeSponsor': 'Maging sponsor',
 
   'shortcuts.title': 'Mga keyboard shortcut',
@@ -262,11 +277,16 @@ export default {
   'btw.emptyHasSession': 'Wala pang mensahe — kumusta muna.',
   'btw.emptyNoSession': 'Mag-type ng mensahe para magsimula ng btw chat, o pindutin ang "bago".',
 
-  'artifactHelp.intro': 'Ang <strong>mga artifact</strong> ay ang mga file na isinulat ng agent at ang mas malalaking code block na ibinahagi nito, kinuha mula sa usapan para mahanap, mabasa, makopya, o ma-download mo ang mga ito sa isang lugar.',
-  'artifactHelp.viewing': '<strong>Pagtingin.</strong> Pumili ng isa mula sa listahan para makita ang source nito. Ang mga HTML, SVG, at Markdown na file ay may toggle ding <em>Preview</em> — tumatakbo ang HTML/SVG sa secure na sandbox, at ang Markdown ay nire-render bilang naka-format na teksto.',
-  'artifactHelp.annotating': '<strong>Pag-annotate.</strong> Pumili ng teksto sa source ng isang artifact para mag-iwan ng tala. Naiipon ang iyong mga tala sa tab na <em>Annotations</em>, kung saan maaari kang bumalik sa kanila o ipadala ang mga ito sa agent.',
-  'artifactHelp.upToDate': '<strong>Pananatiling napapanahon.</strong> Ang mga file na <em>isinusulat</em> o <em>ine-edit</em> ng agent ay awtomatikong nag-a-update, at sinusubaybayan din ang simpleng pagpapalit ng pangalan o pagtanggal (<code>mv</code>, <code>git mv</code>, <code>rm</code>). Pero ang mga pagbabagong ginawa sa ibang shell command — tulad ng <code>sed</code> o output redirect — ay hindi masusubaybayan mula sa usapan, kaya minsan ay maaaring magpakita ang artifact ng mas lumang bersyon. Kapag may pag-aalinlangan, tingnan ang file sa disk.',
-  'artifactHelp.note': 'Ang mga artifact ay bahagi lamang ng live view at hindi kasama sa mga na-export na snapshot.',
+  'artifactHelp.intro':
+    'Ang <strong>mga artifact</strong> ay ang mga file na isinulat ng agent at ang mas malalaking code block na ibinahagi nito, kinuha mula sa usapan para mahanap, mabasa, makopya, o ma-download mo ang mga ito sa isang lugar.',
+  'artifactHelp.viewing':
+    '<strong>Pagtingin.</strong> Pumili ng isa mula sa listahan para makita ang source nito. Ang mga HTML, SVG, at Markdown na file ay may toggle ding <em>Preview</em> — tumatakbo ang HTML/SVG sa secure na sandbox, at ang Markdown ay nire-render bilang naka-format na teksto.',
+  'artifactHelp.annotating':
+    '<strong>Pag-annotate.</strong> Pumili ng teksto sa source ng isang artifact para mag-iwan ng tala. Naiipon ang iyong mga tala sa tab na <em>Annotations</em>, kung saan maaari kang bumalik sa kanila o ipadala ang mga ito sa agent.',
+  'artifactHelp.upToDate':
+    '<strong>Pananatiling napapanahon.</strong> Ang mga file na <em>isinusulat</em> o <em>ine-edit</em> ng agent ay awtomatikong nag-a-update, at sinusubaybayan din ang simpleng pagpapalit ng pangalan o pagtanggal (<code>mv</code>, <code>git mv</code>, <code>rm</code>). Pero ang mga pagbabagong ginawa sa ibang shell command — tulad ng <code>sed</code> o output redirect — ay hindi masusubaybayan mula sa usapan, kaya minsan ay maaaring magpakita ang artifact ng mas lumang bersyon. Kapag may pag-aalinlangan, tingnan ang file sa disk.',
+  'artifactHelp.note':
+    'Ang mga artifact ay bahagi lamang ng live view at hindi kasama sa mga na-export na snapshot.',
 
   'common.back': 'Bumalik',
   'common.copied': 'Nakopya',
@@ -282,7 +302,8 @@ export default {
   'index.failedUpdateProject': 'Nabigong i-update ang proyekto',
   'index.failedRemoveProject': 'Nabigong alisin ang proyekto',
   'index.filterOnDesc': 'Ang mga nakacheck na proyekto lang ang lalabas sa homepage.',
-  'index.filterOffDesc': 'Ipinapakita ang lahat ng proyekto. I-on para ipakita lang ang mga nakacheck.',
+  'index.filterOffDesc':
+    'Ipinapakita ang lahat ng proyekto. I-on para ipakita lang ang mga nakacheck.',
   'composer.pathCopied': 'Nakopya ang path',
   'share.copiedSuffix': 'Nakopya ang {label}',
   'artifact.copy': 'Kopyahin',
@@ -291,7 +312,8 @@ export default {
   'artifact.preview': 'Preview',
   'artifact.runPreview': 'Patakbuhin ang preview',
   'artifact.showSource': 'Ipakita ang source',
-  'artifact.emptyHidden': '{count} {noun} ang itinago ng iyong filter — ayusin sa <a href="/settings">Settings</a>.',
+  'artifact.emptyHidden':
+    '{count} {noun} ang itinago ng iyong filter — ayusin sa <a href="/settings">Settings</a>.',
   'artifact.emptyNone': 'Wala pang artifact sa session na ito.',
   'artifact.nounOne': 'artifact',
   'artifact.nounMany': 'artifact',
@@ -312,7 +334,8 @@ export default {
   'version.couldNotCheck': 'Hindi makapaghanap ng update.',
   'version.devBuild': 'Nagpapatakbo ka ng lokal na development build.',
   'version.latestPublished': 'Pinakabagong nailathala: {version}',
-  'version.devUpdateDisabled': 'Naka-disable ang in-app update dito para hindi ma-overwrite ang mga lokal na pagbabago.',
+  'version.devUpdateDisabled':
+    'Naka-disable ang in-app update dito para hindi ma-overwrite ang mga lokal na pagbabago.',
   'version.updateAvailable': 'May available na update:',
   'version.releaseNotes': 'release notes',
   'version.updateRestart': 'I-update at i-restart',
@@ -326,7 +349,8 @@ export default {
   'version.reconnecting': 'Muling kumukonekta…',
   'version.serverNotBack': 'Hindi bumalik ang server. I-reload ang pahina nang manu-mano.',
   'settings.copiedTemplate': 'Nakopya ang English template sa clipboard.',
-  'settings.clipboardUnavailable': 'Hindi available ang clipboard — inilagay ang template sa ibaba.',
+  'settings.clipboardUnavailable':
+    'Hindi available ang clipboard — inilagay ang template sa ibaba.',
   'settings.invalidJson': 'Hindi wastong JSON: {error}',
   'settings.expectedArray': 'Inaasahan ang array ng mga object na { "code", "label", "strings" }.',
 };

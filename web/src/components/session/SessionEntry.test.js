@@ -19,7 +19,11 @@ describe('SessionEntry', () => {
   });
 
   it('renders an assistant message', () => {
-    const entry = { id: 'a', type: 'message', message: { role: 'assistant', content: [{ type: 'text', text: 'hi' }] } };
+    const entry = {
+      id: 'a',
+      type: 'message',
+      message: { role: 'assistant', content: [{ type: 'text', text: 'hi' }] },
+    };
     const { container } = render(SessionEntry, { props: { entry, model: model([entry]) } });
     const node = container.querySelector('#entry-a');
     expect(node).toHaveClass('assistant-message');
@@ -27,7 +31,11 @@ describe('SessionEntry', () => {
   });
 
   it('renders nothing for tool-result entries', () => {
-    const entry = { id: 'r', type: 'message', message: { role: 'toolResult', toolCallId: 'c', content: [] } };
+    const entry = {
+      id: 'r',
+      type: 'message',
+      message: { role: 'toolResult', toolCallId: 'c', content: [] },
+    };
     const { container } = render(SessionEntry, { props: { entry, model: model([entry]) } });
     expect(container.querySelector('#entry-r')).toBeNull();
   });
@@ -38,8 +46,16 @@ describe('SessionEntry', () => {
     expect(container.querySelector('#entry-m.model-change')?.textContent).toContain('p/x');
 
     cleanup();
-    const implicit = { id: 'm2', type: 'model_change', provider: 'p', modelId: 'x', implicit: true };
-    const { container: c2 } = render(SessionEntry, { props: { entry: implicit, model: model([implicit]) } });
+    const implicit = {
+      id: 'm2',
+      type: 'model_change',
+      provider: 'p',
+      modelId: 'x',
+      implicit: true,
+    };
+    const { container: c2 } = render(SessionEntry, {
+      props: { entry: implicit, model: model([implicit]) },
+    });
     expect(c2.querySelector('#entry-m2')).toBeNull();
   });
 });

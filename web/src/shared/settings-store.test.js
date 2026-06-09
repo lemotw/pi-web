@@ -62,7 +62,10 @@ describe('writeSettings', () => {
     const fetchImpl = vi.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve({}) }));
     configureSettingsSync({ fetchImpl });
 
-    writeSettings({ 'pi-web-theme': 'dracula', 'pi-sessions:spinner-style': 'braille' }, { storage });
+    writeSettings(
+      { 'pi-web-theme': 'dracula', 'pi-sessions:spinner-style': 'braille' },
+      { storage },
+    );
 
     expect(fetchImpl).toHaveBeenCalledTimes(1);
     expect(JSON.parse(fetchImpl.mock.calls[0][1].body)).toEqual({
@@ -77,7 +80,9 @@ describe('hydrateSettings', () => {
     const settings = {};
     for (const k of SERVER_SETTING_KEYS) settings[k] = 'x';
     settings['pi-web-theme'] = 'nord';
-    const fetchImpl = vi.fn(() => Promise.resolve({ ok: true, json: () => Promise.resolve({ settings }) }));
+    const fetchImpl = vi.fn(() =>
+      Promise.resolve({ ok: true, json: () => Promise.resolve({ settings }) }),
+    );
 
     const result = await hydrateSettings({ fetchImpl, storage });
 

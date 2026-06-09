@@ -9,8 +9,18 @@ function mount(overrides = {}) {
     header: { id: 'sid-123', timestamp: '2026-01-01T00:00:00Z' },
     entries: [
       { id: 'u', type: 'message', message: { role: 'user' }, timestamp: '2026-01-01T00:00:00Z' },
-      { id: 'a', parentId: 'u', type: 'message', timestamp: '2026-01-01T00:00:01Z',
-        message: { role: 'assistant', model: 'm', usage: { input: 1200 }, content: [{ type: 'toolCall' }] } },
+      {
+        id: 'a',
+        parentId: 'u',
+        type: 'message',
+        timestamp: '2026-01-01T00:00:01Z',
+        message: {
+          role: 'assistant',
+          model: 'm',
+          usage: { input: 1200 },
+          content: [{ type: 'toolCall' }],
+        },
+      },
     ],
     ...overrides,
   });
@@ -31,7 +41,9 @@ describe('SessionInfoHeader', () => {
   });
 
   it('renders an expandable system prompt and toggles on click', async () => {
-    const { container } = mount({ systemPrompt: Array.from({ length: 12 }, (_, i) => `line ${i}`).join('\n') });
+    const { container } = mount({
+      systemPrompt: Array.from({ length: 12 }, (_, i) => `line ${i}`).join('\n'),
+    });
     const block = container.querySelector('.system-prompt.expandable');
     expect(block).toBeInTheDocument();
     expect(block).not.toHaveClass('expanded');
@@ -42,7 +54,16 @@ describe('SessionInfoHeader', () => {
 
   it('renders tools and expands params on click', async () => {
     const { container } = mount({
-      tools: [{ name: 'read', description: 'Read file', parameters: { required: ['path'], properties: { path: { type: 'string', description: 'the path' } } } }],
+      tools: [
+        {
+          name: 'read',
+          description: 'Read file',
+          parameters: {
+            required: ['path'],
+            properties: { path: { type: 'string', description: 'the path' } },
+          },
+        },
+      ],
     });
     const item = container.querySelector('.tool-item');
     expect(item).toBeInTheDocument();

@@ -26,15 +26,22 @@ func (s *Server) resolveSessionCwd(id string) (sessions.ResolvedSession, string,
 	return resolved, cwd, nil
 }
 
-func writeSessionLookupError(w http.ResponseWriter, err error) {
+// resolveOrWriteError maps a session-resolution error to an HTTP status and
+// writes the response, returning true when err was non-nil (and thus handled).
+// Callers use `if resolveOrWriteError(w, err) { return }`.
+func resolveOrWriteError(w http.ResponseWriter, err error) bool {
+	if err == nil {
+		return false
+	}
 	switch {
 	case errors.Is(err, sessions.ErrInvalidSessionID):
 		writeJSONError(w, http.StatusBadRequest, "invalid session id")
 	case errors.Is(err, sessions.ErrSessionNotFound):
-		writeJSONError(w, http.StatusNotFound, "not found")
+		writeJSONError(w, http.StatusNotFound, "session not found")
 	default:
 		writeJSONError(w, http.StatusInternalServerError, err.Error())
 	}
+	return true
 }
 
 // handleGitInfo returns the current branch and a GitHub PR URL for the
@@ -45,8 +52,7 @@ func (s *Server) handleGitInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	_, cwd, err := s.resolveSessionCwd(r.URL.Query().Get("id"))
-	if err != nil {
-		writeSessionLookupError(w, err)
+	if resolveOrWriteError(w, err) {
 		return
 	}
 	info, _ := git.Describe(cwd)
@@ -67,8 +73,7 @@ func (s *Server) handleGitRenameBranch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	_, cwd, err := s.resolveSessionCwd(r.URL.Query().Get("id"))
-	if err != nil {
-		writeSessionLookupError(w, err)
+	if resolveOrWriteError(w, err) {
 		return
 	}
 	branch, err := git.RenameBranch(cwd, body.Name)

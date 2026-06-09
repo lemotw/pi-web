@@ -1,11 +1,17 @@
 <script>
-  import { onMount, untrack } from 'svelte';
+  import { onMount } from 'svelte';
   import { marked } from 'marked';
   import { safeMarkedParse } from '../../session/render/markdown.js';
   import { getSessionModel } from '../../session/session-context.js';
   import { collectArtifacts } from '../../session/artifacts/artifact-registry.js';
-  import { filterArtifacts, readArtifactSettings, ARTIFACT_SETTING_KEYS } from '../../session/artifacts/artifact-filter.js';
+  import {
+    filterArtifacts,
+    readArtifactSettings,
+    ARTIFACT_SETTING_KEYS,
+  } from '../../session/artifacts/artifact-filter.js';
   import { t } from '../../shared/i18n.js';
+  import { copyToClipboard } from '../../shared/clipboard.js';
+  import { sessionRuntime } from '../../session/session-runtime.js';
 
   // `highlight`/`renderMarkdown` are injectable for tests; in the live app the
   // component lazy-loads highlight.js itself and renders markdown via marked.
@@ -14,19 +20,39 @@
   // The panel collects artifacts straight from the shared reactive model: on
   // mount and whenever entries change (live reload), it re-runs collection +
   // filtering. Standalone (tests, no context) the model is undefined and the
-  // panel is driven imperatively via the window.__piArtifactPanel.setArtifacts
-  // bridge instead.
+  // panel is driven imperatively via the sessionRuntime.artifacts.setArtifacts
+  // handle instead.
   const model = getSessionModel();
-  // Bumped by the cross-tab `storage` listener so the collection effect re-reads
-  // the artifact settings (enable/include filter) without a reload.
+  const COPIED_RESET_MS = 1500;
+  // Bumped by the cross-tab `storage` listener so `collected` re-reads the
+  // artifact settings (enable/include filter) without a reload.
   let settingsTick = $state(0);
 
-  let artifacts = $state([]);
-  let selectedId = $state('');
-  let hiddenCount = $state(0);
+  // Standalone/imperative mode (tests, no shared model): artifacts pushed in via
+  // sessionRuntime.artifacts.setArtifacts. In live mode `collected` drives them.
+  let imperative = $state(null);
+  let pickedId = $state('');
   // Preview is opt-in (click-to-run): never auto-execute artifact content.
   let previewing = $state(false);
   let loadedHljs = $state(null);
+
+  // Collected artifacts from the shared model (live only; null standalone).
+  // Recomputes when entries change (live reload) or the settings tick bumps.
+  const collected = $derived.by(() => {
+    if (!model) return null;
+    settingsTick;
+    const all = collectArtifacts(model.entries);
+    const settings = readArtifactSettings(window.localStorage);
+    const { visible, hiddenCount: hidden } = filterArtifacts(all, settings);
+    return { visible, hiddenCount: hidden, enabled: settings.enabled };
+  });
+
+  const artifacts = $derived(collected ? collected.visible : (imperative?.visible ?? []));
+  const hiddenCount = $derived(collected ? collected.hiddenCount : (imperative?.hiddenCount ?? 0));
+  // Keep the user's pick while it's still in the list; otherwise default to first.
+  const selectedId = $derived(
+    artifacts.some((a) => a.id === pickedId) ? pickedId : (artifacts[0]?.id ?? ''),
+  );
 
   const selected = $derived(artifacts.find((a) => a.id === selectedId) || null);
   const noun = $derived(hiddenCount === 1 ? t('artifact.nounOne') : t('artifact.nounMany'));
@@ -58,13 +84,17 @@
     }
   });
 
-  const renderMd = (text) => (renderMarkdown ? renderMarkdown(text) : safeMarkedParse(text, { marked }));
+  const renderMd = (text) =>
+    renderMarkdown ? renderMarkdown(text) : safeMarkedParse(text, { marked });
 
   function previewSrcdoc(a) {
-    const csp = "default-src 'none'; img-src data:; style-src 'unsafe-inline'; font-src data:; script-src 'unsafe-inline'";
-    return `<!doctype html><html><head><meta charset="utf-8">`
-      + `<meta http-equiv="Content-Security-Policy" content="${csp}">`
-      + `</head><body>${a.content}</body></html>`;
+    const csp =
+      "default-src 'none'; img-src data:; style-src 'unsafe-inline'; font-src data:; script-src 'unsafe-inline'";
+    return (
+      `<!doctype html><html><head><meta charset="utf-8">` +
+      `<meta http-equiv="Content-Security-Policy" content="${csp}">` +
+      `</head><body>${a.content}</body></html>`
+    );
   }
 
   const previewLabel = $derived.by(() => {
@@ -72,26 +102,8 @@
     return selected?.previewType === 'markdown' ? t('artifact.preview') : t('artifact.runPreview');
   });
 
-  async function copyToClipboard(textValue, button) {
-    let ok = false;
-    try {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        await navigator.clipboard.writeText(textValue);
-        ok = true;
-      }
-    } catch { /* fall through to execCommand */ }
-    if (!ok) {
-      try {
-        const ta = document.createElement('textarea');
-        ta.value = textValue;
-        ta.style.position = 'fixed';
-        ta.style.opacity = '0';
-        document.body.appendChild(ta);
-        ta.select();
-        ok = document.execCommand('copy');
-        document.body.removeChild(ta);
-      } catch { /* give up silently */ }
-    }
+  async function copyArtifactSource(textValue, button) {
+    const ok = await copyToClipboard(textValue);
     if (ok && button) {
       const original = button.textContent;
       button.textContent = t('common.copied');
@@ -99,7 +111,7 @@
       window.setTimeout(() => {
         button.textContent = original;
         button.classList.remove('copied');
-      }, 1500);
+      }, COPIED_RESET_MS);
     }
     return ok;
   }
@@ -117,18 +129,16 @@
   }
 
   function setArtifacts(next, { hiddenCount: hidden = 0 } = {}) {
-    artifacts = Array.isArray(next) ? next : [];
-    hiddenCount = Number.isFinite(hidden) && hidden > 0 ? hidden : 0;
-    if (!artifacts.some((a) => a.id === selectedId)) {
-      selectedId = artifacts.length > 0 ? artifacts[0].id : '';
-      previewing = false;
-    }
+    imperative = {
+      visible: Array.isArray(next) ? next : [],
+      hiddenCount: Number.isFinite(hidden) && hidden > 0 ? hidden : 0,
+    };
   }
 
   function selectArtifact(id) {
     if (!artifacts.some((a) => a.id === id)) return;
-    if (id !== selectedId) previewing = false;
-    selectedId = id;
+    if (id !== pickedId) previewing = false;
+    pickedId = id;
   }
 
   // Hide the Artifacts tab entirely when the feature is disabled; if it was the
@@ -142,27 +152,21 @@
     }
   }
 
-  // Reactive collection from the shared model (live only; null in standalone /
-  // imperative mode). Recomputes when entries change (live reload) or the
-  // settings tick bumps (cross-tab settings change). Kept as a $derived so the
-  // sync $effect below depends only on this value, not on the artifact $state it
-  // writes (which would self-trigger).
-  const collected = $derived.by(() => {
-    if (!model) return null;
-    settingsTick; // eslint-disable-line no-unused-expressions -- dependency
-    const all = collectArtifacts(model.entries);
-    const settings = readArtifactSettings(window.localStorage);
-    const { visible, hiddenCount: hidden } = filterArtifacts(all, settings);
-    return { visible, hiddenCount: hidden, enabled: settings.enabled };
+  // Whenever the resolved selection changes (user pick or a list change that
+  // re-defaults it), drop back to the source view.
+  let lastSelectedId = '';
+  $effect(() => {
+    if (selectedId !== lastSelectedId) {
+      lastSelectedId = selectedId;
+      previewing = false;
+    }
   });
 
-  // Push the derived collection into the panel's display $state + tab chrome.
-  // Reading/writing artifacts/selectedId via setArtifacts is untracked so the
-  // effect's only dependency is `collected`.
+  // Live-only tab chrome: reflect enabled state + the artifact count badge.
+  // Writes DOM only, so it depends purely on `collected`.
   $effect(() => {
     const c = collected;
     if (!c) return;
-    untrack(() => setArtifacts(c.visible, { hiddenCount: c.hiddenCount }));
     applyArtifactsEnabled(c.enabled);
     const countEl = document.getElementById('artifact-tab-count');
     if (countEl) {
@@ -173,7 +177,11 @@
 
   onMount(() => {
     if (!highlight) {
-      import('highlight.js').then(({ default: loaded }) => { loadedHljs = loaded; }).catch(() => {});
+      import('highlight.js')
+        .then(({ default: loaded }) => {
+          loadedHljs = loaded;
+        })
+        .catch(() => {});
     }
     // Reflect artifact-setting changes made on the /settings page (in another
     // tab) without a reload. The `storage` event fires only in other documents,
@@ -183,7 +191,7 @@
       if (e.key === null || ARTIFACT_SETTING_KEYS.includes(e.key)) settingsTick += 1;
     };
     if (model) window.addEventListener('storage', onStorage);
-    window.__piArtifactPanel = {
+    sessionRuntime.artifacts = {
       setArtifacts,
       selectArtifact,
       render: () => {},
@@ -193,16 +201,20 @@
     };
     return () => {
       if (model) window.removeEventListener('storage', onStorage);
-      delete window.__piArtifactPanel;
+      sessionRuntime.artifacts = null;
     };
   });
 </script>
+
+<!-- eslint-disable svelte/no-at-html-tags -- trusted: Lucide icon SVG and rendered session markdown -->
 
 <div id="artifact-panel-host" class="artifact-panel-host">
   <div class="artifact-panel">
     {#if artifacts.length === 0}
       {#if hiddenCount > 0}
-        <div class="artifact-empty">{@html t('artifact.emptyHidden', { count: hiddenCount, noun })}</div>
+        <div class="artifact-empty">
+          {@html t('artifact.emptyHidden', { count: hiddenCount, noun })}
+        </div>
       {:else}
         <div class="artifact-empty">{t('artifact.emptyNone')}</div>
       {/if}
@@ -232,21 +244,58 @@
           <span class="artifact-view-title">{selected.title}</span>
           <div class="artifact-view-actions">
             {#if selected.kind === 'preview'}
-              <button type="button" class="artifact-action" class:active={previewing} data-action="toggle-preview" onclick={() => (previewing = !previewing)}>{previewLabel}</button>
+              <button
+                type="button"
+                class="artifact-action"
+                class:active={previewing}
+                data-action="toggle-preview"
+                onclick={() => (previewing = !previewing)}>{previewLabel}</button
+              >
             {/if}
-            <button type="button" class="artifact-action" data-action="copy" title={t('artifact.copySource')} onclick={(e) => copyToClipboard(selected.content, e.currentTarget)}>{t('artifact.copy')}</button>
-            <button type="button" class="artifact-action" data-action="download" title={t('artifact.download')} onclick={() => download(selected)}>{t('artifact.download')}</button>
+            <button
+              type="button"
+              class="artifact-action"
+              data-action="copy"
+              title={t('artifact.copySource')}
+              onclick={(e) => copyArtifactSource(selected.content, e.currentTarget)}
+              >{t('artifact.copy')}</button
+            >
+            <button
+              type="button"
+              class="artifact-action"
+              data-action="download"
+              title={t('artifact.download')}
+              onclick={() => download(selected)}>{t('artifact.download')}</button
+            >
           </div>
         </div>
         {#if selected.kind === 'preview' && previewing}
           {#if selected.previewType === 'markdown'}
-            <div class="artifact-view-body"><div class="artifact-markdown markdown-content">{@html renderMd(selected.content)}</div></div>
+            <div class="artifact-view-body">
+              <div class="artifact-markdown markdown-content">
+                {@html renderMd(selected.content)}
+              </div>
+            </div>
           {:else}
-            <div class="artifact-view-body"><iframe class="artifact-preview" sandbox="allow-scripts" referrerpolicy="no-referrer" title={`Preview: ${selected.title}`} srcdoc={previewSrcdoc(selected)}></iframe></div>
+            <div class="artifact-view-body">
+              <iframe
+                class="artifact-preview"
+                sandbox="allow-scripts"
+                referrerpolicy="no-referrer"
+                title={`Preview: ${selected.title}`}
+                srcdoc={previewSrcdoc(selected)}
+              ></iframe>
+            </div>
           {/if}
         {:else}
           <div class="artifact-view-body">
-            <pre class="artifact-source" id={`artifact-${selected.id}`}>{#if codeHtml !== null}<code class="hljs">{@html codeHtml}</code>{:else}<code class="hljs" data-highlight-pending data-lang={selected.lang || undefined}>{selected.content}</code>{/if}</pre>
+            <pre class="artifact-source" id={`artifact-${selected.id}`}>{#if codeHtml !== null}<code
+                  class="hljs">{@html codeHtml}</code
+                >{:else}<code
+                  class="hljs"
+                  data-highlight-pending
+                  data-lang={selected.lang || undefined}>{selected.content}</code
+                >{/if}</pre>
           </div>
         {/if}
       {/if}

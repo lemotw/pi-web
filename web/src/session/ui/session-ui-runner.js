@@ -1,3 +1,5 @@
+import { sessionRuntime } from '../session-runtime.js';
+
 export function setupSessionUi({
   documentImpl = document,
   windowImpl = window,
@@ -24,7 +26,7 @@ export function setupSessionUi({
     setSearchQuery,
     setFilterMode,
     forceTreeRerender,
-    navigateTo
+    navigateTo,
   });
 
   const isMobileLayout = () => sidebarApi.isMobileLayout({ windowImpl });
@@ -34,15 +36,20 @@ export function setupSessionUi({
   const overlayEl = documentImpl.getElementById('sidebar-overlay');
   if (overlayEl) {
     overlayEl.addEventListener('click', closeSidebar);
-    overlayEl.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      closeSidebar();
-    }, { passive: false });
+    overlayEl.addEventListener(
+      'touchstart',
+      (e) => {
+        e.preventDefault();
+        closeSidebar();
+      },
+      { passive: false },
+    );
   }
 
   const toggleController = toggleStateApi.createToggleController({ documentImpl, storage });
-  windowImpl.sessionToggleState = toggleController;
-  windowImpl.applyToggleStateToNode = (node) => toggleController.applyToNode(node);
+  // Registered so the message-pane afterRender hook (live content-runtime +
+  // export-entry) can re-apply persisted collapse/toggle state to new nodes.
+  sessionRuntime.toggleState = toggleController;
 
   const attachHeaderHandlers = () => toggleController.attachHeaderHandlers();
   const toggleThinking = () => toggleController.toggleThinking();
@@ -54,7 +61,7 @@ export function setupSessionUi({
     clearSearch: () => searchFilterControls.clearAndNavigateBottom(),
     toggleThinking,
     toggleToolsVisibility,
-    toggleToolOutputs
+    toggleToolOutputs,
   });
 
   return {
@@ -64,11 +71,11 @@ export function setupSessionUi({
     attachHeaderHandlers,
     toggleController,
     // The right-sidebar chrome (scratchpad/resize/tabs) lives in <RightSidebar>,
-    // which exposes its controls on window.__piRightSidebar. Read lazily so the
-    // calls resolve against the mounted component.
-    toggleRightSidebar: () => windowImpl.__piRightSidebar?.toggle(),
-    openRightSidebar: () => windowImpl.__piRightSidebar?.open(),
-    collapseRightSidebar: () => windowImpl.__piRightSidebar?.collapse(),
-    activateRightTab: (pane) => windowImpl.__piRightSidebar?.activateTab(pane),
+    // which registers its controls in sessionRuntime.rightSidebar. Read lazily so
+    // the calls resolve against the mounted component.
+    toggleRightSidebar: () => sessionRuntime.rightSidebar?.toggle(),
+    openRightSidebar: () => sessionRuntime.rightSidebar?.open(),
+    collapseRightSidebar: () => sessionRuntime.rightSidebar?.collapse(),
+    activateRightTab: (pane) => sessionRuntime.rightSidebar?.activateTab(pane),
   };
 }

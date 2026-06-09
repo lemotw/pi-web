@@ -4,7 +4,8 @@ import { t } from '../shared/i18n.js';
 export const layoutStorageKey = 'pi-sessions:view-layout';
 export const collapsedProjectsStorageKey = 'pi-sessions:collapsed-projects';
 
-export const sessionsCountLabel = (n) => (n === 1 ? t('index.sessionCountOne') : t('index.sessionsCount', { count: n }));
+export const sessionsCountLabel = (n) =>
+  n === 1 ? t('index.sessionCountOne') : t('index.sessionsCount', { count: n });
 
 export function normalizeSession(raw = {}) {
   return {
@@ -33,8 +34,12 @@ export function formatRelativeTime(timestamp, now = Date.now()) {
   if (Number.isNaN(date.getTime())) return '';
   const seconds = Math.max(0, Math.floor((now - date.getTime()) / 1000));
   const units = [
-    ['year', 31536000], ['month', 2592000], ['week', 604800],
-    ['day', 86400], ['hour', 3600], ['minute', 60],
+    ['year', 31536000],
+    ['month', 2592000],
+    ['week', 604800],
+    ['day', 86400],
+    ['hour', 3600],
+    ['minute', 60],
   ];
   for (const [name, size] of units) {
     const count = Math.floor(seconds / size);
@@ -54,8 +59,12 @@ export function sessionSearchText(session = {}) {
 
 export function formatRunningModel(status) {
   if (!status || typeof status !== 'object') return '';
-  const model = typeof status.modelName === 'string' && status.modelName ? status.modelName
-    : typeof status.model === 'string' ? status.model : '';
+  const model =
+    typeof status.modelName === 'string' && status.modelName
+      ? status.modelName
+      : typeof status.model === 'string'
+        ? status.model
+        : '';
   const provider = typeof status.modelProvider === 'string' ? status.modelProvider : '';
   if (model && provider) return `${provider}/${model}`;
   return model || provider;
@@ -76,7 +85,7 @@ export function groupSessionsByProject(sessions = []) {
     group.latest = Math.max(group.latest, activityMs(session));
   }
   groups.forEach((group) => group.sessions.sort((a, b) => activityMs(b) - activityMs(a)));
-  groups.sort((a, b) => (b.latest - a.latest) || (a.index - b.index));
+  groups.sort((a, b) => b.latest - a.latest || a.index - b.index);
   return groups;
 }
 
@@ -96,13 +105,25 @@ export function groupSessionsTimeline(sessions = []) {
 }
 
 export function filterSessions(sessions = [], query = '') {
-  const q = String(query || '').trim().toLowerCase();
+  const q = String(query || '')
+    .trim()
+    .toLowerCase();
   if (!q) return sessions;
   return sessions.filter((session) => sessionSearchText(session).toLowerCase().includes(q));
 }
 
-export function defaultFetchSessions() { return getJSON('/api/sessions'); }
-export function defaultFetchRecent() { return getJSON('/api/recent-locations'); }
-export function defaultCreateSession(path) { return postJSON('/api/new-session', { path }); }
-export function defaultFetchProjects() { return getJSON('/api/projects'); }
-export function defaultUpdateProject(path, action) { return postJSON('/api/projects', { path, action }); }
+export function defaultFetchSessions() {
+  return getJSON('/api/sessions');
+}
+export function defaultFetchRecent() {
+  return getJSON('/api/recent-locations');
+}
+export function defaultCreateSession(path) {
+  return postJSON('/api/new-session', { path });
+}
+export function defaultFetchProjects() {
+  return getJSON('/api/projects');
+}
+export function defaultUpdateProject(path, action) {
+  return postJSON('/api/projects', { path, action });
+}

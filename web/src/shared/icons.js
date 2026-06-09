@@ -40,6 +40,7 @@ import {
   Settings,
   Share2,
   Snowflake,
+  Square,
   SquarePen,
   Sun,
   Tag,
@@ -80,13 +81,14 @@ export function icon(node, { size = 16, class: className = '', strokeWidth } = {
   };
   if (strokeWidth != null) attrs['stroke-width'] = String(strokeWidth);
   if (className) attrs.class = className;
-  const children = node
-    .map(([tag, childAttrs]) => `<${tag} ${attrString(childAttrs)} />`)
-    .join('');
+  const children = node.map(([tag, childAttrs]) => `<${tag} ${attrString(childAttrs)} />`).join('');
   return `<svg ${attrString(attrs)}>${children}</svg>`;
 }
 
-export function iconNode(node, { size = 16, class: className = '', strokeWidth, documentImpl = document } = {}) {
+export function iconNode(
+  node,
+  { size = 16, class: className = '', strokeWidth, documentImpl = document } = {},
+) {
   const svg = documentImpl.createElementNS('http://www.w3.org/2000/svg', 'svg');
   const attrs = {
     ...DEFAULT_ATTRS,
@@ -107,7 +109,9 @@ export function iconNode(node, { size = 16, class: className = '', strokeWidth, 
 
 export function setIconElement(el, node, opts = {}) {
   if (!el) return;
-  el.replaceChildren(iconNode(node, { ...opts, documentImpl: opts.documentImpl || el.ownerDocument || document }));
+  el.replaceChildren(
+    iconNode(node, { ...opts, documentImpl: opts.documentImpl || el.ownerDocument || document }),
+  );
 }
 
 // Theme -> Lucide icon. Keep this in sync with the inlined theme-icon SVGs in
@@ -164,6 +168,7 @@ export {
   Settings,
   Share2,
   Snowflake,
+  Square,
   SquarePen,
   Sun,
   Tag,

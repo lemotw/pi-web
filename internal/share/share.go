@@ -124,7 +124,7 @@ func Handle(w http.ResponseWriter, r *http.Request, deps Dependencies) {
 		return
 	}
 	defer os.RemoveAll(tmpDir)
-	tmpFile := filepath.Join(tmpDir, "session.html")
+	tmpFile := filepath.Join(tmpDir, "share-session.html")
 	if err := os.WriteFile(tmpFile, []byte(html), 0644); err != nil {
 		writeJSONError(w, http.StatusInternalServerError, "failed to write temp file: "+err.Error())
 		return

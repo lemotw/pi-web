@@ -14,7 +14,6 @@
 
   // Re-run post-render side effects whenever the rendered path changes.
   $effect(() => {
-    // eslint-disable-next-line no-unused-expressions
     model.activePath;
     if (containerEl && typeof afterRender === 'function') {
       afterRender(containerEl);

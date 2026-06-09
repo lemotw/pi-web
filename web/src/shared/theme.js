@@ -22,18 +22,23 @@ export function applyTheme(windowImpl, documentImpl, next) {
   next = next || 'dark';
   documentImpl.documentElement.dataset.theme = next;
   writeSetting('pi-web-theme', next, { storage: windowImpl.localStorage });
-  try { documentImpl.cookie = 'pi-web-theme=' + next + ';path=/;SameSite=Lax;max-age=31536000'; } catch (e) {}
+  try {
+    documentImpl.cookie = 'pi-web-theme=' + next + ';path=/;SameSite=Lax;max-age=31536000';
+  } catch (e) {}
 
-  const wco = !!(windowImpl.navigator
-    && windowImpl.navigator.windowControlsOverlay
-    && windowImpl.navigator.windowControlsOverlay.visible);
+  const wco = !!(
+    windowImpl.navigator &&
+    windowImpl.navigator.windowControlsOverlay &&
+    windowImpl.navigator.windowControlsOverlay.visible
+  );
   // Built-in themes have a hardcoded background; the user-defined custom theme
   // (loaded via /custom-themes.css) instead exposes its background through the
   // --body-bg CSS variable, so read it back after the data-theme switch.
-  const color = (wco ? CHROME_BGS : BODY_BGS)[next]
-    || readThemeBg(windowImpl, documentImpl)
-    || BODY_BGS.dark;
-  try { documentImpl.documentElement.style.backgroundColor = color; } catch (e) {}
+  const color =
+    (wco ? CHROME_BGS : BODY_BGS)[next] || readThemeBg(windowImpl, documentImpl) || BODY_BGS.dark;
+  try {
+    documentImpl.documentElement.style.backgroundColor = color;
+  } catch (e) {}
   const meta = documentImpl.querySelector('meta[name="theme-color"]');
   if (meta) meta.content = color;
 }

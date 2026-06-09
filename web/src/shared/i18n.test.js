@@ -3,7 +3,6 @@ import {
   t,
   getLocale,
   availableLocales,
-  registerCustomLocales,
   readCustomLanguages,
   englishTemplate,
   resetI18n,
@@ -43,7 +42,9 @@ describe('i18n', () => {
   it('registers and uses a custom locale from the setting', () => {
     localStorage.setItem(
       CUSTOM_LANGUAGES_KEY,
-      JSON.stringify([{ code: 'pt', label: 'Português', strings: { 'settings.title': 'Definições' } }]),
+      JSON.stringify([
+        { code: 'pt', label: 'Português', strings: { 'settings.title': 'Definições' } },
+      ]),
     );
     localStorage.setItem(LOCALE_KEY, 'pt');
     resetI18n();

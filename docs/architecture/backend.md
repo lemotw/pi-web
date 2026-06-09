@@ -9,22 +9,25 @@ pi-web/
 ├── web/
 │   └── assets_embed.go         # Embeds Vite build output from web/dist
 ├── internal/
+│   ├── agentdir/
+│   │   └── agentdir.go         # Resolve ~/.pi/agent dir + the paths pi-web stores under it
 │   ├── app/
 │   │   ├── app.go              # CLI flags, dependency wiring, HTTP mux setup
 │   │   ├── network.go          # Bind host / loopback helpers
 │   │   ├── tailscale.go        # Tailscale Serve detection/configuration
 │   │   ├── models_cache.go     # Process-wide coalesced cache for model list
+│   │   ├── browser.go          # Open the default browser at startup
+│   │   ├── sounds.go           # Seed default notification sounds into the agent dir
 │   │   ├── update.go           # runInstall / runRestart for self-update
 │   │   └── state_file_*.go     # pi-web-state.json + flock helpers
 │   ├── frontend/
 │   │   └── assets.go           # Vite manifest parsing + static asset handlers
 │   ├── ui/
-│   │   ├── session_page.go     # Live session renderer
+│   │   ├── spa_page.go         # Live SPA shell renderer (RenderAppShell)
+│   │   ├── app_script.go       # SPA Vite module URL path + script tag
+│   │   ├── session_page.go     # Session page data prep (bootstrap base64 + CSS)
+│   │   ├── live_page.go        # Live document shell + theme/font providers
 │   │   ├── export.go           # Static export renderer
-│   │   ├── index_template.go   # Index page template + helpers
-│   │   ├── live_page.go        # Live page shell rendering helpers
-│   │   ├── live_menu.go        # Command/theme menu rendering
-│   │   ├── palette.go          # Session-list palette rendering
 │   │   ├── auth_page.go        # Auth/token entry page
 │   │   ├── pwa.go              # PWA routes: manifest, sw.js, icons, css, cat.webm
 │   │   └── embedded/     # Embedded HTML/CSS/assets (shells, styles, export/)
@@ -32,6 +35,8 @@ pi-web/
 │   │   └── auth.go             # Token-based HTTP middleware
 │   ├── chat/
 │   │   └── request.go          # Multipart chat request parser (text + images)
+│   ├── files/
+│   │   └── files.go            # Bounded read-only dir listing for @mention autocomplete
 │   ├── render/
 │   │   ├── assets.go           # Vite manifest parsing helpers
 │   │   └── json.go             # WriteJSON / WriteJSONError helpers
@@ -43,13 +48,20 @@ pi-web/
 │   │   ├── client.go           # JSONL RPC command builders
 │   │   ├── worker.go           # pi --mode rpc subprocess worker
 │   │   ├── stream.go           # SSE chat-preview stream accumulator
+│   │   ├── prompt.go           # OneShotPrompt: spawn pi for a single prompt (auto-title)
 │   │   └── oneshot.go          # One-shot RPC for model enumeration
 │   ├── server/
-│   │   ├── server.go           # Server type, deps, SSE registry, SQLite open
+│   │   ├── server.go           # Server type, deps, SSE registry, route registration, SQLite open
 │   │   ├── handlers.go         # index, session, api/session(s), new, fork/clone, rename, locations, models, custom-themes
-│   │   ├── chat.go             # Chat, set-model, set-thinking, worker-status handlers
+│   │   ├── chat.go             # Chat, set-model, set-thinking, worker-status, commands handlers
 │   │   ├── new_session.go      # New-session creation logic
 │   │   ├── git.go              # /api/git/info, /api/git/rename-branch handlers
+│   │   ├── files.go            # /api/files handler + per-cwd file-walk cache
+│   │   ├── settings.go         # Server-backed user settings (/api/settings) + SPA shell helpers
+│   │   ├── btw.go              # btw scratch-chat registry: get/new + legacy migration (SQLite)
+│   │   ├── auto_title.go       # Auto-title sessions via OneShotPrompt; guards against clobbering user names
+│   │   ├── auto_title_heuristic.go # Heuristic fallback title from first user message
+│   │   ├── metrics.go          # /metrics + /api/metrics + pprof registration (gopsutil sampler)
 │   │   ├── scratchpad.go       # Per-project scratchpad get/save (SQLite)
 │   │   ├── annotations.go      # Per-session review annotations: list/create/delete + SSE snapshot (SQLite)
 │   │   ├── projects.go         # Project visibility prefs: list/toggle/register + index filtering (SQLite)
@@ -57,13 +69,15 @@ pi-web/
 │   │   ├── push.go             # PushManager: VAPID, subscribe/unsubscribe, NotifyDone
 │   │   ├── update.go           # /api/version, check-update, update, restart handlers
 │   │   ├── events.go           # SSE endpoint (/events)
+│   │   ├── sse_format.go       # SSE event framing helper
 │   │   ├── share.go            # Share handler adapter
 │   │   ├── watcher.go          # fsnotify + polling file watcher
 │   │   ├── status.go           # Running-status computation logic
 │   │   ├── status_sweeper.go   # Periodic status revalidation
 │   │   └── status_watcher.go   # fsnotify on session-status/ dir
 │   ├── sessions/
-│   │   ├── session.go          # Session struct, ParseFile, LoadAll, CreateSessionFile, RenameSession
+│   │   ├── session.go          # Session/SessionSummary structs, ParseFile, LoadAll, CreateSessionFile, RenameSession, fork/clone
+│   │   ├── title.go            # ReadTitleInputs: extract auto-title source text from a session
 │   │   ├── cache.go            # Modtime-aware session cache
 │   │   └── lookup.go           # Resolve session by ID
 │   ├── share/
@@ -94,14 +108,13 @@ type Server struct {
     auth          *auth.Middleware
     shareRunner   shareCmdRunner  // overridable in tests
     now           func() time.Time
-    renderIndex         func(w io.Writer, summaries []sessions.SessionSummary) error
-    renderLiveSession   func(s sessions.Session) string
     renderExportSession func(s sessions.Session, theme string) string
+    renderAppShell      func(w io.Writer, bootstrap string) error
     models              func(ctx context.Context) (json.RawMessage, error)
     lastKnown     map[string]struct{} // sessions currently broadcast as running
     lastKnownMu   sync.Mutex
     push          *PushManager    // web-push subscriptions + done notifications
-    db            *sql.DB         // SQLite (~/.pi/agent/pi-web.sqlite) for scratchpads
+    db            *sql.DB         // SQLite (~/.pi/agent/pi-web.sqlite)
     updater       *updater.Checker // optional; nil disables /api/version etc.
     runInstall    func(ctx context.Context) error // optional self-update install
     runRestart    func() error                    // optional self-update restart
@@ -109,45 +122,67 @@ type Server struct {
     stopCh        chan struct{}
     stopOnce      sync.Once
     wg            sync.WaitGroup
+
+    fileWalk     *fileWalkCache  // bounded dir-listing cache for @mention autocomplete
+    fileWalkOnce sync.Once
+
+    startedAt      time.Time      // process uptime for the metrics dashboard
+    metricsSampler processSampler // swappable in tests
+    metricsCPUMu   sync.Mutex
+    metricsCPULast map[int]cpuMark // per-PID CPU baselines for delta %CPU
+
+    titleMu        sync.Mutex             // auto-title bookkeeping (see auto_title.go)
+    titleInFlight  map[string]bool
+    titledName     map[string]string      // sessID -> title pi-web last set
+    titledCount    map[string]int         // sessID -> user-msg count at last titling
+    titleUserOwned map[string]bool        // sessID -> user named it; never auto-title
 }
 ```
 
-`Deps` (passed to `New`) supplies everything wired from `internal/app`: renderers,
-`Models`, `Cache`, `Auth`, `ChatSender`, plus the optional `Updater`, `RunInstall`,
-and `RunRestart`. When `Updater` is nil the version/update routes are not registered;
-when `RunInstall`/`RunRestart` are nil the corresponding endpoints respond `503`.
+`Deps` (passed to `New`) supplies everything wired from `internal/app`: the
+`RenderExportSession` and `RenderAppShell` renderers, `Models`, `Cache`, `Auth`,
+`ChatSender`, plus the optional `Updater`, `RunInstall`, and `RunRestart`. When
+`Updater` is nil the version/update routes are not registered; when
+`RunInstall`/`RunRestart` are nil the corresponding endpoints respond `503`.
 
 On `New`, the server opens (and migrates) a SQLite database at
-`~/.pi/agent/pi-web.sqlite` — a `scratchpads` table keyed by project path, a
-`project_prefs` table recording which projects are enabled, an `app_settings`
-key/value table holding the project-filter master switch (default off), and an
-`annotations` table holding per-session review notes (keyed by session id; see
-`annotations.go`). See `projects.go`. The pool is capped to a single connection
-(`SetMaxOpenConns(1)`) so concurrent writers queue instead of failing with
-"database is locked". A `PushManager` (when configured) persists web-push
+`~/.pi/agent/pi-web.sqlite` with six tables: `scratchpads` (per project path),
+`settings` (server-backed user settings key/value), `project_prefs` (which
+projects are enabled), `app_settings` (the project-filter master switch, default
+off), `btw_sessions` (the btw scratch-chat registry), and `annotations`
+(per-session review notes keyed by session id; see `annotations.go`). See
+`projects.go`, `settings.go`, and `btw.go`. The pool is capped to a single
+connection (`SetMaxOpenConns(1)`) so concurrent writers queue instead of failing
+with "database is locked". A `PushManager` (when configured) persists web-push
 subscriptions and VAPID keys under the agent dir.
 
 ### `sessions.Session`
 
-The domain model for a session file.
+The domain model for a session file. The scalar fields live on `SessionSummary`
+(reused for the index, where entries aren't parsed); `Session` embeds it and adds
+the full header + entries.
 
 ```go
-type Session struct {
+type SessionSummary struct {
     ID                 string
-    Filename           string
     SessionUUID        string
+    Filename           string
     Project            string
     LastActivity       string
     Name               string
     MessageCount       int
     TokenTotal         int
     CostTotal          float64
-    Model              string                // last-known model from messages or model_change
-    ModelProvider      string                // provider for the last-known model
-    Header             map[string]any        // type=="session" line
-    Entries            []map[string]any      // all JSONL lines
+    Model              string  // last-known model from messages or model_change
+    ModelProvider      string  // provider for the last-known model
     ChatAvailable      bool
     ChatDisabledReason string
+}
+
+type Session struct {
+    SessionSummary
+    Header  map[string]any   // type=="session" line
+    Entries []map[string]any // all JSONL lines
 }
 ```
 
@@ -159,6 +194,7 @@ Manages `pi --mode rpc` subprocesses per session.
 type Manager struct {
     mu         sync.Mutex
     workers    map[string]ChatWorker  // sessionID → worker
+    creating   map[string]*createCall // single-flight: coalesce concurrent creates per session
     factory    Factory                // (sessionID, sessionPath) → ChatWorker
     idleTTL    time.Duration          // default 10m
     reaperStop chan struct{}
@@ -180,6 +216,7 @@ type piRPCWorker struct {
     mu                   sync.Mutex
     writeMu              sync.Mutex
     sessionPath          string
+    startedAt            time.Time // process start; feeds metrics uptime
     cmd                  *exec.Cmd
     stdin                io.WriteCloser
     status               workers.WorkerStatus
@@ -189,6 +226,8 @@ type piRPCWorker struct {
     currentProvider      string
     currentThinkingLevel string
     stderrBuf            *strings.Builder
+    commands             []workers.SlashCommand // cached get_commands result
+    commandsCached       bool
     lastActive           atomic.Int64 // unix nanos; user-initiated actions
     lastStreamActivity   atomic.Int64 // unix nanos; stream events keep worker visually running
     streamSink           StreamEventSink
@@ -202,6 +241,8 @@ type piRPCWorker struct {
 |-------|--------|---------|-------------|
 | `/` | GET | `handleIndex` | Render SPA shell for the sessions route |
 | `/session` | GET | `handleSession` | Render SPA shell for the session route |
+| `/settings` | GET | `handleSettingsPage` | Render SPA shell for the settings route |
+| `/login` | GET | `handleAppShell` | Render SPA shell for the login route |
 | `/api/session` | GET | `handleApiSession` | JSON session data |
 | `/api/sessions` | GET | `handleApiSessions` | JSON list of session summaries |
 | `/api/chat` | POST | `handleChat` | Send chat message (multipart) |
@@ -210,6 +251,7 @@ type piRPCWorker struct {
 | `/api/set-thinking-level` | POST | `handleSetThinkingLevel` | Change thinking level |
 | `/api/models` | GET | `handleAvailableModels` | List available AI models |
 | `/api/worker-status` | GET | `handleWorkerStatus` | Get worker state for session |
+| `/api/commands` | GET | `handleCommands` | List slash commands exposed by the session worker |
 | `/metrics` | GET | `handleMetricsPage` | Worker metrics dashboard (self-contained HTML) |
 | `/api/metrics` | GET | `handleMetrics` | JSON snapshot: process + per-worker CPU/RSS (gopsutil); see `docs/dev/metrics-dashboard.md` |
 | `/api/debug/pprof/` | GET | `pprof.Index` (+ cmdline/profile/symbol/trace) | Go runtime profiler, auth-gated (`/api`-stripped before Index) |
@@ -219,11 +261,16 @@ type piRPCWorker struct {
 | `/api/fork-session` | POST | `handleApiForkSession` | Fork a session into a new file |
 | `/api/clone-session` | POST | `handleApiCloneSession` | Clone a session into a new file |
 | `/api/rename-session` | POST | `handleRenameSession` | Append `session_info` rename metadata |
+| `/api/label-session` | POST | `handleLabelSessionEntry` | Append a label to a session entry |
 | `/api/recent-locations` | GET | `handleRecentLocations` | List known project paths |
+| `/api/files` | GET | `handleApiFiles` | Bounded file listing for @mention autocomplete |
 | `/api/git/info` | GET | `handleGitInfo` | Branch / dirty / PR-URL info for a project |
 | `/api/git/rename-branch` | POST | `handleGitRenameBranch` | Rename the current git branch |
 | `/api/scratchpad` | GET/POST | `handleGetScratchpad` / `handleSaveScratchpad` | Per-project scratchpad (SQLite) |
 | `/api/annotations` | GET/POST/DELETE | `handleAnnotations` | Per-session review annotations; mutations broadcast an `annotations` SSE snapshot (SQLite) |
+| `/api/settings` | GET/POST | `handleGetSettings` / `handleSaveSettings` | Server-backed user settings (SQLite) |
+| `/api/btw` | GET | `handleGetBtw` | Resolve the btw scratch-chat session for a parent (SQLite) |
+| `/api/btw/new` | POST | `handleNewBtw` | Create a new btw scratch-chat session (SQLite) |
 | `/api/projects` | GET/POST | `handleApiProjects` / `handleUpdateProject` | List projects + filter state; enable/disable/register/remove, bulk enable-all/disable-all, enable-filter/disable-filter (SQLite) |
 | `/api/sounds` | GET | `handleApiSounds` | List available notification sounds |
 | `/sounds/` | GET | `handleSounds` | Serve a sound asset (no auth) |

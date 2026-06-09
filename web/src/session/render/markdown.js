@@ -1,4 +1,5 @@
-export const strictStrikethroughRegex = /^(~~)(?=[^\s~])((?:\\.|[^\\])*?(?:\\.|[^\s~\\]))\1(?=[^~]|$)/;
+export const strictStrikethroughRegex =
+  /^(~~)(?=[^\s~])((?:\\.|[^\\])*?(?:\\.|[^\s~\\]))\1(?=[^~]|$)/;
 
 export function configureSessionMarkdown({ marked, hljs, escapeHtml }) {
   marked.use({
@@ -18,9 +19,9 @@ export function configureSessionMarkdown({ marked, hljs, escapeHtml }) {
           type: 'del',
           raw: match[0],
           text: match[2],
-          tokens: this.lexer.inlineTokens(match[2])
+          tokens: this.lexer.inlineTokens(match[2]),
         };
-      }
+      },
     },
     renderer: {
       link(token) {
@@ -53,11 +54,17 @@ export function configureSessionMarkdown({ marked, hljs, escapeHtml }) {
         if (hljs) {
           let highlighted;
           if (lang && hljs.getLanguage(lang)) {
-            try { highlighted = hljs.highlight(code, { language: lang }).value; }
-            catch { highlighted = escapeHtml(code); }
+            try {
+              highlighted = hljs.highlight(code, { language: lang }).value;
+            } catch {
+              highlighted = escapeHtml(code);
+            }
           } else {
-            try { highlighted = hljs.highlightAuto(code).value; }
-            catch { highlighted = escapeHtml(code); }
+            try {
+              highlighted = hljs.highlightAuto(code).value;
+            } catch {
+              highlighted = escapeHtml(code);
+            }
           }
           return `<pre><code class="hljs">${highlighted}</code></pre>`;
         }
@@ -67,8 +74,8 @@ export function configureSessionMarkdown({ marked, hljs, escapeHtml }) {
       },
       codespan(token) {
         return `<code>${escapeHtml(token.text)}</code>`;
-      }
-    }
+      },
+    },
   });
 }
 

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { setupThinkingLevelSelector } from './ChatComposer.svelte';
+import { setupThinkingLevelSelector } from './chat/thinking-selector.js';
 
 function createDom() {
   const div = document.createElement('div');
@@ -211,22 +211,31 @@ describe('setupThinkingLevelSelector', () => {
     it('serializes rapid cycles so the backend observes the final UI order', async () => {
       const el = createDom();
       let resolveFirst;
-      const firstDeferred = new Promise((r) => { resolveFirst = r; });
+      const firstDeferred = new Promise((r) => {
+        resolveFirst = r;
+      });
 
       const chatApi = {
-        setThinkingLevel: vi.fn()
-          .mockImplementationOnce(() => firstDeferred.then(() => ({
-            ok: true,
-            json: () => Promise.resolve({ thinkingLevel: 'minimal' }),
-          })))
-          .mockImplementationOnce(() => Promise.resolve({
-            ok: true,
-            json: () => Promise.resolve({ thinkingLevel: 'low' }),
-          })),
+        setThinkingLevel: vi
+          .fn()
+          .mockImplementationOnce(() =>
+            firstDeferred.then(() => ({
+              ok: true,
+              json: () => Promise.resolve({ thinkingLevel: 'minimal' }),
+            })),
+          )
+          .mockImplementationOnce(() =>
+            Promise.resolve({
+              ok: true,
+              json: () => Promise.resolve({ thinkingLevel: 'low' }),
+            }),
+          ),
       };
 
       let knownThinkingLevel = 'off';
-      const setKnownThinkingLevel = vi.fn((level) => { knownThinkingLevel = level; });
+      const setKnownThinkingLevel = vi.fn((level) => {
+        knownThinkingLevel = level;
+      });
       const setThinkingLabel = vi.fn();
       const setChatStatus = vi.fn();
 
@@ -258,7 +267,8 @@ describe('setupThinkingLevelSelector', () => {
 
       expect(chatApi.setThinkingLevel).toHaveBeenCalledTimes(2);
       expect(chatApi.setThinkingLevel).toHaveBeenNthCalledWith(2, 's', 'low');
-      const lastCall = setKnownThinkingLevel.mock.calls[setKnownThinkingLevel.mock.calls.length - 1][0];
+      const lastCall =
+        setKnownThinkingLevel.mock.calls[setKnownThinkingLevel.mock.calls.length - 1][0];
       expect(lastCall).toBe('low');
 
       cleanupDom(el);
@@ -274,7 +284,9 @@ describe('setupThinkingLevelSelector', () => {
       };
 
       let knownThinkingLevel = 'off';
-      const setKnownThinkingLevel = vi.fn((level) => { knownThinkingLevel = level; });
+      const setKnownThinkingLevel = vi.fn((level) => {
+        knownThinkingLevel = level;
+      });
       const setThinkingLabel = vi.fn();
       const setChatStatus = vi.fn();
 
@@ -293,7 +305,8 @@ describe('setupThinkingLevelSelector', () => {
       expect(chatApi.setThinkingLevel).toHaveBeenCalledTimes(1);
       expect(setKnownThinkingLevel).toHaveBeenCalledWith('minimal');
       expect(setKnownThinkingLevel).toHaveBeenCalledWith('low');
-      const lastKnown = setKnownThinkingLevel.mock.calls[setKnownThinkingLevel.mock.calls.length - 1][0];
+      const lastKnown =
+        setKnownThinkingLevel.mock.calls[setKnownThinkingLevel.mock.calls.length - 1][0];
       const lastLabel = setThinkingLabel.mock.calls[setThinkingLabel.mock.calls.length - 1][0];
       expect(lastKnown).toBe('off');
       expect(lastLabel).toBe('off');
@@ -305,21 +318,30 @@ describe('setupThinkingLevelSelector', () => {
     it('manual picker selection invalidates pending cycle UI updates', async () => {
       const el = createDom();
       let resolveFirst;
-      const firstDeferred = new Promise((r) => { resolveFirst = r; });
+      const firstDeferred = new Promise((r) => {
+        resolveFirst = r;
+      });
       const chatApi = {
-        setThinkingLevel: vi.fn()
-          .mockImplementationOnce(() => firstDeferred.then(() => ({
-            ok: true,
-            json: () => Promise.resolve({ thinkingLevel: 'minimal' }),
-          })))
-          .mockImplementationOnce(() => Promise.resolve({
-            ok: true,
-            json: () => Promise.resolve({ thinkingLevel: 'high' }),
-          })),
+        setThinkingLevel: vi
+          .fn()
+          .mockImplementationOnce(() =>
+            firstDeferred.then(() => ({
+              ok: true,
+              json: () => Promise.resolve({ thinkingLevel: 'minimal' }),
+            })),
+          )
+          .mockImplementationOnce(() =>
+            Promise.resolve({
+              ok: true,
+              json: () => Promise.resolve({ thinkingLevel: 'high' }),
+            }),
+          ),
       };
 
       let knownThinkingLevel = 'off';
-      const setKnownThinkingLevel = vi.fn((level) => { knownThinkingLevel = level; });
+      const setKnownThinkingLevel = vi.fn((level) => {
+        knownThinkingLevel = level;
+      });
       const setThinkingLabel = vi.fn();
 
       const api = setupThinkingLevelSelector({
@@ -349,7 +371,8 @@ describe('setupThinkingLevelSelector', () => {
 
       expect(chatApi.setThinkingLevel).toHaveBeenCalledTimes(2);
       expect(chatApi.setThinkingLevel).toHaveBeenNthCalledWith(2, 's', 'high');
-      const lastKnown = setKnownThinkingLevel.mock.calls[setKnownThinkingLevel.mock.calls.length - 1][0];
+      const lastKnown =
+        setKnownThinkingLevel.mock.calls[setKnownThinkingLevel.mock.calls.length - 1][0];
       const lastLabel = setThinkingLabel.mock.calls[setThinkingLabel.mock.calls.length - 1][0];
       expect(lastKnown).toBe('high');
       expect(lastLabel).toBe('high');
@@ -367,7 +390,9 @@ describe('setupThinkingLevelSelector', () => {
       };
 
       let knownThinkingLevel = 'off';
-      const setKnownThinkingLevel = vi.fn((level) => { knownThinkingLevel = level; });
+      const setKnownThinkingLevel = vi.fn((level) => {
+        knownThinkingLevel = level;
+      });
       const setThinkingLabel = vi.fn();
       const setChatStatus = vi.fn();
 
@@ -395,7 +420,8 @@ describe('setupThinkingLevelSelector', () => {
 
       expect(chatApi.setThinkingLevel).toHaveBeenCalledTimes(1);
       expect(chatApi.setThinkingLevel).toHaveBeenCalledWith('s', 'high');
-      const lastKnown = setKnownThinkingLevel.mock.calls[setKnownThinkingLevel.mock.calls.length - 1][0];
+      const lastKnown =
+        setKnownThinkingLevel.mock.calls[setKnownThinkingLevel.mock.calls.length - 1][0];
       const lastLabel = setThinkingLabel.mock.calls[setThinkingLabel.mock.calls.length - 1][0];
       expect(lastKnown).toBe('off');
       expect(lastLabel).toBe('off');

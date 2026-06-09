@@ -5,7 +5,9 @@ import { createSessionNavigator } from './session-navigation.js';
 // message DOM reactively from the model, so these tests cover state updates and
 // scrolling, not DOM building. setTimeoutImpl runs the immediate (delay 0)
 // callback synchronously but defers the 2s highlight-removal timer.
-const runImmediate = (fn, delay) => { if (!delay) fn(); };
+const runImmediate = (fn, delay) => {
+  if (!delay) fn();
+};
 
 describe('session navigator (nav + scroll)', () => {
   it('updates the active leaf/target and refreshes the tree', () => {

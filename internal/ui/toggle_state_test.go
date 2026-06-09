@@ -35,7 +35,7 @@ func TestSessionToggleButtonsReflectPersistedActiveState(t *testing.T) {
 			"btn.classList.toggle('active', isActive);",
 			"btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');",
 		},
-		runnerSrc: {"windowImpl.sessionToggleState = toggleController;"},
+		runnerSrc: {"sessionRuntime.toggleState = toggleController;"},
 		headerSrc: {`data-action="toggle-tool-output"`, "show/hide thinking"},
 	}
 	for src, checks := range srcChecks {
@@ -53,9 +53,9 @@ func TestSessionToggleButtonsReflectPersistedActiveState(t *testing.T) {
 func TestToolsVisibilityAndOutputExpansionAreSeparateStates(t *testing.T) {
 	src := readSrc(t, "web/src/session/ui/toggle-state.js")
 	checks := []string{
-		"node.querySelectorAll('.tool-execution, .compaction').forEach(el => {",
+		"node.querySelectorAll('.tool-execution, .compaction').forEach((el) => {",
 		"el.style.display = state.toolsVisible ? '' : 'none';",
-		"node.querySelectorAll('.tool-output.expandable').forEach(el => {",
+		"node.querySelectorAll('.tool-output.expandable').forEach((el) => {",
 		"el.classList.toggle('expanded', state.toolOutputsExpanded);",
 		"toggleToolsVisibility: () => toggle('toolsVisible'),",
 		"toggleToolOutputs: () => toggle('toolOutputsExpanded'),",
@@ -78,7 +78,7 @@ func TestNavigationReappliesCurrentToggleStateAfterRenderingMessages(t *testing.
 		contentSrc: {"afterRender(containerEl)"},
 		runtimeSrc: {
 			"contentRuntime.afterRender =",
-			"target.applyToggleStateToNode?.(container)",
+			"sessionRuntime.toggleState?.applyToNode(container)",
 		},
 	}
 	for src, checks := range srcChecks {
@@ -103,7 +103,7 @@ func TestLiveReloadEntriesInheritCurrentToggleState(t *testing.T) {
 			"export function applyToggleStateToNode(node, state) {",
 			"const applyToNode = (node) => applyToggleStateToNode(node, state);",
 		},
-		runnerSrc: {"windowImpl.applyToggleStateToNode = (node) => toggleController.applyToNode(node);"},
+		runnerSrc: {"sessionRuntime.toggleState = toggleController;"},
 	}
 	for src, checks := range hookChecks {
 		for _, check := range checks {

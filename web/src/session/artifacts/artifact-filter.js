@@ -5,7 +5,7 @@
  * The registry (artifact-registry.js) always detects *everything*; this module
  * narrows that list down to what the user wants to see:
  *
- *   - `enabled === false` → show nothing (session.js also hides the whole tab).
+ *   - `enabled === false` → show nothing (the Artifacts pane hides itself).
  *   - empty `include` list → show everything (all files + chat snippets).
  *   - non-empty `include` list → keep file artifacts whose path matches a
  *     pattern, and DROP chat snippets (they have no path to match against).
@@ -53,8 +53,11 @@ function globToRegExp(pattern) {
   for (let i = 0; i < pattern.length; i += 1) {
     const ch = pattern[i];
     if (ch === '*') {
-      if (pattern[i + 1] === '*') { re += '.*'; i += 1; } // ** → any chars
-      else re += '[^/]*';                                  // *  → non-slash run
+      if (pattern[i + 1] === '*') {
+        re += '.*';
+        i += 1;
+      } // ** → any chars
+      else re += '[^/]*'; // *  → non-slash run
     } else {
       re += ch.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
     }

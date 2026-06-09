@@ -1,12 +1,8 @@
 <script>
   // Renders the session tree node list + status line from the reactive
   // SessionDataModel. Live-safe (no SSE/fetch) → usable by live and export.
-  // Replaces the imperative render/diff loop in tree-renderer.js: the
-  // {#each model.filteredNodes} block recomputes automatically whenever the
-  // model's entries / filter / active path change — no manual DOM patching.
-  //
-  // Not yet wired into SessionTree.svelte (the live shell) — that cut-over
-  // happens with full e2e verification. See docs/dev/svelte-migration-plan.md.
+  // The {#each model.filteredNodes} block recomputes automatically whenever the
+  // model's entries / filter / active path change.
   import { getSessionModel } from '../../session/session-context.js';
   import { buildTreePrefix } from '../../session/tree/session-tree.js';
   import { getTreeNodeDisplayHtml, escapeHtml } from '../../session/render/session-format.js';
@@ -27,8 +23,8 @@
       escapeHtmlImpl: (text) => escapeHtml(text, { documentImpl: document }),
     });
 
-  // Parity with tree-renderer.js: clicking a node navigates to the NEWEST leaf
-  // under it, while the clicked node becomes the scroll target.
+  // Clicking a node navigates to the NEWEST leaf under it, while the clicked
+  // node becomes the scroll target.
   function navigate(id) {
     if (onNavigate) {
       onNavigate(id);
@@ -37,11 +33,10 @@
     model.navigateTo(model.newestLeaf(id) || id, id);
   }
 
-  // Keep the active node visible when the target changes (parity with the
-  // legacy renderer's scrollIntoView). Depend on currentTargetId so it re-runs
-  // on navigation.
+  // Keep the active node visible when the target changes. Depend on
+  // currentTargetId so it re-runs on navigation.
   $effect(() => {
-    const targetId = model.currentTargetId;
+    void model.currentTargetId;
     if (!containerEl) return;
     const active = containerEl.querySelector('.tree-node.active');
     active?.scrollIntoView?.({ block: 'nearest' });
@@ -60,4 +55,6 @@
     />
   {/each}
 </div>
-<div class="tree-status" id="tree-status">{model.filteredNodes.length} / {model.flatNodes.length} entries</div>
+<div class="tree-status" id="tree-status">
+  {model.filteredNodes.length} / {model.flatNodes.length} entries
+</div>

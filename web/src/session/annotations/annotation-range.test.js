@@ -6,7 +6,7 @@ import {
   getSelectionInfo,
   wrapRange,
   unwrapAll,
-  applyHighlights
+  applyHighlights,
 } from './annotation-range.js';
 
 function domWith(html) {
@@ -74,7 +74,9 @@ describe('wrapRange / unwrapAll', () => {
   it('wraps a range within a single text node', () => {
     const { doc } = domWith('<div id="entry-e1">hello world</div>');
     const anchor = doc.getElementById('entry-e1');
-    expect(wrapRange(anchor, 0, 5, { dataset: { annotationId: 'a1' }, documentImpl: doc })).toBe(true);
+    expect(wrapRange(anchor, 0, 5, { dataset: { annotationId: 'a1' }, documentImpl: doc })).toBe(
+      true,
+    );
     const mark = anchor.querySelector('mark.pi-annotation');
     expect(mark.textContent).toBe('hello');
     expect(mark.dataset.annotationId).toBe('a1');
@@ -101,7 +103,7 @@ describe('wrapRange / unwrapAll', () => {
 describe('applyHighlights', () => {
   const annotations = [
     { id: 'a1', anchorId: 'entry-e1', startOffset: 0, endOffset: 5 },
-    { id: 'a2', anchorId: 'entry-e2', startOffset: 1, endOffset: 3 }
+    { id: 'a2', anchorId: 'entry-e2', startOffset: 1, endOffset: 3 },
   ];
 
   it('applies highlights from offsets across anchors', () => {

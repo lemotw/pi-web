@@ -11,12 +11,22 @@
   let inputEl = $state(null);
   let backdropEl = $state(null);
 
-  function close() { open = false; }
-  function submit(label) { onSave?.({ entryId, label }); close(); }
+  function close() {
+    open = false;
+  }
+  function submit(label) {
+    onSave?.({ entryId, label });
+    close();
+  }
 
   function onKey(e) {
-    if (e.key === 'Escape') { e.preventDefault(); close(); }
-    else if (e.key === 'Enter') { e.preventDefault(); submit(value.trim()); }
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      close();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      submit(value.trim());
+    }
   }
 
   // Initialize the field + focus each time it opens; close on backdrop click
@@ -24,8 +34,13 @@
   $effect(() => {
     if (!open) return;
     value = currentLabel || '';
-    tick().then(() => { inputEl?.focus(); inputEl?.select(); });
-    const onBackdropClick = (e) => { if (e.target === backdropEl) close(); };
+    tick().then(() => {
+      inputEl?.focus();
+      inputEl?.select();
+    });
+    const onBackdropClick = (e) => {
+      if (e.target === backdropEl) close();
+    };
     backdropEl?.addEventListener('click', onBackdropClick);
     return () => backdropEl?.removeEventListener('click', onBackdropClick);
   });
@@ -37,13 +52,30 @@
       <h3 id="label-modal-title">{t('session.labelEntry')}</h3>
       <label class="label-modal-field">
         <span>{t('session.labelInput')}</span>
-        <input id="label-modal-input" type="text" autocomplete="off" spellcheck="false" bind:value bind:this={inputEl} onkeydown={onKey}>
+        <input
+          id="label-modal-input"
+          type="text"
+          autocomplete="off"
+          spellcheck="false"
+          bind:value
+          bind:this={inputEl}
+          onkeydown={onKey}
+        />
       </label>
       <div class="label-modal-actions">
-        <button type="button" class="label-modal-remove" hidden={!currentLabel} onclick={() => submit('')}>{t('session.removeLabel')}</button>
+        <button
+          type="button"
+          class="label-modal-remove"
+          hidden={!currentLabel}
+          onclick={() => submit('')}>{t('session.removeLabel')}</button
+        >
         <span class="label-modal-spacer"></span>
-        <button type="button" class="label-modal-cancel" onclick={close}>{t('common.cancel')}</button>
-        <button type="button" class="label-modal-save" onclick={() => submit(value.trim())}>{t('common.save')}</button>
+        <button type="button" class="label-modal-cancel" onclick={close}
+          >{t('common.cancel')}</button
+        >
+        <button type="button" class="label-modal-save" onclick={() => submit(value.trim())}
+          >{t('common.save')}</button
+        >
       </div>
     </div>
   </div>

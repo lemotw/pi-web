@@ -1,4 +1,7 @@
-export function decodeBase64JSON(base64, { atobImpl = globalThis.atob, TextDecoderImpl = globalThis.TextDecoder } = {}) {
+export function decodeBase64JSON(
+  base64,
+  { atobImpl = globalThis.atob, TextDecoderImpl = globalThis.TextDecoder } = {},
+) {
   if (typeof base64 !== 'string') {
     throw new TypeError('base64 payload must be a string');
   }
@@ -23,7 +26,9 @@ export function readSessionPayload({ documentImpl = document, atobImpl = globalT
 
 export function getSessionSearchParams({ documentImpl = document, windowImpl = window } = {}) {
   const injectedParams = documentImpl.querySelector('meta[name="pi-url-params"]');
-  const searchString = injectedParams ? injectedParams.content : (windowImpl.location?.search || '').replace(/^\?/, '');
+  const searchString = injectedParams
+    ? injectedParams.content
+    : (windowImpl.location?.search || '').replace(/^\?/, '');
   return new URLSearchParams(searchString);
 }
 
@@ -35,7 +40,11 @@ export function buildSessionLookups(entries = []) {
   for (const entry of entries) {
     if (entry?.id) byId.set(entry.id, entry);
 
-    if (entry?.type === 'message' && entry.message?.role === 'assistant' && Array.isArray(entry.message.content)) {
+    if (
+      entry?.type === 'message' &&
+      entry.message?.role === 'assistant' &&
+      Array.isArray(entry.message.content)
+    ) {
       for (const block of entry.message.content) {
         if (block?.type === 'toolCall') {
           toolCallMap.set(block.id, { name: block.name, arguments: block.arguments });
@@ -83,7 +92,7 @@ export function createSessionDataModel(payload, params = new URLSearchParams()) 
     total,
     from,
     truncated,
-    ...buildSessionLookups(entries)
+    ...buildSessionLookups(entries),
   };
 }
 

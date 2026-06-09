@@ -11,16 +11,32 @@ function addShareBtn() {
   return btn;
 }
 
-afterEach(() => { cleanup(); document.getElementById('share-btn')?.remove(); vi.restoreAllMocks(); });
-beforeEach(() => { document.body.innerHTML = ''; });
+afterEach(() => {
+  cleanup();
+  document.getElementById('share-btn')?.remove();
+  vi.restoreAllMocks();
+});
+beforeEach(() => {
+  document.body.innerHTML = '';
+});
 
 describe('ShareDialog', () => {
   it('starts hidden and shows the gist + preview URLs after a successful share', async () => {
     const btn = addShareBtn();
-    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(new Response(
-      JSON.stringify({ gistUrl: 'https://gist.example/abc', previewUrl: 'https://preview.example/abc' }),
-      { status: 200 },
-    ))));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve(
+          new Response(
+            JSON.stringify({
+              gistUrl: 'https://gist.example/abc',
+              previewUrl: 'https://preview.example/abc',
+            }),
+            { status: 200 },
+          ),
+        ),
+      ),
+    );
     render(ShareDialog, { props: { sessionId: 's.jsonl' } });
     await tick();
     expect(document.getElementById('share-overlay').style.display).toBe('none');
@@ -36,9 +52,12 @@ describe('ShareDialog', () => {
 
   it('shows an error state when the share endpoint returns an error', async () => {
     const btn = addShareBtn();
-    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(new Response(
-      JSON.stringify({ error: 'gh not found' }), { status: 200 },
-    ))));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve(new Response(JSON.stringify({ error: 'gh not found' }), { status: 200 })),
+      ),
+    );
     render(ShareDialog, { props: { sessionId: 's.jsonl' } });
     await tick();
 

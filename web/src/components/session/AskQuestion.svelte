@@ -32,7 +32,13 @@
   }
 </script>
 
-<div class="ask-question-card" data-question-count={questions.length} data-needs-submit={needsSubmit}>
+<!-- eslint-disable svelte/no-at-html-tags -- trusted: Lucide icon SVG and rendered session markdown -->
+
+<div
+  class="ask-question-card"
+  data-question-count={questions.length}
+  data-needs-submit={needsSubmit}
+>
   <div class="ask-question-title">Question for you</div>
   {#if questionToolFailed}
     <div class="ask-question-state error">question UI failed</div>
@@ -50,27 +56,42 @@
     <div class="ask-question-text">No question payload provided.</div>
   {/if}
 
-  {#each questions as q, qIndex}
+  {#each questions as q, qIndex (questionTextOf(q, qIndex))}
     {@const questionText = questionTextOf(q, qIndex)}
     {@const answer = answers[questionText]}
     {@const options = Array.isArray(q.options) ? q.options : []}
-    <div class="ask-question-block" data-question-text={questionText} data-multi-select={q && q.multiSelect === true}>
+    <div
+      class="ask-question-block"
+      data-question-text={questionText}
+      data-multi-select={q && q.multiSelect === true}
+    >
       {#if q.header}<div class="ask-question-header">{String(q.header)}</div>{/if}
       <div class="ask-question-text">{questionText}</div>
       {#if options.length > 0}
         <div class="ask-question-options">
-          {#each options as option}
+          {#each options as option, optionIndex (optionIndex)}
             {@const label = optionLabel(option)}
             {@const desc = optionDesc(option)}
             {@const selected = isSelected(answer, label)}
             {#if isInteractive}
-              <button type="button" class="ask-question-option{selected ? ' selected' : ''} ask-question-option-action" data-question={questionText} data-answer={label}>
-                <div class="ask-question-option-label">{#if selected}{@html icon(Check, { size: 13 })} {/if}{label}</div>
+              <button
+                type="button"
+                class="ask-question-option{selected ? ' selected' : ''} ask-question-option-action"
+                data-question={questionText}
+                data-answer={label}
+              >
+                <div class="ask-question-option-label">
+                  {#if selected}{@html icon(Check, { size: 13 })}
+                  {/if}{label}
+                </div>
                 {#if desc}<div class="ask-question-option-desc">{desc}</div>{/if}
               </button>
             {:else}
               <div class="ask-question-option{selected ? ' selected' : ''}">
-                <div class="ask-question-option-label">{#if selected}{@html icon(Check, { size: 13 })} {/if}{label}</div>
+                <div class="ask-question-option-label">
+                  {#if selected}{@html icon(Check, { size: 13 })}
+                  {/if}{label}
+                </div>
                 {#if desc}<div class="ask-question-option-desc">{desc}</div>{/if}
               </div>
             {/if}
@@ -83,13 +104,19 @@
 
   {#if isInteractive}
     {#if needsSubmit}
-      <div class="ask-question-actions" style="display:none"><button type="button" class="ask-question-submit-btn">Send answers</button></div>
+      <div class="ask-question-actions" style="display:none">
+        <button type="button" class="ask-question-submit-btn">Send answers</button>
+      </div>
     {:else if questionToolFailed}
-      <div class="ask-question-hint">Use these options as a fallback — click an option to send your answer to pi.</div>
+      <div class="ask-question-hint">
+        Use these options as a fallback — click an option to send your answer to pi.
+      </div>
     {:else if cancelled}
       <div class="ask-question-hint">Click an option to send your answer to pi.</div>
     {:else if !result || awaitingChatReply}
-      <div class="ask-question-hint">Click an option, or use the chat composer below, to answer this question.</div>
+      <div class="ask-question-hint">
+        Click an option, or use the chat composer below, to answer this question.
+      </div>
     {/if}
   {/if}
 </div>

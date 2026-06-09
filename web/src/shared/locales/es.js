@@ -35,7 +35,8 @@ export default {
   'index.loadingSessions': 'Cargando sesiones…',
   'index.loadingSessionsHint': 'Obteniendo la lista de sesiones más reciente.',
   'index.noSessions': 'No hay sesiones que mostrar',
-  'index.noSessionsHint': 'Habilita proyectos desde el menú (⋯ → Gestionar proyectos) para ver sus sesiones.',
+  'index.noSessionsHint':
+    'Habilita proyectos desde el menú (⋯ → Gestionar proyectos) para ver sus sesiones.',
   'index.noSessionsYet': 'Aún no hay sesiones',
   'index.noSessionsYetHint': 'Inicia una nueva sesión para empezar.',
   'index.importSession': 'Importar sesión',
@@ -118,7 +119,8 @@ export default {
   'composer.searchModels': 'Buscar modelos…',
   'composer.switchModel': 'Cambiar modelo',
   'composer.switchEffort': 'Cambiar esfuerzo',
-  'composer.disabledNotice': 'Esta sesión se puede ver, pero el chat está deshabilitado porque su directorio de trabajo ya no existe.',
+  'composer.disabledNotice':
+    'Esta sesión se puede ver, pero el chat está deshabilitado porque su directorio de trabajo ya no existe.',
   'composer.copyPath': 'Clic para copiar la ruta',
   'composer.focusShortcut': 'Mayús + i para enfocar',
   'composer.cancelRunning': 'Cancelar respuesta en curso',
@@ -134,17 +136,21 @@ export default {
   'settings.interfaceFont': 'Fuente de la interfaz',
   'settings.interfaceFontHint': 'Fuente de la interfaz de la app: menús, listas, encabezados.',
   'settings.contentFont': 'Fuente del contenido',
-  'settings.contentFontHint': 'Fuente para la prosa de los mensajes. El código usa la fuente de código.',
+  'settings.contentFontHint':
+    'Fuente para la prosa de los mensajes. El código usa la fuente de código.',
   'settings.codeFont': 'Fuente del código',
-  'settings.codeFontHint': 'Fuente para código, comandos y salida de herramientas. Monoespaciada por defecto.',
+  'settings.codeFontHint':
+    'Fuente para código, comandos y salida de herramientas. Monoespaciada por defecto.',
   'settings.interfaceFontSize': 'Tamaño de fuente de la interfaz',
   'settings.interfaceFontSizeHint': 'Tamaño del texto de la interfaz (px).',
   'settings.contentFontSize': 'Tamaño de fuente del contenido',
   'settings.contentFontSizeHint': 'Tamaño del texto de los mensajes (px).',
   'settings.fontBuiltIn': 'Integradas',
   'settings.fontInstalled': 'Instaladas',
-  'settings.fontDetectUnsupported': 'Este navegador no puede listar fuentes instaladas. Usa Personalizado… para escribir un nombre.',
-  'settings.fontDetectDenied': 'No se pudieron leer las fuentes instaladas (permiso denegado). Usa Personalizado…',
+  'settings.fontDetectUnsupported':
+    'Este navegador no puede listar fuentes instaladas. Usa Personalizado… para escribir un nombre.',
+  'settings.fontDetectDenied':
+    'No se pudieron leer las fuentes instaladas (permiso denegado). Usa Personalizado…',
   'settings.fontActions': 'Acciones',
   'settings.fontMono': 'Monoespaciada',
   'settings.fontSystem': 'Del sistema',
@@ -157,7 +163,8 @@ export default {
   'settings.language': 'Idioma',
   'settings.languageHint': 'Idioma de la interfaz de la app. Cambiarlo recarga la página.',
   'settings.customLanguages': 'Idiomas personalizados',
-  'settings.customLanguagesHint': 'Añade o sobrescribe idiomas como JSON: una matriz de { "code", "label", "strings": { … } }. Las claves faltantes recurren al inglés. Usa «Copiar claves en inglés» para una plantilla inicial y luego «Guardar y aplicar».',
+  'settings.customLanguagesHint':
+    'Añade o sobrescribe idiomas como JSON: una matriz de { "code", "label", "strings": { … } }. Las claves faltantes recurren al inglés. Usa «Copiar claves en inglés» para una plantilla inicial y luego «Guardar y aplicar».',
   'settings.copyEnglishKeys': 'Copiar claves en inglés',
   'settings.saveApply': 'Guardar y aplicar',
 
@@ -167,28 +174,34 @@ export default {
   'settings.defaultLayout': 'Disposición predeterminada',
   'settings.defaultLayoutHint': 'Cómo se agrupa la lista de sesiones al cargar.',
   'settings.showBtw': 'Mostrar chats btw en la lista',
-  'settings.showBtwHint': 'Incluye los chats temporales btw en la lista de sesiones. Ocultos por defecto.',
+  'settings.showBtwHint':
+    'Incluye los chats temporales btw en la lista de sesiones. Ocultos por defecto.',
 
   'settings.sessionTitles': 'Títulos de sesión',
   'settings.autoTitle': 'Generar títulos automáticamente',
-  'settings.autoTitleHint': 'Deja que pi-web nombre las sesiones automáticamente a partir del primer mensaje.',
+  'settings.autoTitleHint':
+    'Deja que pi-web nombre las sesiones automáticamente a partir del primer mensaje.',
   'settings.whenToTitle': 'Cuándo titular',
   'settings.whenToTitleHint': 'Titula una sesión una vez o actualízala según cambie el enfoque.',
   'settings.titleOnce': 'Una vez por sesión',
   'settings.titleEachTurn': 'Cada nuevo mensaje',
   'settings.titleModel': 'Modelo de títulos',
-  'settings.titleModelHint': 'El integrado es una heurística de palabras gratuita e instantánea (sin IA). Elige un modelo para títulos más inteligentes: uno pequeño y rápido es lo ideal.',
+  'settings.titleModelHint':
+    'El integrado es una heurística de palabras gratuita e instantánea (sin IA). Elige un modelo para títulos más inteligentes: uno pequeño y rápido es lo ideal.',
   'settings.titleBuiltin': 'Heurística integrada (sin IA)',
 
   'settings.artifacts': 'Artefactos',
   'settings.showArtifacts': 'Mostrar el panel de artefactos',
-  'settings.showArtifactsHint': 'Muestra los archivos que el agente escribió y los bloques de código grandes en una pestaña de la barra lateral derecha. Cuando está desactivado, la pestaña se oculta.',
+  'settings.showArtifactsHint':
+    'Muestra los archivos que el agente escribió y los bloques de código grandes en una pestaña de la barra lateral derecha. Cuando está desactivado, la pestaña se oculta.',
   'settings.includeFilter': 'Filtro de inclusión',
-  'settings.includeFilterHint': 'Globs separados por comas (p. ej. *.md, *.html, artifacts/**). Solo se muestran los archivos coincidentes. Déjalo vacío para mostrar todo; cualquier filtro también oculta los fragmentos de código sueltos del chat.',
+  'settings.includeFilterHint':
+    'Globs separados por comas (p. ej. *.md, *.html, artifacts/**). Solo se muestran los archivos coincidentes. Déjalo vacío para mostrar todo; cualquier filtro también oculta los fragmentos de código sueltos del chat.',
 
   'settings.notifications': 'Notificaciones',
   'settings.notifyReady': 'Avisar cuando una respuesta esté lista',
-  'settings.notifyReadyHint': 'Reproduce un sonido y muestra una notificación cuando el chat termina.',
+  'settings.notifyReadyHint':
+    'Reproduce un sonido y muestra una notificación cuando el chat termina.',
   'settings.doneSound': 'Sonido de finalización',
   'settings.doneSoundHint': 'Sonido reproducido cuando una respuesta está lista.',
 
@@ -262,11 +275,16 @@ export default {
   'btw.emptyHasSession': 'Aún no hay mensajes — saluda.',
   'btw.emptyNoSession': 'Escribe un mensaje para iniciar un chat btw, o pulsa «nuevo».',
 
-  'artifactHelp.intro': 'Los <strong>artefactos</strong> son los archivos que el agente escribió y los bloques de código más grandes que compartió, extraídos de la conversación para que puedas encontrarlos, leerlos, copiarlos o descargarlos en un solo lugar.',
-  'artifactHelp.viewing': '<strong>Visualización.</strong> Elige uno de la lista para ver su código fuente. Los archivos HTML, SVG y Markdown también tienen un interruptor de <em>Vista previa</em> — HTML/SVG se ejecutan en un entorno seguro, Markdown se muestra como texto con formato.',
-  'artifactHelp.annotating': '<strong>Anotación.</strong> Selecciona texto en el código de un artefacto para dejar una nota. Tus notas se reúnen en la pestaña <em>Anotaciones</em>, donde puedes volver a ellas o enviarlas al agente.',
-  'artifactHelp.upToDate': '<strong>Mantenerse al día.</strong> Los archivos que el agente <em>escribe</em> o <em>edita</em> se actualizan automáticamente, y los renombrados o borrados simples (<code>mv</code>, <code>git mv</code>, <code>rm</code>) también se rastrean. Pero los cambios hechos mediante otros comandos de shell — como <code>sed</code> o redirecciones de salida — no se pueden seguir desde la conversación, así que de vez en cuando un artefacto puede mostrar una versión anterior. En caso de duda, revisa el archivo en disco.',
-  'artifactHelp.note': 'Los artefactos forman parte solo de la vista en vivo y no se incluyen en las instantáneas exportadas.',
+  'artifactHelp.intro':
+    'Los <strong>artefactos</strong> son los archivos que el agente escribió y los bloques de código más grandes que compartió, extraídos de la conversación para que puedas encontrarlos, leerlos, copiarlos o descargarlos en un solo lugar.',
+  'artifactHelp.viewing':
+    '<strong>Visualización.</strong> Elige uno de la lista para ver su código fuente. Los archivos HTML, SVG y Markdown también tienen un interruptor de <em>Vista previa</em> — HTML/SVG se ejecutan en un entorno seguro, Markdown se muestra como texto con formato.',
+  'artifactHelp.annotating':
+    '<strong>Anotación.</strong> Selecciona texto en el código de un artefacto para dejar una nota. Tus notas se reúnen en la pestaña <em>Anotaciones</em>, donde puedes volver a ellas o enviarlas al agente.',
+  'artifactHelp.upToDate':
+    '<strong>Mantenerse al día.</strong> Los archivos que el agente <em>escribe</em> o <em>edita</em> se actualizan automáticamente, y los renombrados o borrados simples (<code>mv</code>, <code>git mv</code>, <code>rm</code>) también se rastrean. Pero los cambios hechos mediante otros comandos de shell — como <code>sed</code> o redirecciones de salida — no se pueden seguir desde la conversación, así que de vez en cuando un artefacto puede mostrar una versión anterior. En caso de duda, revisa el archivo en disco.',
+  'artifactHelp.note':
+    'Los artefactos forman parte solo de la vista en vivo y no se incluyen en las instantáneas exportadas.',
 
   'common.back': 'Atrás',
   'common.copied': 'Copiado',
@@ -291,7 +309,8 @@ export default {
   'artifact.preview': 'Vista previa',
   'artifact.runPreview': 'Ejecutar vista previa',
   'artifact.showSource': 'Mostrar código',
-  'artifact.emptyHidden': '{count} {noun} ocultos por tu filtro — ajústalo en <a href="/settings">Configuración</a>.',
+  'artifact.emptyHidden':
+    '{count} {noun} ocultos por tu filtro — ajústalo en <a href="/settings">Configuración</a>.',
   'artifact.emptyNone': 'Aún no hay artefactos en esta sesión.',
   'artifact.nounOne': 'artefacto',
   'artifact.nounMany': 'artefactos',
@@ -312,7 +331,8 @@ export default {
   'version.couldNotCheck': 'No se pudieron buscar actualizaciones.',
   'version.devBuild': 'Estás ejecutando una compilación de desarrollo local.',
   'version.latestPublished': 'Última publicada: {version}',
-  'version.devUpdateDisabled': 'La actualización en la app está desactivada aquí para no sobrescribir cambios locales.',
+  'version.devUpdateDisabled':
+    'La actualización en la app está desactivada aquí para no sobrescribir cambios locales.',
   'version.updateAvailable': 'Actualización disponible:',
   'version.releaseNotes': 'notas de la versión',
   'version.updateRestart': 'Actualizar y reiniciar',

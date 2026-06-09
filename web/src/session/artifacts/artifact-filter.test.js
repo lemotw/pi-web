@@ -84,7 +84,10 @@ describe('filterArtifacts', () => {
   });
 
   it('handles a non-array input gracefully', () => {
-    expect(filterArtifacts(null, { enabled: true, include: '' })).toEqual({ visible: [], hiddenCount: 0 });
+    expect(filterArtifacts(null, { enabled: true, include: '' })).toEqual({
+      visible: [],
+      hiddenCount: 0,
+    });
   });
 });
 
@@ -94,7 +97,10 @@ describe('readArtifactSettings', () => {
   }
 
   it('falls back to defaults when storage is empty', () => {
-    expect(readArtifactSettings(fakeStorage({}))).toEqual({ enabled: true, include: '*.md, *.html' });
+    expect(readArtifactSettings(fakeStorage({}))).toEqual({
+      enabled: true,
+      include: '*.md, *.html',
+    });
   });
 
   it('reads stored values', () => {
@@ -111,7 +117,11 @@ describe('readArtifactSettings', () => {
   });
 
   it('survives a throwing storage', () => {
-    const s = { getItem() { throw new Error('blocked'); } };
+    const s = {
+      getItem() {
+        throw new Error('blocked');
+      },
+    };
     expect(readArtifactSettings(s)).toEqual({ enabled: true, include: '*.md, *.html' });
   });
 });

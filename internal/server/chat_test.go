@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -19,49 +20,74 @@ import (
 )
 
 type fakeSender struct {
+	// Config fields below are set at construction (before the server starts any
+	// goroutine) and only read afterwards, so they need no locking.
+	state          workers.WorkerStatus
+	status         workers.WorkerStatus
+	getStateErr    error
+	ensureWorkerCh chan struct{}
+	sendCh         chan struct{}
+	commands       []workers.SlashCommand
+	commandsReady  bool
+	commandsErr    error
+
+	// mu guards every field below it. handleNewSession (and friends) initialize
+	// workers on a background goroutine, so the sender methods run concurrently
+	// with test assertions that read these fields.
+	mu                      sync.Mutex
 	sessionID               string
 	sessionPath             string
 	chat                    chat.Request
-	state                   workers.WorkerStatus
-	status                  workers.WorkerStatus
 	getStateCalls           int
-	getStateErr             error
 	ensureWorkerCalled      bool
 	ensureWorkerSessionID   string
 	ensureWorkerSessionPath string
-	ensureWorkerCh          chan struct{}
 	setModelSessionID       string
 	setModelProvider        string
 	setModelID              string
 	setThinkingSessionID    string
 	setThinkingLevel        string
-	sendCh                  chan struct{}
-	commands                []workers.SlashCommand
-	commandsReady           bool
-	commandsErr             error
 	getCommandsCalls        int
+	compactSessionID        string
+	compactSessionPath      string
+	compactCh               chan struct{}
 }
 
 func (f *fakeSender) Send(ctx context.Context, sessionID, sessionPath string, chat chat.Request) error {
+	f.mu.Lock()
 	f.sessionID = sessionID
 	f.sessionPath = sessionPath
 	f.chat = chat
+	f.mu.Unlock()
 	if f.sendCh != nil {
 		f.sendCh <- struct{}{}
 	}
 	return nil
 }
 
+func (f *fakeSender) Compact(ctx context.Context, sessionID, sessionPath string) error {
+	f.compactSessionID = sessionID
+	f.compactSessionPath = sessionPath
+	if f.compactCh != nil {
+		f.compactCh <- struct{}{}
+	}
+	return nil
+}
+
 func (f *fakeSender) SetModel(ctx context.Context, sessionID, sessionPath, provider, modelID string) error {
+	f.mu.Lock()
 	f.setModelSessionID = sessionID
 	f.setModelProvider = provider
 	f.setModelID = modelID
+	f.mu.Unlock()
 	return nil
 }
 
 func (f *fakeSender) SetThinkingLevel(ctx context.Context, sessionID, sessionPath, level string) error {
+	f.mu.Lock()
 	f.setThinkingSessionID = sessionID
 	f.setThinkingLevel = level
+	f.mu.Unlock()
 	return nil
 }
 
@@ -70,7 +96,9 @@ func (f *fakeSender) Abort(ctx context.Context, sessionID string) error {
 }
 
 func (f *fakeSender) GetState(ctx context.Context, sessionID string) (workers.WorkerStatus, error) {
+	f.mu.Lock()
 	f.getStateCalls++
+	f.mu.Unlock()
 	if f.getStateErr != nil {
 		return workers.WorkerStatus{}, f.getStateErr
 	}
@@ -81,7 +109,9 @@ func (f *fakeSender) GetState(ctx context.Context, sessionID string) (workers.Wo
 }
 
 func (f *fakeSender) GetCommands(ctx context.Context, sessionID string) ([]workers.SlashCommand, bool, error) {
+	f.mu.Lock()
 	f.getCommandsCalls++
+	f.mu.Unlock()
 	return f.commands, f.commandsReady, f.commandsErr
 }
 
@@ -93,13 +123,48 @@ func (f *fakeSender) Status(sessionID string) workers.WorkerStatus {
 }
 
 func (f *fakeSender) EnsureWorker(ctx context.Context, sessionID, sessionPath string) error {
+	f.mu.Lock()
 	f.ensureWorkerCalled = true
 	f.ensureWorkerSessionID = sessionID
 	f.ensureWorkerSessionPath = sessionPath
+	f.mu.Unlock()
 	if f.ensureWorkerCh != nil {
 		f.ensureWorkerCh <- struct{}{}
 	}
 	return nil
+}
+
+// Accessors for the mutex-guarded fields, so tests read them safely from a
+// goroutine other than the one the sender method ran on.
+
+func (f *fakeSender) sentInfo() (sessionID, sessionPath string, req chat.Request) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.sessionID, f.sessionPath, f.chat
+}
+
+func (f *fakeSender) stateCalls() int {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.getStateCalls
+}
+
+func (f *fakeSender) ensureWorkerInfo() (called bool, sessionID, sessionPath string) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.ensureWorkerCalled, f.ensureWorkerSessionID, f.ensureWorkerSessionPath
+}
+
+func (f *fakeSender) modelSessionID() string {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.setModelSessionID
+}
+
+func (f *fakeSender) thinkingSessionID() string {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.setThinkingSessionID
 }
 
 func TestHandleChatQueuesResolvedSession(t *testing.T) {
@@ -130,8 +195,9 @@ func TestHandleChatQueuesResolvedSession(t *testing.T) {
 	case <-time.After(time.Second):
 		t.Fatal("Send was not called asynchronously")
 	}
-	if fake.sessionID != "session.jsonl" || fake.sessionPath != wantPath || fake.chat.Message != "hello" {
-		t.Fatalf("fake = %#v, want path %q", fake, wantPath)
+	sentID, sentPath, sentReq := fake.sentInfo()
+	if sentID != "session.jsonl" || sentPath != wantPath || sentReq.Message != "hello" {
+		t.Fatalf("sent id=%q path=%q msg=%q, want path %q", sentID, sentPath, sentReq.Message, wantPath)
 	}
 }
 
@@ -177,7 +243,7 @@ func TestHandleChatRejectsBrokenSession(t *testing.T) {
 }
 
 func TestHandleWorkerStatusDefaultsIdle(t *testing.T) {
-	s := &Server{sessionsDir: t.TempDir(), chatSender: &fakeSender{}}
+	s := &Server{sessionsDir: t.TempDir(), chatSender: &fakeSender{}, now: time.Now}
 	req := httptest.NewRequest(http.MethodGet, "/api/worker-status?id=session.jsonl", nil)
 	w := httptest.NewRecorder()
 	s.handleWorkerStatus(w, req)
@@ -246,8 +312,8 @@ func TestHandleWorkerStatusSkipsGetStateWhenLocalStatusRunning(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Fatalf("status = %d", w.Code)
 	}
-	if sender.getStateCalls != 0 {
-		t.Fatalf("GetState calls = %d, want 0", sender.getStateCalls)
+	if calls := sender.stateCalls(); calls != 0 {
+		t.Fatalf("GetState calls = %d, want 0", calls)
 	}
 	if got := w.Body.String(); got != "{\"state\":\"running\"}\n" {
 		t.Fatalf("body = %q", got)
@@ -322,7 +388,7 @@ func TestHandleCommandsReturnsWorkerCommands(t *testing.T) {
 	if len(body.Commands) != 1 || body.Commands[0].Name != "skill:memory" {
 		t.Fatalf("commands = %#v", body.Commands)
 	}
-	if sender.ensureWorkerCalled {
+	if called, _, _ := sender.ensureWorkerInfo(); called {
 		t.Fatalf("EnsureWorker called without ?load=1")
 	}
 }
@@ -353,7 +419,7 @@ func TestHandleCommandsLoadEnsuresWorker(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Fatalf("status = %d", w.Code)
 	}
-	if !sender.ensureWorkerCalled {
+	if called, _, _ := sender.ensureWorkerInfo(); !called {
 		t.Fatalf("EnsureWorker not called for ?load=1")
 	}
 }
@@ -450,7 +516,7 @@ func TestHandleWorkerStatusIgnoresStaleSessionStatusFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	s := &Server{sessionsDir: sessionsDir, chatSender: &fakeSender{}}
+	s := &Server{sessionsDir: sessionsDir, chatSender: &fakeSender{}, now: time.Now}
 	req := httptest.NewRequest(http.MethodGet, "/api/worker-status?id="+sessionID, nil)
 	w := httptest.NewRecorder()
 	s.handleWorkerStatus(w, req)
@@ -481,7 +547,7 @@ func TestHandleWorkerStatusFallsThroughForIdleStatusFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	s := &Server{agentDir: root, sessionsDir: sessionsDir, chatSender: &fakeSender{}}
+	s := &Server{agentDir: root, sessionsDir: sessionsDir, chatSender: &fakeSender{}, now: time.Now}
 	req := httptest.NewRequest(http.MethodGet, "/api/worker-status?id="+sessionID, nil)
 	w := httptest.NewRecorder()
 	s.handleWorkerStatus(w, req)
@@ -506,7 +572,7 @@ func TestHandleWorkerStatusReturnsModelAndThinkingLevel(t *testing.T) {
 			ThinkingLevel: "medium",
 		},
 	}
-	s := &Server{sessionsDir: root, chatSender: sender}
+	s := &Server{sessionsDir: root, chatSender: sender, now: time.Now}
 	req := httptest.NewRequest(http.MethodGet, "/api/worker-status?id=session.jsonl", nil)
 	w := httptest.NewRecorder()
 	s.handleWorkerStatus(w, req)
@@ -544,7 +610,7 @@ func TestHandleWorkerStatusDoesNotSpawnWorkerWhenModelUnknown(t *testing.T) {
 			ThinkingLevel: "medium",
 		},
 	}
-	s := &Server{sessionsDir: root, chatSender: sender}
+	s := &Server{sessionsDir: root, chatSender: sender, now: time.Now}
 	req := httptest.NewRequest(http.MethodGet, "/api/worker-status?id=session.jsonl", nil)
 	w := httptest.NewRecorder()
 	s.handleWorkerStatus(w, req)
@@ -552,7 +618,7 @@ func TestHandleWorkerStatusDoesNotSpawnWorkerWhenModelUnknown(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Fatalf("status = %d", w.Code)
 	}
-	if sender.ensureWorkerCalled {
+	if called, _, _ := sender.ensureWorkerInfo(); called {
 		t.Fatal("worker-status should not prewarm/create workers")
 	}
 }
@@ -587,10 +653,11 @@ func TestHandleNewSessionPreinitializesWorker(t *testing.T) {
 	// Verify EnsureWorker was called
 	select {
 	case <-fake.ensureWorkerCh:
-		if !fake.ensureWorkerCalled {
+		called, sessionID, _ := fake.ensureWorkerInfo()
+		if !called {
 			t.Fatal("EnsureWorker not marked as called")
 		}
-		if fake.ensureWorkerSessionID == "" {
+		if sessionID == "" {
 			t.Fatal("EnsureWorker called with empty sessionID")
 		}
 	case <-time.After(time.Second):
@@ -632,10 +699,11 @@ func TestHandleNewSessionCopiesSourceModelAndThinking(t *testing.T) {
 	}
 
 	waitForCondition(t, time.Second, func() bool {
-		return fake.ensureWorkerSessionID == id
+		_, sessionID, _ := fake.ensureWorkerInfo()
+		return sessionID == id
 	})
-	if fake.setModelSessionID != "" || fake.setThinkingSessionID != "" {
-		t.Fatalf("new session initialization should not append visible setting changes, got setModel=%q setThinking=%q", fake.setModelSessionID, fake.setThinkingSessionID)
+	if modelID, thinkingID := fake.modelSessionID(), fake.thinkingSessionID(); modelID != "" || thinkingID != "" {
+		t.Fatalf("new session initialization should not append visible setting changes, got setModel=%q setThinking=%q", modelID, thinkingID)
 	}
 	projectDir := filepath.Join(root, sessions.EncodeProjectName("/tmp/test-project"))
 	data, err := os.ReadFile(filepath.Join(projectDir, id))

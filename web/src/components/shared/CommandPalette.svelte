@@ -1,11 +1,5 @@
 <script module>
-  function debounce(fn, ms) {
-    let timer;
-    return (...args) => {
-      clearTimeout(timer);
-      timer = setTimeout(() => fn(...args), ms);
-    };
-  }
+  import { getSessionRuntime } from '../../session/session-runtime-context.js';
 
   function sessionTitle(session) {
     return session.title || session.Name || session.name || session.ID || session.id || 'Session';
@@ -16,7 +10,10 @@
   }
 
   function sessionHref(session) {
-    return session.href || (sessionId(session) ? '/session?id=' + encodeURIComponent(sessionId(session)) : '');
+    return (
+      session.href ||
+      (sessionId(session) ? '/session?id=' + encodeURIComponent(sessionId(session)) : '')
+    );
   }
 
   function sessionMeta(session) {
@@ -40,29 +37,37 @@
       title,
       meta,
       href: sessionHref(session),
-      searchText: String(session.searchText || [title, id, meta, project, model, provider].filter(Boolean).join(' ')).toLowerCase(),
+      searchText: String(
+        session.searchText || [title, id, meta, project, model, provider].filter(Boolean).join(' '),
+      ).toLowerCase(),
     };
   }
 
   export function sessionsFromCards(documentImpl = document) {
-    return Array.from(documentImpl.querySelectorAll('.session-card[data-session-id]')).map((card) => {
-      const title = card.querySelector('.session-title')?.textContent?.trim() || card.dataset.sessionId || 'Session';
-      const meta = card.querySelector('[data-session-model]')?.textContent?.trim()
-        || card.querySelector('.session-time')?.textContent?.trim()
-        || '';
-      return normalizePaletteSession({
-        id: card.dataset.sessionId || '',
-        title,
-        meta,
-        href: card.getAttribute('href') || '',
-        searchText: card.dataset.search || [title, meta, card.dataset.sessionId || ''].join(' '),
-      });
-    });
+    return Array.from(documentImpl.querySelectorAll('.session-card[data-session-id]')).map(
+      (card) => {
+        const title =
+          card.querySelector('.session-title')?.textContent?.trim() ||
+          card.dataset.sessionId ||
+          'Session';
+        const meta =
+          card.querySelector('[data-session-model]')?.textContent?.trim() ||
+          card.querySelector('.session-time')?.textContent?.trim() ||
+          '';
+        return normalizePaletteSession({
+          id: card.dataset.sessionId || '',
+          title,
+          meta,
+          href: card.getAttribute('href') || '',
+          searchText: card.dataset.search || [title, meta, card.dataset.sessionId || ''].join(' '),
+        });
+      },
+    );
   }
 
-  export function defaultSessionPaletteCwd(windowImpl = window) {
+  export function defaultSessionPaletteCwd() {
     try {
-      const preload = windowImpl.__piSessionDataModel;
+      const preload = getSessionRuntime().model;
       const data = preload && typeof preload.header === 'object' ? preload.header : {};
       return data.cwd || '';
     } catch {
@@ -70,7 +75,10 @@
     }
   }
 
-  export async function fetchPaletteSessions({ fetchImpl = fetch, getCwd = () => defaultSessionPaletteCwd(window) } = {}) {
+  export async function fetchPaletteSessions({
+    fetchImpl = fetch,
+    getCwd = () => defaultSessionPaletteCwd(),
+  } = {}) {
     const cwd = getCwd ? getCwd() : '';
     const url = cwd ? '/api/sessions?project=' + encodeURIComponent(cwd) : '/api/sessions';
     const response = await fetchImpl(url);
@@ -91,14 +99,17 @@
 
 <script>
   import { onMount, tick } from 'svelte';
+  import {
+    getSessionPaletteApi,
+    setSessionPaletteApi,
+  } from '../../shared/command-palette-runtime.js';
   import { icon, X } from '../../shared/icons.js';
   import { t } from '../../shared/i18n.js';
 
   let {
     limit = 8,
-    debounceMs = 100,
     loadSessions = null,
-    getCwd = () => defaultSessionPaletteCwd(window),
+    getCwd = () => defaultSessionPaletteCwd(),
     onOpen = null,
     onClose = null,
     onQueryChange = null,
@@ -151,7 +162,8 @@
     const generation = ++loadGeneration;
     error = '';
     try {
-      const loader = loadSessions || (() => fetchPaletteSessions({ fetchImpl: effectiveFetch, getCwd }));
+      const loader =
+        loadSessions || (() => fetchPaletteSessions({ fetchImpl: effectiveFetch, getCwd }));
       const sessions = await loader({ query, documentImpl: document, windowImpl: window });
       if (generation !== loadGeneration) return;
       allSessions = (sessions || []).map(normalizePaletteSession);
@@ -192,7 +204,12 @@
   function handleKeydown(e) {
     if (!open) return;
     const active = document.activeElement;
-    const shouldHandle = !active || active === inputEl || active === document.body || active === document.documentElement || !overlayEl?.contains(active);
+    const shouldHandle =
+      !active ||
+      active === inputEl ||
+      active === document.body ||
+      active === document.documentElement ||
+      !overlayEl?.contains(active);
     if (e.key === 'Escape') {
       e.preventDefault();
       e.stopPropagation();
@@ -203,15 +220,22 @@
     const last = Math.min(visibleSessions.length, limit) - 1;
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      selectedIndex = selectedIndex < last ? selectedIndex + 1 : (selectedIndex === -1 && last >= 0 ? 0 : selectedIndex);
+      selectedIndex =
+        selectedIndex < last
+          ? selectedIndex + 1
+          : selectedIndex === -1 && last >= 0
+            ? 0
+            : selectedIndex;
       resultButtons[selectedIndex]?.scrollIntoView?.({ block: 'nearest' });
       return;
     }
     if (e.key === 'ArrowUp') {
       e.preventDefault();
       if (selectedIndex > 0) selectedIndex -= 1;
-      else if (selectedIndex === 0) { selectedIndex = -1; inputEl?.focus(); }
-      else if (selectedIndex === -1 && last >= 0) selectedIndex = last;
+      else if (selectedIndex === 0) {
+        selectedIndex = -1;
+        inputEl?.focus();
+      } else if (selectedIndex === -1 && last >= 0) selectedIndex = last;
       resultButtons[selectedIndex]?.scrollIntoView?.({ block: 'nearest' });
       return;
     }
@@ -226,27 +250,64 @@
 
   onMount(() => {
     const api = { open: openPalette, close, refresh };
+    const previousApi = getSessionPaletteApi();
+    setSessionPaletteApi(api);
     const previousOpenBridge = window.__piOpenSessionPalette;
     const openBridge = () => api.open();
+    // Compatibility shims for existing external/browser entry points. In-app
+    // code should import command-palette-runtime helpers instead.
     window.__piSessionPalette = api;
     if (typeof previousOpenBridge !== 'function') window.__piOpenSessionPalette = openBridge;
     const keydown = (e) => handleKeydown(e);
     window.addEventListener('keydown', keydown);
     return () => {
       window.removeEventListener('keydown', keydown);
+      if (getSessionPaletteApi() === api) setSessionPaletteApi(previousApi);
       if (window.__piSessionPalette === api) delete window.__piSessionPalette;
       if (window.__piOpenSessionPalette === openBridge) delete window.__piOpenSessionPalette;
-      else if (previousOpenBridge && window.__piOpenSessionPalette == null) window.__piOpenSessionPalette = previousOpenBridge;
+      else if (previousOpenBridge && window.__piOpenSessionPalette == null)
+        window.__piOpenSessionPalette = previousOpenBridge;
       document.body?.classList.remove('pi-palette-open');
     };
   });
 </script>
 
-<div class="command-palette-overlay" id="sessionPalette" class:open aria-hidden={open ? 'false' : 'true'} bind:this={overlayEl} role="presentation" onclick={(e) => { if (e.target === overlayEl) close(); }}>
-  <div class="command-palette" role="dialog" aria-modal="true" aria-label={t('palette.listSessions')}>
+<!-- eslint-disable svelte/no-at-html-tags -- trusted: Lucide icon SVG and rendered session markdown -->
+
+<div
+  class="command-palette-overlay"
+  id="sessionPalette"
+  class:open
+  aria-hidden={open ? 'false' : 'true'}
+  bind:this={overlayEl}
+  role="presentation"
+  onclick={(e) => {
+    if (e.target === overlayEl) close();
+  }}
+>
+  <div
+    class="command-palette"
+    role="dialog"
+    aria-modal="true"
+    aria-label={t('palette.listSessions')}
+  >
     <div class="palette-search-wrap">
-      <input type="text" id="session-palette-search" placeholder={t('index.searchSessions')} autocomplete="off" bind:this={inputEl} bind:value={query} oninput={handleInput}>
-      <button class="palette-search-close" type="button" data-palette-close aria-label={t('palette.closeSearch')} onclick={close}>{@html icon(X, { size: 15 })}</button>
+      <input
+        type="text"
+        id="session-palette-search"
+        placeholder={t('index.searchSessions')}
+        autocomplete="off"
+        bind:this={inputEl}
+        bind:value={query}
+        oninput={handleInput}
+      />
+      <button
+        class="palette-search-close"
+        type="button"
+        data-palette-close
+        aria-label={t('palette.closeSearch')}
+        onclick={close}>{@html icon(X, { size: 15 })}</button
+      >
     </div>
     <div class="palette-results" data-palette-results>
       {#if error}
@@ -269,7 +330,19 @@
       {/if}
     </div>
     <div class="palette-section-title">{t('palette.actions')}</div>
-    <button class="palette-action" type="button" data-new-session-btn onclick={startNewSession}>{t('palette.newSession')}</button>
-    <button class="palette-action muted" type="button" data-import-session-btn disabled={!onImportSession} aria-disabled={!onImportSession} onclick={() => { close(); onImportSession?.(); }}>{t('index.importSession')}</button>
+    <button class="palette-action" type="button" data-new-session-btn onclick={startNewSession}
+      >{t('palette.newSession')}</button
+    >
+    <button
+      class="palette-action muted"
+      type="button"
+      data-import-session-btn
+      disabled={!onImportSession}
+      aria-disabled={!onImportSession}
+      onclick={() => {
+        close();
+        onImportSession?.();
+      }}>{t('index.importSession')}</button
+    >
   </div>
 </div>

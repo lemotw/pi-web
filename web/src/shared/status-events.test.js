@@ -33,18 +33,41 @@ describe('createStatusEvents', () => {
     const onDelta = vi.fn();
     const onMessage = vi.fn();
 
-    const sub = createStatusEvents({ EventSourceImpl: FakeEventSource, onSnapshot, onDelta, onMessage });
+    const sub = createStatusEvents({
+      EventSourceImpl: FakeEventSource,
+      onSnapshot,
+      onDelta,
+      onMessage,
+    });
     sub.connect();
 
     const es = FakeEventSource.instances[0];
     expect(es.url).toBe('/events?id=__all__');
 
-    es.emit('status-snapshot', JSON.stringify({ running: ['a.jsonl'], statuses: { 'a.jsonl': { model: 'm', modelProvider: 'p' } } }));
-    es.emit('status-delta', JSON.stringify({ id: 'a.jsonl', running: false, model: 'm', modelProvider: 'p' }));
+    es.emit(
+      'status-snapshot',
+      JSON.stringify({
+        running: ['a.jsonl'],
+        statuses: { 'a.jsonl': { model: 'm', modelProvider: 'p' } },
+      }),
+    );
+    es.emit(
+      'status-delta',
+      JSON.stringify({ id: 'a.jsonl', running: false, model: 'm', modelProvider: 'p' }),
+    );
     es.emit('message', 'new-session');
 
-    expect(onSnapshot).toHaveBeenCalledWith({ ids: ['a.jsonl'], statuses: { 'a.jsonl': { model: 'm', modelProvider: 'p' } } });
-    expect(onDelta).toHaveBeenCalledWith({ id: 'a.jsonl', running: false, model: 'm', modelName: '', modelProvider: 'p' });
+    expect(onSnapshot).toHaveBeenCalledWith({
+      ids: ['a.jsonl'],
+      statuses: { 'a.jsonl': { model: 'm', modelProvider: 'p' } },
+    });
+    expect(onDelta).toHaveBeenCalledWith({
+      id: 'a.jsonl',
+      running: false,
+      model: 'm',
+      modelName: '',
+      modelProvider: 'p',
+    });
     expect(onMessage).toHaveBeenCalledWith('new-session');
   });
 
@@ -68,7 +91,7 @@ describe('createStatusEvents', () => {
     const addEventListener = vi.fn();
     const sub = createStatusEvents({
       EventSourceImpl: FakeEventSource,
-      windowImpl: { addEventListener, removeEventListener }
+      windowImpl: { addEventListener, removeEventListener },
     });
 
     sub.connect();

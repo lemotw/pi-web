@@ -118,7 +118,8 @@ export default {
   'composer.searchModels': 'Cari model…',
   'composer.switchModel': 'Ganti model',
   'composer.switchEffort': 'Ganti tingkat usaha',
-  'composer.disabledNotice': 'Sesi ini dapat dilihat, tetapi obrolan dinonaktifkan karena direktori kerjanya sudah tidak ada.',
+  'composer.disabledNotice':
+    'Sesi ini dapat dilihat, tetapi obrolan dinonaktifkan karena direktori kerjanya sudah tidak ada.',
   'composer.copyPath': 'Klik untuk menyalin path',
   'composer.focusShortcut': 'Shift + i untuk fokus',
   'composer.cancelRunning': 'Batalkan respons yang berjalan',
@@ -143,8 +144,10 @@ export default {
   'settings.contentFontSizeHint': 'Ukuran teks pesan yang ditampilkan (px).',
   'settings.fontBuiltIn': 'Bawaan',
   'settings.fontInstalled': 'Installed',
-  'settings.fontDetectUnsupported': 'This browser cannot list installed fonts. Use Custom… to type a font name.',
-  'settings.fontDetectDenied': 'Could not read installed fonts (permission denied). Use Custom… to type a font name.',
+  'settings.fontDetectUnsupported':
+    'This browser cannot list installed fonts. Use Custom… to type a font name.',
+  'settings.fontDetectDenied':
+    'Could not read installed fonts (permission denied). Use Custom… to type a font name.',
   'settings.fontActions': 'Tindakan',
   'settings.fontMono': 'Monospace',
   'settings.fontSystem': 'Sistem',
@@ -155,9 +158,11 @@ export default {
   'settings.fontFamilyPlaceholder': 'Nama keluarga font',
 
   'settings.language': 'Bahasa',
-  'settings.languageHint': 'Bahasa untuk antarmuka aplikasi. Mengubahnya akan memuat ulang halaman.',
+  'settings.languageHint':
+    'Bahasa untuk antarmuka aplikasi. Mengubahnya akan memuat ulang halaman.',
   'settings.customLanguages': 'Bahasa khusus',
-  'settings.customLanguagesHint': 'Tambah atau timpa bahasa sebagai JSON — array dari { "code", "label", "strings": { … } }. Kunci yang hilang akan kembali ke bahasa Inggris. Gunakan "Salin kunci Inggris" untuk templat awal, lalu "Simpan & terapkan".',
+  'settings.customLanguagesHint':
+    'Tambah atau timpa bahasa sebagai JSON — array dari { "code", "label", "strings": { … } }. Kunci yang hilang akan kembali ke bahasa Inggris. Gunakan "Salin kunci Inggris" untuk templat awal, lalu "Simpan & terapkan".',
   'settings.copyEnglishKeys': 'Salin kunci Inggris',
   'settings.saveApply': 'Simpan & terapkan',
 
@@ -167,7 +172,8 @@ export default {
   'settings.defaultLayout': 'Tata letak bawaan',
   'settings.defaultLayoutHint': 'Cara daftar sesi dikelompokkan saat dimuat.',
   'settings.showBtw': 'Tampilkan obrolan btw di daftar',
-  'settings.showBtwHint': 'Sertakan obrolan coretan btw sekali pakai dalam daftar sesi. Disembunyikan secara bawaan.',
+  'settings.showBtwHint':
+    'Sertakan obrolan coretan btw sekali pakai dalam daftar sesi. Disembunyikan secara bawaan.',
 
   'settings.sessionTitles': 'Judul Sesi',
   'settings.autoTitle': 'Buat judul otomatis',
@@ -177,14 +183,17 @@ export default {
   'settings.titleOnce': 'Sekali per sesi',
   'settings.titleEachTurn': 'Setiap pesan baru',
   'settings.titleModel': 'Model judul',
-  'settings.titleModelHint': 'Bawaan adalah heuristik kata gratis dan instan (tanpa AI). Pilih model untuk judul yang lebih cerdas — yang kecil dan cepat ideal.',
+  'settings.titleModelHint':
+    'Bawaan adalah heuristik kata gratis dan instan (tanpa AI). Pilih model untuk judul yang lebih cerdas — yang kecil dan cepat ideal.',
   'settings.titleBuiltin': 'Heuristik bawaan (tanpa AI)',
 
   'settings.artifacts': 'Artefak',
   'settings.showArtifacts': 'Tampilkan panel Artefak',
-  'settings.showArtifactsHint': 'Menampilkan file yang ditulis agen dan blok kode besar dalam tab bilah sisi kanan. Saat mati, tab disembunyikan.',
+  'settings.showArtifactsHint':
+    'Menampilkan file yang ditulis agen dan blok kode besar dalam tab bilah sisi kanan. Saat mati, tab disembunyikan.',
   'settings.includeFilter': 'Filter sertakan',
-  'settings.includeFilterHint': 'Glob dipisahkan koma (mis. *.md, *.html, artifacts/**). Hanya file yang cocok yang ditampilkan. Biarkan kosong untuk menampilkan semua; filter apa pun juga menyembunyikan cuplikan kode obrolan yang lepas.',
+  'settings.includeFilterHint':
+    'Glob dipisahkan koma (mis. *.md, *.html, artifacts/**). Hanya file yang cocok yang ditampilkan. Biarkan kosong untuk menampilkan semua; filter apa pun juga menyembunyikan cuplikan kode obrolan yang lepas.',
 
   'settings.notifications': 'Notifikasi',
   'settings.notifyReady': 'Beri tahu saat respons siap',
@@ -214,7 +223,8 @@ export default {
   'settings.githubHint': 'Jika pi-web berguna bagi Anda, beri repo ⭐.',
   'settings.starGithub': 'Beri bintang di GitHub',
   'settings.sponsor': 'Sponsor',
-  'settings.sponsorHint': 'Dukung pengembangan pi-web yang berkelanjutan dengan mensponsori pembuatnya.',
+  'settings.sponsorHint':
+    'Dukung pengembangan pi-web yang berkelanjutan dengan mensponsori pembuatnya.',
   'settings.becomeSponsor': 'Jadi sponsor',
 
   'shortcuts.title': 'Pintasan keyboard',
@@ -262,11 +272,16 @@ export default {
   'btw.emptyHasSession': 'Belum ada pesan — sapa dulu.',
   'btw.emptyNoSession': 'Ketik pesan untuk memulai obrolan btw, atau tekan "baru".',
 
-  'artifactHelp.intro': '<strong>Artefak</strong> adalah file yang ditulis agen dan blok kode besar yang dibagikannya, ditarik keluar dari percakapan agar Anda dapat menemukan, membaca, menyalin, atau mengunduhnya di satu tempat.',
-  'artifactHelp.viewing': '<strong>Melihat.</strong> Pilih salah satu dari daftar untuk melihat sumbernya. File HTML, SVG, dan Markdown juga memiliki tombol <em>Pratinjau</em> — HTML/SVG berjalan di sandbox aman, Markdown ditampilkan sebagai teks berformat.',
-  'artifactHelp.annotating': '<strong>Anotasi.</strong> Pilih teks di sumber artefak untuk meninggalkan catatan. Catatan Anda terkumpul di tab <em>Anotasi</em>, tempat Anda dapat kembali ke catatan tersebut atau mengirimnya ke agen.',
-  'artifactHelp.upToDate': '<strong>Tetap terkini.</strong> File yang <em>ditulis</em> atau <em>diedit</em> agen diperbarui otomatis, dan penggantian nama atau penghapusan sederhana (<code>mv</code>, <code>git mv</code>, <code>rm</code>) juga dilacak. Namun perubahan melalui perintah shell lain — seperti <code>sed</code> atau pengalihan keluaran — tidak dapat diikuti dari percakapan, jadi sesekali artefak mungkin menampilkan versi lama. Jika ragu, periksa file di disk.',
-  'artifactHelp.note': 'Artefak hanya bagian dari tampilan langsung dan tidak disertakan dalam snapshot yang diekspor.',
+  'artifactHelp.intro':
+    '<strong>Artefak</strong> adalah file yang ditulis agen dan blok kode besar yang dibagikannya, ditarik keluar dari percakapan agar Anda dapat menemukan, membaca, menyalin, atau mengunduhnya di satu tempat.',
+  'artifactHelp.viewing':
+    '<strong>Melihat.</strong> Pilih salah satu dari daftar untuk melihat sumbernya. File HTML, SVG, dan Markdown juga memiliki tombol <em>Pratinjau</em> — HTML/SVG berjalan di sandbox aman, Markdown ditampilkan sebagai teks berformat.',
+  'artifactHelp.annotating':
+    '<strong>Anotasi.</strong> Pilih teks di sumber artefak untuk meninggalkan catatan. Catatan Anda terkumpul di tab <em>Anotasi</em>, tempat Anda dapat kembali ke catatan tersebut atau mengirimnya ke agen.',
+  'artifactHelp.upToDate':
+    '<strong>Tetap terkini.</strong> File yang <em>ditulis</em> atau <em>diedit</em> agen diperbarui otomatis, dan penggantian nama atau penghapusan sederhana (<code>mv</code>, <code>git mv</code>, <code>rm</code>) juga dilacak. Namun perubahan melalui perintah shell lain — seperti <code>sed</code> atau pengalihan keluaran — tidak dapat diikuti dari percakapan, jadi sesekali artefak mungkin menampilkan versi lama. Jika ragu, periksa file di disk.',
+  'artifactHelp.note':
+    'Artefak hanya bagian dari tampilan langsung dan tidak disertakan dalam snapshot yang diekspor.',
 
   'common.back': 'Kembali',
   'common.copied': 'Disalin',
@@ -282,7 +297,8 @@ export default {
   'index.failedUpdateProject': 'Gagal memperbarui proyek',
   'index.failedRemoveProject': 'Gagal menghapus proyek',
   'index.filterOnDesc': 'Hanya proyek yang dicentang yang muncul di beranda.',
-  'index.filterOffDesc': 'Semua proyek ditampilkan. Aktifkan untuk menampilkan hanya yang dicentang.',
+  'index.filterOffDesc':
+    'Semua proyek ditampilkan. Aktifkan untuk menampilkan hanya yang dicentang.',
   'composer.pathCopied': 'Path disalin',
   'share.copiedSuffix': '{label} disalin',
   'artifact.copy': 'Salin',
@@ -291,7 +307,8 @@ export default {
   'artifact.preview': 'Pratinjau',
   'artifact.runPreview': 'Jalankan pratinjau',
   'artifact.showSource': 'Tampilkan sumber',
-  'artifact.emptyHidden': '{count} {noun} disembunyikan oleh filter Anda — sesuaikan di <a href="/settings">Pengaturan</a>.',
+  'artifact.emptyHidden':
+    '{count} {noun} disembunyikan oleh filter Anda — sesuaikan di <a href="/settings">Pengaturan</a>.',
   'artifact.emptyNone': 'Belum ada artefak di sesi ini.',
   'artifact.nounOne': 'artefak',
   'artifact.nounMany': 'artefak',
@@ -312,7 +329,8 @@ export default {
   'version.couldNotCheck': 'Tidak dapat memeriksa pembaruan.',
   'version.devBuild': 'Anda menjalankan build pengembangan lokal.',
   'version.latestPublished': 'Terbaru dipublikasikan: {version}',
-  'version.devUpdateDisabled': 'Pembaruan dalam aplikasi dinonaktifkan di sini agar tidak menimpa perubahan lokal.',
+  'version.devUpdateDisabled':
+    'Pembaruan dalam aplikasi dinonaktifkan di sini agar tidak menimpa perubahan lokal.',
   'version.updateAvailable': 'Pembaruan tersedia:',
   'version.releaseNotes': 'catatan rilis',
   'version.updateRestart': 'Perbarui & mulai ulang',

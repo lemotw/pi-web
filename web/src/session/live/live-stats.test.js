@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { JSDOM } from 'jsdom';
-import { computeLiveStats, formatTokens, updateStatsDom } from './LiveReload.svelte';
+import { computeLiveStats, formatTokens, updateStatsDom } from './live-stats.js';
 
 describe('live stats', () => {
   it('formats tokens', () => {
@@ -12,7 +12,16 @@ describe('live stats', () => {
   it('computes and updates header stats', () => {
     const entries = [
       { type: 'message', message: { role: 'user' } },
-      { type: 'message', message: { role: 'assistant', provider: 'p', model: 'm', usage: { input: 1000, output: 2000, cost: { input: 0.001, output: 0.002 } }, content: [{ type: 'toolCall' }] } }
+      {
+        type: 'message',
+        message: {
+          role: 'assistant',
+          provider: 'p',
+          model: 'm',
+          usage: { input: 1000, output: 2000, cost: { input: 0.001, output: 0.002 } },
+          content: [{ type: 'toolCall' }],
+        },
+      },
     ];
     const stats = computeLiveStats(entries);
     expect(stats.user).toBe(1);
@@ -27,7 +36,9 @@ describe('live stats', () => {
       <div class="info-item"><span class="info-label">Cost:</span><span class="info-value"></span></div>
     </div>`);
     expect(updateStatsDom(entries, { documentImpl: dom.window.document })).toBe(true);
-    expect(dom.window.document.querySelectorAll('.info-value')[0].textContent).toBe('1 user, 1 assistant');
+    expect(dom.window.document.querySelectorAll('.info-value')[0].textContent).toBe(
+      '1 user, 1 assistant',
+    );
     expect(dom.window.document.querySelectorAll('.info-value')[1].textContent).toBe('1');
     expect(dom.window.document.querySelectorAll('.info-value')[2].textContent).toBe('p/m');
     expect(dom.window.document.querySelectorAll('.info-value')[3].textContent).toBe('↑1.0k ↓2.0k');

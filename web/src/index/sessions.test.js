@@ -1,20 +1,41 @@
 import { describe, expect, it } from 'vitest';
-import { formatRelativeTime, groupSessionsByProject, groupSessionsTimeline, normalizeSession, sessionModelLabel, sessionSearchText } from './sessions.js';
+import {
+  formatRelativeTime,
+  groupSessionsByProject,
+  groupSessionsTimeline,
+  normalizeSession,
+  sessionModelLabel,
+  sessionSearchText,
+} from './sessions.js';
 
 describe('index sessions helpers', () => {
   it('normalizes Go and JS-shaped sessions', () => {
-    expect(normalizeSession({ ID: 'a', Project: '/repo', ModelProvider: 'p', Model: 'm' })).toMatchObject({
-      id: 'a', project: '/repo', modelProvider: 'p', model: 'm', chatAvailable: true,
+    expect(
+      normalizeSession({ ID: 'a', Project: '/repo', ModelProvider: 'p', Model: 'm' }),
+    ).toMatchObject({
+      id: 'a',
+      project: '/repo',
+      modelProvider: 'p',
+      model: 'm',
+      chatAvailable: true,
     });
   });
 
   it('formats relative times', () => {
-    expect(formatRelativeTime('2024-01-01T00:00:00Z', Date.parse('2024-01-01T00:02:00Z'))).toBe('2 minutes ago');
+    expect(formatRelativeTime('2024-01-01T00:00:00Z', Date.parse('2024-01-01T00:02:00Z'))).toBe(
+      '2 minutes ago',
+    );
     expect(formatRelativeTime('not a date')).toBe('');
   });
 
   it('builds labels and search text', () => {
-    const session = { name: 'Fix bug', project: '/repo', modelProvider: 'openai', model: 'gpt', sessionUUID: 'uuid' };
+    const session = {
+      name: 'Fix bug',
+      project: '/repo',
+      modelProvider: 'openai',
+      model: 'gpt',
+      sessionUUID: 'uuid',
+    };
     expect(sessionModelLabel(session)).toBe('openai/gpt');
     expect(sessionSearchText(session)).toContain('Fix bug /repo openai/gpt uuid');
   });

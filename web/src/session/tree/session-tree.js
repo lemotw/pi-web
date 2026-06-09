@@ -29,7 +29,9 @@ export function buildTree(entries = [], labelMap = new Map()) {
   }
 
   function sortChildren(node) {
-    node.children.sort((a, b) => new Date(a.entry.timestamp).getTime() - new Date(b.entry.timestamp).getTime());
+    node.children.sort(
+      (a, b) => new Date(a.entry.timestamp).getTime() - new Date(b.entry.timestamp).getTime(),
+    );
     node.children.forEach(sortChildren);
   }
   roots.forEach(sortChildren);
@@ -69,7 +71,8 @@ export function buildTreeNodeMap(roots = []) {
 }
 
 export function findNewestLeaf(nodeId, rootsOrNodeMap = []) {
-  const treeNodeMap = rootsOrNodeMap instanceof Map ? rootsOrNodeMap : buildTreeNodeMap(rootsOrNodeMap);
+  const treeNodeMap =
+    rootsOrNodeMap instanceof Map ? rootsOrNodeMap : buildTreeNodeMap(rootsOrNodeMap);
   const node = treeNodeMap.get(nodeId);
   if (!node) return nodeId;
 
@@ -100,19 +103,40 @@ export function flattenTree(roots, activePathIds) {
   roots.forEach(markActive);
 
   const stack = [];
-  const orderedRoots = [...roots].sort((a, b) => Number(containsActive.get(b)) - Number(containsActive.get(a)));
+  const orderedRoots = [...roots].sort(
+    (a, b) => Number(containsActive.get(b)) - Number(containsActive.get(a)),
+  );
   for (let i = orderedRoots.length - 1; i >= 0; i -= 1) {
     const isLast = i === orderedRoots.length - 1;
-    stack.push([orderedRoots[i], multipleRoots ? 1 : 0, multipleRoots, multipleRoots, isLast, [], multipleRoots]);
+    stack.push([
+      orderedRoots[i],
+      multipleRoots ? 1 : 0,
+      multipleRoots,
+      multipleRoots,
+      isLast,
+      [],
+      multipleRoots,
+    ]);
   }
 
   while (stack.length > 0) {
-    const [node, indent, justBranched, showConnector, isLast, gutters, isVirtualRootChild] = stack.pop();
-    result.push({ node, indent, showConnector, isLast, gutters, isVirtualRootChild, multipleRoots });
+    const [node, indent, justBranched, showConnector, isLast, gutters, isVirtualRootChild] =
+      stack.pop();
+    result.push({
+      node,
+      indent,
+      showConnector,
+      isLast,
+      gutters,
+      isVirtualRootChild,
+      multipleRoots,
+    });
 
     const children = node.children;
     const multipleChildren = children.length > 1;
-    const orderedChildren = [...children].sort((a, b) => Number(containsActive.get(b)) - Number(containsActive.get(a)));
+    const orderedChildren = [...children].sort(
+      (a, b) => Number(containsActive.get(b)) - Number(containsActive.get(a)),
+    );
     let childIndent;
     if (multipleChildren) childIndent = indent + 1;
     else if (justBranched && indent > 0) childIndent = indent + 1;
@@ -121,11 +145,21 @@ export function flattenTree(roots, activePathIds) {
     const connectorDisplayed = showConnector && !isVirtualRootChild;
     const currentDisplayIndent = multipleRoots ? Math.max(0, indent - 1) : indent;
     const connectorPosition = Math.max(0, currentDisplayIndent - 1);
-    const childGutters = connectorDisplayed ? [...gutters, { position: connectorPosition, show: !isLast }] : gutters;
+    const childGutters = connectorDisplayed
+      ? [...gutters, { position: connectorPosition, show: !isLast }]
+      : gutters;
 
     for (let i = orderedChildren.length - 1; i >= 0; i -= 1) {
       const childIsLast = i === orderedChildren.length - 1;
-      stack.push([orderedChildren[i], childIndent, multipleChildren, multipleChildren, childIsLast, childGutters, false]);
+      stack.push([
+        orderedChildren[i],
+        childIndent,
+        multipleChildren,
+        multipleChildren,
+        childIsLast,
+        childGutters,
+        false,
+      ]);
     }
   }
 
@@ -144,7 +178,8 @@ export function buildTreePrefix(flatNode) {
     const posInLevel = i % 3;
     const gutter = gutters.find((g) => g.position === level);
     if (gutter) prefixChars.push(posInLevel === 0 ? (gutter.show ? '│' : ' ') : ' ');
-    else if (connector && level === connectorPosition) prefixChars.push(posInLevel === 0 ? (isLast ? '└' : '├') : (posInLevel === 1 ? '─' : ' '));
+    else if (connector && level === connectorPosition)
+      prefixChars.push(posInLevel === 0 ? (isLast ? '└' : '├') : posInLevel === 1 ? '─' : ' ');
     else prefixChars.push(' ');
   }
   return prefixChars.join('');

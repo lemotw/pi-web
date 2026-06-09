@@ -45,7 +45,13 @@ describe('applyFonts', () => {
     const props = {};
     return {
       _props: props,
-      documentElement: { style: { setProperty: (n, v) => { props[n] = v; } } },
+      documentElement: {
+        style: {
+          setProperty: (n, v) => {
+            props[n] = v;
+          },
+        },
+      },
     };
   }
 

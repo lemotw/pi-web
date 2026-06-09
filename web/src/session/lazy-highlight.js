@@ -8,10 +8,13 @@ export function applyLazyHighlighting(documentImpl) {
       const lang = el.dataset.lang;
       const text = el.textContent;
       try {
-        el.innerHTML = lang && hljs.getLanguage(lang)
-          ? hljs.highlight(text, { language: lang }).value
-          : hljs.highlightAuto(text).value;
-      } catch { /* keep plain text */ }
+        el.innerHTML =
+          lang && hljs.getLanguage(lang)
+            ? hljs.highlight(text, { language: lang }).value
+            : hljs.highlightAuto(text).value;
+      } catch {
+        /* keep plain text */
+      }
       el.removeAttribute('data-highlight-pending');
       el.removeAttribute('data-lang');
     });

@@ -1,5 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { setupSessionGlobals } from './session-globals.js';
+import { sessionModals, resetSessionModals } from './session-modals.svelte.js';
+import { sessionRuntime, resetSessionRuntime } from './session-runtime.js';
+import { setSessionPaletteApi } from '../shared/command-palette-runtime.js';
 
 // Focused coverage for the global keyboard shortcuts + relay buttons, which the
 // e2e suite does not exercise. The other wiring (done-notifier, version, palette,
@@ -7,17 +10,18 @@ import { setupSessionGlobals } from './session-globals.js';
 // setupSessionGlobals registers them without throwing in jsdom.
 
 function dispatchKey(key, { meta = false, shift = false } = {}) {
-  window.dispatchEvent(new KeyboardEvent('keydown', {
-    key,
-    metaKey: meta,
-    shiftKey: shift,
-    bubbles: true,
-    cancelable: true,
-  }));
+  window.dispatchEvent(
+    new KeyboardEvent('keydown', {
+      key,
+      metaKey: meta,
+      shiftKey: shift,
+      bubbles: true,
+      cancelable: true,
+    }),
+  );
 }
 
 describe('setupSessionGlobals — keyboard shortcuts', () => {
-  let model;
   let dispose;
 
   beforeEach(() => {
@@ -28,16 +32,16 @@ describe('setupSessionGlobals — keyboard shortcuts', () => {
       <button id="new-session-header-btn"></button>
     `;
     document.body.classList.remove('sidebar-collapsed');
-    window.matchMedia = vi.fn(() => ({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() }));
+    window.matchMedia = vi.fn(() => ({
+      matches: false,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }));
     window.fetch = vi.fn(async () => new Response('{}', { status: 200 }));
     window.scrollTo = vi.fn();
-    model = { truncated: false, reconcile: vi.fn(), leafId: 'leaf' };
     dispose = setupSessionGlobals({
       windowImpl: window,
       documentImpl: document,
-      model,
-      sessionId: 'sess1',
-      navigateTo: vi.fn(),
     });
   });
 
@@ -45,14 +49,14 @@ describe('setupSessionGlobals — keyboard shortcuts', () => {
     dispose?.();
     vi.restoreAllMocks();
     document.body.innerHTML = '';
-    delete window.__piOpenShortcuts;
-    delete window.__piRightSidebar;
-    delete window.__piOpenSessionPalette;
+    resetSessionModals();
+    resetSessionRuntime();
+    setSessionPaletteApi(null);
   });
 
-  it('Cmd+K calls the Svelte command-palette bridge when present', () => {
+  it('Cmd+K calls the Svelte command-palette runtime when present', () => {
     const open = vi.fn();
-    window.__piOpenSessionPalette = open;
+    setSessionPaletteApi({ open });
     dispatchKey('k', { meta: true });
     expect(open).toHaveBeenCalledOnce();
   });
@@ -70,25 +74,23 @@ describe('setupSessionGlobals — keyboard shortcuts', () => {
     expect(document.body.classList.contains('sidebar-collapsed')).toBe(true);
   });
 
-  it('Cmd+Shift+N toggles the right sidebar via its window bridge', () => {
+  it('Cmd+Shift+N toggles the right sidebar via the runtime registry', () => {
     const toggle = vi.fn();
-    window.__piRightSidebar = { toggle };
+    sessionRuntime.rightSidebar = { toggle };
     dispatchKey('n', { meta: true, shift: true });
     expect(toggle).toHaveBeenCalledOnce();
   });
 
-  it('Cmd+/ opens the shortcuts modal via its window bridge', () => {
-    const open = vi.fn();
-    window.__piOpenShortcuts = open;
+  it('Cmd+/ opens the shortcuts modal via the modal store', () => {
+    expect(sessionModals.shortcuts).toBe(false);
     dispatchKey('/', { meta: true });
-    expect(open).toHaveBeenCalledOnce();
+    expect(sessionModals.shortcuts).toBe(true);
   });
 
   it('the shortcuts-help button opens the shortcuts modal', () => {
-    const open = vi.fn();
-    window.__piOpenShortcuts = open;
+    expect(sessionModals.shortcuts).toBe(false);
     document.getElementById('shortcuts-help-btn').click();
-    expect(open).toHaveBeenCalledOnce();
+    expect(sessionModals.shortcuts).toBe(true);
   });
 
   it('the header new-session button clicks the hidden new-session relay', () => {

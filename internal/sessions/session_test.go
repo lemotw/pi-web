@@ -11,6 +11,10 @@ import (
 	"time"
 )
 
+func createSessionFile(sessionsDir, path string) (string, error) {
+	return CreateSessionFileWithSettings(sessionsDir, path, InitialSettings{})
+}
+
 func TestEncodeProjectName(t *testing.T) {
 	tests := []struct {
 		input    string
@@ -229,7 +233,7 @@ func TestCreateSessionFile(t *testing.T) {
 	sessDir := filepath.Join(tmpDir, "sessions")
 	projectPath := filepath.Join(tmpDir, "test-project")
 
-	id, err := CreateSessionFile(sessDir, projectPath)
+	id, err := createSessionFile(sessDir, projectPath)
 	if err != nil {
 		t.Fatalf("CreateSessionFile failed: %v", err)
 	}
@@ -266,7 +270,7 @@ func TestCreateSessionFileAcceptsLegitimateDoubleDotInName(t *testing.T) {
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		t.Fatal(err)
 	}
-	id, err := CreateSessionFile(tmp, dir)
+	id, err := createSessionFile(tmp, dir)
 	if err != nil {
 		t.Fatalf("expected legitimate ..hidden path to be accepted, got %v", err)
 	}
@@ -277,7 +281,7 @@ func TestCreateSessionFileAcceptsLegitimateDoubleDotInName(t *testing.T) {
 
 func TestCreateSessionFileRejectsRelativePath(t *testing.T) {
 	tmp := t.TempDir()
-	if _, err := CreateSessionFile(tmp, "relative/foo"); err == nil {
+	if _, err := createSessionFile(tmp, "relative/foo"); err == nil {
 		t.Fatal("expected error for relative path, got nil")
 	}
 }
@@ -740,7 +744,7 @@ func TestForkSessionFile(t *testing.T) {
 	projectPath := filepath.Join(tmpDir, "test-project")
 
 	// Create source session
-	id, err := CreateSessionFile(sessDir, projectPath)
+	id, err := createSessionFile(sessDir, projectPath)
 	if err != nil {
 		t.Fatalf("CreateSessionFile failed: %v", err)
 	}
@@ -812,7 +816,7 @@ func TestCloneSessionFile(t *testing.T) {
 	sessDir := filepath.Join(tmpDir, "sessions")
 	projectPath := filepath.Join(tmpDir, "test-project")
 
-	id, err := CreateSessionFile(sessDir, projectPath)
+	id, err := createSessionFile(sessDir, projectPath)
 	if err != nil {
 		t.Fatalf("CreateSessionFile failed: %v", err)
 	}
@@ -878,7 +882,7 @@ func TestForkSessionFileEntryNotFound(t *testing.T) {
 	sessDir := filepath.Join(tmpDir, "sessions")
 	projectPath := filepath.Join(tmpDir, "test-project")
 
-	id, err := CreateSessionFile(sessDir, projectPath)
+	id, err := createSessionFile(sessDir, projectPath)
 	if err != nil {
 		t.Fatalf("CreateSessionFile failed: %v", err)
 	}

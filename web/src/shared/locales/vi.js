@@ -118,7 +118,8 @@ export default {
   'composer.searchModels': 'Tìm mô hình…',
   'composer.switchModel': 'Đổi mô hình',
   'composer.switchEffort': 'Đổi mức nỗ lực',
-  'composer.disabledNotice': 'Phiên này có thể xem được, nhưng trò chuyện bị tắt vì thư mục làm việc của nó không còn tồn tại.',
+  'composer.disabledNotice':
+    'Phiên này có thể xem được, nhưng trò chuyện bị tắt vì thư mục làm việc của nó không còn tồn tại.',
   'composer.copyPath': 'Nhấp để sao chép đường dẫn',
   'composer.focusShortcut': 'Shift + i để tập trung',
   'composer.cancelRunning': 'Hủy phản hồi đang chạy',
@@ -143,8 +144,10 @@ export default {
   'settings.contentFontSizeHint': 'Cỡ chữ tin nhắn hiển thị (px).',
   'settings.fontBuiltIn': 'Tích hợp',
   'settings.fontInstalled': 'Installed',
-  'settings.fontDetectUnsupported': 'This browser cannot list installed fonts. Use Custom… to type a font name.',
-  'settings.fontDetectDenied': 'Could not read installed fonts (permission denied). Use Custom… to type a font name.',
+  'settings.fontDetectUnsupported':
+    'This browser cannot list installed fonts. Use Custom… to type a font name.',
+  'settings.fontDetectDenied':
+    'Could not read installed fonts (permission denied). Use Custom… to type a font name.',
   'settings.fontActions': 'Hành động',
   'settings.fontMono': 'Monospace',
   'settings.fontSystem': 'Hệ thống',
@@ -157,7 +160,8 @@ export default {
   'settings.language': 'Ngôn ngữ',
   'settings.languageHint': 'Ngôn ngữ cho giao diện ứng dụng. Thay đổi sẽ tải lại trang.',
   'settings.customLanguages': 'Ngôn ngữ tùy chỉnh',
-  'settings.customLanguagesHint': 'Thêm hoặc ghi đè ngôn ngữ dưới dạng JSON — một mảng gồm { "code", "label", "strings": { … } }. Các khóa thiếu sẽ quay về tiếng Anh. Dùng "Sao chép khóa tiếng Anh" để có mẫu khởi đầu, rồi "Lưu & áp dụng".',
+  'settings.customLanguagesHint':
+    'Thêm hoặc ghi đè ngôn ngữ dưới dạng JSON — một mảng gồm { "code", "label", "strings": { … } }. Các khóa thiếu sẽ quay về tiếng Anh. Dùng "Sao chép khóa tiếng Anh" để có mẫu khởi đầu, rồi "Lưu & áp dụng".',
   'settings.copyEnglishKeys': 'Sao chép khóa tiếng Anh',
   'settings.saveApply': 'Lưu & áp dụng',
 
@@ -167,7 +171,8 @@ export default {
   'settings.defaultLayout': 'Bố cục mặc định',
   'settings.defaultLayoutHint': 'Cách nhóm danh sách phiên khi tải.',
   'settings.showBtw': 'Hiện trò chuyện btw trong danh sách',
-  'settings.showBtwHint': 'Bao gồm các trò chuyện nháp btw dùng một lần trong danh sách phiên. Ẩn theo mặc định.',
+  'settings.showBtwHint':
+    'Bao gồm các trò chuyện nháp btw dùng một lần trong danh sách phiên. Ẩn theo mặc định.',
 
   'settings.sessionTitles': 'Tiêu đề phiên',
   'settings.autoTitle': 'Tự động tạo tiêu đề',
@@ -177,14 +182,17 @@ export default {
   'settings.titleOnce': 'Một lần mỗi phiên',
   'settings.titleEachTurn': 'Mỗi tin nhắn mới',
   'settings.titleModel': 'Mô hình tiêu đề',
-  'settings.titleModelHint': 'Tích hợp là heuristic từ ngữ miễn phí, tức thời (không AI). Chọn một mô hình để có tiêu đề thông minh hơn — loại nhỏ, nhanh là lý tưởng.',
+  'settings.titleModelHint':
+    'Tích hợp là heuristic từ ngữ miễn phí, tức thời (không AI). Chọn một mô hình để có tiêu đề thông minh hơn — loại nhỏ, nhanh là lý tưởng.',
   'settings.titleBuiltin': 'Heuristic tích hợp (không AI)',
 
   'settings.artifacts': 'Tạo phẩm',
   'settings.showArtifacts': 'Hiện bảng Tạo phẩm',
-  'settings.showArtifactsHint': 'Hiển thị các tệp mà tác nhân đã viết và các khối mã lớn trong một tab thanh bên phải. Khi tắt, tab bị ẩn.',
+  'settings.showArtifactsHint':
+    'Hiển thị các tệp mà tác nhân đã viết và các khối mã lớn trong một tab thanh bên phải. Khi tắt, tab bị ẩn.',
   'settings.includeFilter': 'Bộ lọc bao gồm',
-  'settings.includeFilterHint': 'Các glob phân tách bằng dấu phẩy (vd. *.md, *.html, artifacts/**). Chỉ các tệp khớp được hiển thị. Để trống để hiện tất cả; bất kỳ bộ lọc nào cũng ẩn các đoạn mã trò chuyện rời rạc.',
+  'settings.includeFilterHint':
+    'Các glob phân tách bằng dấu phẩy (vd. *.md, *.html, artifacts/**). Chỉ các tệp khớp được hiển thị. Để trống để hiện tất cả; bất kỳ bộ lọc nào cũng ẩn các đoạn mã trò chuyện rời rạc.',
 
   'settings.notifications': 'Thông báo',
   'settings.notifyReady': 'Thông báo khi phản hồi sẵn sàng',
@@ -262,11 +270,16 @@ export default {
   'btw.emptyHasSession': 'Chưa có tin nhắn — chào một câu nào.',
   'btw.emptyNoSession': 'Nhập tin nhắn để bắt đầu trò chuyện btw, hoặc nhấn "mới".',
 
-  'artifactHelp.intro': '<strong>Tạo phẩm</strong> là các tệp mà tác nhân đã viết và những khối mã lớn hơn nó đã chia sẻ, được rút ra khỏi cuộc trò chuyện để bạn có thể tìm, đọc, sao chép hoặc tải xuống ở một nơi.',
-  'artifactHelp.viewing': '<strong>Xem.</strong> Chọn một mục từ danh sách để xem nguồn của nó. Các tệp HTML, SVG và Markdown cũng có nút <em>Xem trước</em> — HTML/SVG chạy trong hộp cát an toàn, Markdown hiển thị dưới dạng văn bản định dạng.',
-  'artifactHelp.annotating': '<strong>Chú thích.</strong> Chọn văn bản trong nguồn của tạo phẩm để để lại ghi chú. Ghi chú của bạn được tập hợp trong tab <em>Chú thích</em>, nơi bạn có thể quay lại chúng hoặc gửi chúng cho tác nhân.',
-  'artifactHelp.upToDate': '<strong>Luôn cập nhật.</strong> Các tệp mà tác nhân <em>viết</em> hoặc <em>chỉnh sửa</em> được cập nhật tự động, và việc đổi tên hay xóa đơn giản (<code>mv</code>, <code>git mv</code>, <code>rm</code>) cũng được theo dõi. Nhưng những thay đổi qua các lệnh shell khác — như <code>sed</code> hoặc chuyển hướng đầu ra — không thể theo dõi từ cuộc trò chuyện, nên thỉnh thoảng một tạo phẩm có thể hiển thị phiên bản cũ. Khi nghi ngờ, hãy kiểm tra tệp trên đĩa.',
-  'artifactHelp.note': 'Tạo phẩm chỉ là một phần của chế độ xem trực tiếp và không có trong các snapshot đã xuất.',
+  'artifactHelp.intro':
+    '<strong>Tạo phẩm</strong> là các tệp mà tác nhân đã viết và những khối mã lớn hơn nó đã chia sẻ, được rút ra khỏi cuộc trò chuyện để bạn có thể tìm, đọc, sao chép hoặc tải xuống ở một nơi.',
+  'artifactHelp.viewing':
+    '<strong>Xem.</strong> Chọn một mục từ danh sách để xem nguồn của nó. Các tệp HTML, SVG và Markdown cũng có nút <em>Xem trước</em> — HTML/SVG chạy trong hộp cát an toàn, Markdown hiển thị dưới dạng văn bản định dạng.',
+  'artifactHelp.annotating':
+    '<strong>Chú thích.</strong> Chọn văn bản trong nguồn của tạo phẩm để để lại ghi chú. Ghi chú của bạn được tập hợp trong tab <em>Chú thích</em>, nơi bạn có thể quay lại chúng hoặc gửi chúng cho tác nhân.',
+  'artifactHelp.upToDate':
+    '<strong>Luôn cập nhật.</strong> Các tệp mà tác nhân <em>viết</em> hoặc <em>chỉnh sửa</em> được cập nhật tự động, và việc đổi tên hay xóa đơn giản (<code>mv</code>, <code>git mv</code>, <code>rm</code>) cũng được theo dõi. Nhưng những thay đổi qua các lệnh shell khác — như <code>sed</code> hoặc chuyển hướng đầu ra — không thể theo dõi từ cuộc trò chuyện, nên thỉnh thoảng một tạo phẩm có thể hiển thị phiên bản cũ. Khi nghi ngờ, hãy kiểm tra tệp trên đĩa.',
+  'artifactHelp.note':
+    'Tạo phẩm chỉ là một phần của chế độ xem trực tiếp và không có trong các snapshot đã xuất.',
 
   'common.back': 'Quay lại',
   'common.copied': 'Đã sao chép',
@@ -291,7 +304,8 @@ export default {
   'artifact.preview': 'Xem trước',
   'artifact.runPreview': 'Chạy xem trước',
   'artifact.showSource': 'Hiện nguồn',
-  'artifact.emptyHidden': '{count} {noun} bị ẩn bởi bộ lọc của bạn — điều chỉnh trong <a href="/settings">Cài đặt</a>.',
+  'artifact.emptyHidden':
+    '{count} {noun} bị ẩn bởi bộ lọc của bạn — điều chỉnh trong <a href="/settings">Cài đặt</a>.',
   'artifact.emptyNone': 'Chưa có tạo phẩm nào trong phiên này.',
   'artifact.nounOne': 'tạo phẩm',
   'artifact.nounMany': 'tạo phẩm',
@@ -312,7 +326,8 @@ export default {
   'version.couldNotCheck': 'Không thể kiểm tra cập nhật.',
   'version.devBuild': 'Bạn đang chạy bản dựng phát triển cục bộ.',
   'version.latestPublished': 'Mới nhất đã phát hành: {version}',
-  'version.devUpdateDisabled': 'Cập nhật trong ứng dụng bị tắt ở đây để không ghi đè các thay đổi cục bộ.',
+  'version.devUpdateDisabled':
+    'Cập nhật trong ứng dụng bị tắt ở đây để không ghi đè các thay đổi cục bộ.',
   'version.updateAvailable': 'Có bản cập nhật:',
   'version.releaseNotes': 'ghi chú phát hành',
   'version.updateRestart': 'Cập nhật & khởi động lại',

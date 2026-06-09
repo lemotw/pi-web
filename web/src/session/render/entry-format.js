@@ -12,7 +12,11 @@ export function formatTokens(count) {
 export function formatTimestamp(ts) {
   if (!ts) return '';
   const date = new Date(ts);
-  return date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  return date.toLocaleTimeString(undefined, {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  });
 }
 
 export function replaceTabs(text) {
@@ -30,13 +34,34 @@ export function str(value) {
 export function getLanguageFromPath(filePath) {
   const ext = String(filePath).split('.').pop()?.toLowerCase();
   const extToLang = {
-    ts: 'typescript', tsx: 'typescript', js: 'javascript', jsx: 'javascript',
-    py: 'python', rb: 'ruby', rs: 'rust', go: 'go', java: 'java',
-    c: 'c', cpp: 'cpp', h: 'c', hpp: 'cpp', cs: 'csharp',
-    php: 'php', sh: 'bash', bash: 'bash', zsh: 'bash',
-    sql: 'sql', html: 'html', css: 'css', scss: 'scss',
-    json: 'json', yaml: 'yaml', yml: 'yaml', xml: 'xml',
-    md: 'markdown', dockerfile: 'dockerfile',
+    ts: 'typescript',
+    tsx: 'typescript',
+    js: 'javascript',
+    jsx: 'javascript',
+    py: 'python',
+    rb: 'ruby',
+    rs: 'rust',
+    go: 'go',
+    java: 'java',
+    c: 'c',
+    cpp: 'cpp',
+    h: 'c',
+    hpp: 'cpp',
+    cs: 'csharp',
+    php: 'php',
+    sh: 'bash',
+    bash: 'bash',
+    zsh: 'bash',
+    sql: 'sql',
+    html: 'html',
+    css: 'css',
+    scss: 'scss',
+    json: 'json',
+    yaml: 'yaml',
+    yml: 'yaml',
+    xml: 'xml',
+    md: 'markdown',
+    dockerfile: 'dockerfile',
   };
   return extToLang[ext];
 }

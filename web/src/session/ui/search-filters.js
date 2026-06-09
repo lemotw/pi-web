@@ -4,7 +4,7 @@ export function setupSessionSearchAndFilters({
   setSearchQuery,
   setFilterMode,
   forceTreeRerender,
-  navigateTo
+  navigateTo,
 } = {}) {
   const searchInput = documentImpl.getElementById('tree-search');
   searchInput?.addEventListener('input', (e) => {
@@ -12,9 +12,9 @@ export function setupSessionSearchAndFilters({
     forceTreeRerender();
   });
 
-  documentImpl.querySelectorAll('.filter-btn').forEach(btn => {
+  documentImpl.querySelectorAll('.filter-btn').forEach((btn) => {
     btn.addEventListener('click', () => {
-      documentImpl.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      documentImpl.querySelectorAll('.filter-btn').forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
       setFilterMode(btn.dataset.filter);
       forceTreeRerender();
@@ -29,14 +29,19 @@ export function setupSessionSearchAndFilters({
       if (hasQuery) {
         navigateTo(getLeafId(), 'bottom');
       }
-    }
+    },
   };
 }
 
 export function isEditableTarget(element) {
   if (!element) return false;
   const tagName = element.tagName;
-  if (tagName === 'INPUT' || tagName === 'TEXTAREA' || tagName === 'SELECT' || tagName === 'BUTTON') {
+  if (
+    tagName === 'INPUT' ||
+    tagName === 'TEXTAREA' ||
+    tagName === 'SELECT' ||
+    tagName === 'BUTTON'
+  ) {
     return true;
   }
   return element.isContentEditable || Boolean(element.closest?.('[contenteditable="true"]'));
@@ -48,7 +53,7 @@ export function setupSessionKeyboardShortcuts({
   toggleThinking,
   toggleToolsVisibility,
   toggleToolOutputs,
-  isEditableTargetImpl = isEditableTarget
+  isEditableTargetImpl = isEditableTarget,
 } = {}) {
   documentImpl.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {

@@ -8,15 +8,24 @@ import {
 
 function makeStorage(enabled = true) {
   const map = { [DONE_NOTIFY_STORAGE_KEY]: String(enabled) };
-  return { getItem: (k) => map[k] ?? null, setItem: (k, v) => { map[k] = v; } };
+  return {
+    getItem: (k) => map[k] ?? null,
+    setItem: (k, v) => {
+      map[k] = v;
+    },
+  };
 }
 
 function makeWindow({ badgeApi = true } = {}) {
   const badge = { set: [], cleared: 0 };
   const nav = badgeApi
     ? {
-        setAppBadge: vi.fn(async (n) => { badge.set.push(n); }),
-        clearAppBadge: vi.fn(async () => { badge.cleared += 1; }),
+        setAppBadge: vi.fn(async (n) => {
+          badge.set.push(n);
+        }),
+        clearAppBadge: vi.fn(async () => {
+          badge.cleared += 1;
+        }),
       }
     : {};
   return {
@@ -47,7 +56,7 @@ describe('notifyDone — app badge', () => {
   it('does nothing when Badging API is unavailable', () => {
     const { windowImpl } = makeWindow({ badgeApi: false });
     expect(() =>
-      notifyDone({ windowImpl, documentImpl: { hidden: true }, storage: makeStorage(true) })
+      notifyDone({ windowImpl, documentImpl: { hidden: true }, storage: makeStorage(true) }),
     ).not.toThrow();
   });
 });
@@ -71,9 +80,13 @@ describe('setupAppBadgeClearing', () => {
     const listeners = {};
     const documentImpl = {
       hidden: false,
-      addEventListener: (type, fn) => { listeners[type] = fn; },
+      addEventListener: (type, fn) => {
+        listeners[type] = fn;
+      },
     };
-    windowImpl.addEventListener = (type, fn) => { listeners[type] = fn; };
+    windowImpl.addEventListener = (type, fn) => {
+      listeners[type] = fn;
+    };
 
     setupAppBadgeClearing({ documentImpl, windowImpl });
 
@@ -85,9 +98,13 @@ describe('setupAppBadgeClearing', () => {
     const listeners = {};
     const documentImpl = {
       hidden: true,
-      addEventListener: (type, fn) => { listeners[type] = fn; },
+      addEventListener: (type, fn) => {
+        listeners[type] = fn;
+      },
     };
-    windowImpl.addEventListener = (type, fn) => { listeners[type] = fn; };
+    windowImpl.addEventListener = (type, fn) => {
+      listeners[type] = fn;
+    };
 
     setupAppBadgeClearing({ documentImpl, windowImpl });
     expect(badge.cleared).toBe(0);
@@ -102,9 +119,13 @@ describe('setupAppBadgeClearing', () => {
     const listeners = {};
     const documentImpl = {
       hidden: false,
-      addEventListener: (type, fn) => { listeners[type] = fn; },
+      addEventListener: (type, fn) => {
+        listeners[type] = fn;
+      },
     };
-    windowImpl.addEventListener = (type, fn) => { listeners[type] = fn; };
+    windowImpl.addEventListener = (type, fn) => {
+      listeners[type] = fn;
+    };
 
     setupAppBadgeClearing({ documentImpl, windowImpl });
     badge.cleared = 0; // reset after the initial clear

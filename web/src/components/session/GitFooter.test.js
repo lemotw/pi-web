@@ -1,6 +1,10 @@
 import { describe, expect, it, vi, afterEach } from 'vitest';
 import { render, cleanup } from '@testing-library/svelte';
-import GitFooter, { DRAFT_PR_PROMPT, COMMIT_PUSH_PROMPT, MERGE_PR_PROMPT } from './GitFooter.svelte';
+import GitFooter, {
+  DRAFT_PR_PROMPT,
+  COMMIT_PUSH_PROMPT,
+  MERGE_PR_PROMPT,
+} from './GitFooter.svelte';
 
 const flush = () => new Promise((r) => setTimeout(r, 0));
 const id = (x) => document.getElementById(x);
@@ -33,7 +37,15 @@ describe('GitFooter', () => {
   });
 
   it('feature branch, no PR -> primary Create PR (commit+push+create), only manual under the caret', async () => {
-    renderFooter({ getGitInfo: vi.fn().mockResolvedValue({ isRepo: true, branch: 'feature/x', isDefault: false, hasChanges: true, prUrl: '' }) });
+    renderFooter({
+      getGitInfo: vi.fn().mockResolvedValue({
+        isRepo: true,
+        branch: 'feature/x',
+        isDefault: false,
+        hasChanges: true,
+        prUrl: '',
+      }),
+    });
     await flush();
     expect(id('pi-git-primary-label').textContent).toBe('Create PR');
     expect(id('pi-git-branch-edit').hidden).toBe(false);
@@ -47,7 +59,15 @@ describe('GitFooter', () => {
   });
 
   it('feature branch, open PR + local changes -> primary Commit & push, secondary view + merge', async () => {
-    renderFooter({ getGitInfo: vi.fn().mockResolvedValue({ isRepo: true, branch: 'feature/x', isDefault: false, hasChanges: true, prUrl: 'https://github.com/o/r/pull/42' }) });
+    renderFooter({
+      getGitInfo: vi.fn().mockResolvedValue({
+        isRepo: true,
+        branch: 'feature/x',
+        isDefault: false,
+        hasChanges: true,
+        prUrl: 'https://github.com/o/r/pull/42',
+      }),
+    });
     await flush();
     expect(id('pi-git-primary-label').textContent).toBe('Commit & push');
     expect(id('pi-git-pr-view').hidden).toBe(false);
@@ -60,7 +80,15 @@ describe('GitFooter', () => {
 
   it('feature branch, open PR + no changes -> primary View PR, secondary merge only (no commit)', async () => {
     const open = vi.spyOn(window, 'open').mockImplementation(() => null);
-    renderFooter({ getGitInfo: vi.fn().mockResolvedValue({ isRepo: true, branch: 'feature/x', isDefault: false, hasChanges: false, prUrl: 'https://github.com/o/r/pull/42' }) });
+    renderFooter({
+      getGitInfo: vi.fn().mockResolvedValue({
+        isRepo: true,
+        branch: 'feature/x',
+        isDefault: false,
+        hasChanges: false,
+        prUrl: 'https://github.com/o/r/pull/42',
+      }),
+    });
     await flush();
     expect(id('pi-git-primary-label').textContent.trim()).toBe('View PR');
     expect(id('pi-git-primary-label').querySelector('svg')).not.toBeNull();
@@ -71,7 +99,11 @@ describe('GitFooter', () => {
   });
 
   it('default branch + changes -> primary Commit & push, no caret, no edit pencil', async () => {
-    renderFooter({ getGitInfo: vi.fn().mockResolvedValue({ isRepo: true, branch: 'main', isDefault: true, hasChanges: true }) });
+    renderFooter({
+      getGitInfo: vi
+        .fn()
+        .mockResolvedValue({ isRepo: true, branch: 'main', isDefault: true, hasChanges: true }),
+    });
     await flush();
     expect(id('pi-git-primary-label').textContent).toBe('Commit & push');
     expect(id('pi-git-caret').hidden).toBe(true);
@@ -81,7 +113,11 @@ describe('GitFooter', () => {
   });
 
   it('default branch + no changes -> action control hidden, only the branch shows', async () => {
-    renderFooter({ getGitInfo: vi.fn().mockResolvedValue({ isRepo: true, branch: 'main', isDefault: true, hasChanges: false }) });
+    renderFooter({
+      getGitInfo: vi
+        .fn()
+        .mockResolvedValue({ isRepo: true, branch: 'main', isDefault: true, hasChanges: false }),
+    });
     await flush();
     expect(id('pi-git-bar').hidden).toBe(false);
     expect(id('pi-git-pr').hidden).toBe(true);
@@ -89,7 +125,15 @@ describe('GitFooter', () => {
   });
 
   it('menu items run their actions (Merge PR injects merge prompt)', async () => {
-    renderFooter({ getGitInfo: vi.fn().mockResolvedValue({ isRepo: true, branch: 'feature/x', isDefault: false, hasChanges: true, prUrl: 'https://github.com/o/r/pull/42' }) });
+    renderFooter({
+      getGitInfo: vi.fn().mockResolvedValue({
+        isRepo: true,
+        branch: 'feature/x',
+        isDefault: false,
+        hasChanges: true,
+        prUrl: 'https://github.com/o/r/pull/42',
+      }),
+    });
     await flush();
     id('pi-git-pr-merge').click();
     expect(id('pi-chat-message').value).toBe(MERGE_PR_PROMPT);

@@ -8,7 +8,11 @@ afterEach(cleanup);
 const entries = [
   { id: 'a1', type: 'message', message: { role: 'user', content: 'First request' } },
   { id: 'b2', type: 'message', message: { role: 'assistant', content: 'Ignore me' } },
-  { id: 'c3', type: 'message', message: { role: 'user', content: 'Implement the palette redesign with keyboard nav' } },
+  {
+    id: 'c3',
+    type: 'message',
+    message: { role: 'user', content: 'Implement the palette redesign with keyboard nav' },
+  },
 ];
 
 describe('buildUserMessageList', () => {
@@ -28,7 +32,9 @@ describe('ForkModal', () => {
     expect(rows[0].textContent).toContain('#2');
     expect(rows[0].textContent).toContain('Implement the palette');
     expect(rows[1].textContent).toContain('#1');
-    expect(document.querySelector('.fork-message-preview').textContent).toContain('Implement the palette redesign');
+    expect(document.querySelector('.fork-message-preview').textContent).toContain(
+      'Implement the palette redesign',
+    );
   });
 
   it('filters messages and selects the highlighted row with Enter', async () => {

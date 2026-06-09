@@ -13,6 +13,15 @@ import (
 	"time"
 )
 
+// Session JSONL is read line-by-line; a single line (e.g. a large assistant
+// message or pasted blob) can be big, so the scanner starts with a 64KB buffer
+// and grows up to maxScanLineBytes. The cap bounds memory against an
+// attacker-controlled file with a pathologically long line.
+const (
+	scanInitialBufferBytes = 64 * 1024
+	maxScanLineBytes       = 256 * 1024 * 1024
+)
+
 // Typed structs for ParseSummary — avoid map[string]any per line.
 type summaryLine struct {
 	Type      string      `json:"type"`
@@ -150,6 +159,49 @@ func SortSummariesByProjectActivity(s []SessionSummary) {
 	}
 }
 
+const chatDisabledMissingCwd = "This session can be viewed, but chat is disabled because its working directory no longer exists."
+
+func newSessionSummary(dirName, fileName string) SessionSummary {
+	return SessionSummary{
+		ID:            fileName,
+		Filename:      fileName,
+		Project:       cleanProjectName(dirName),
+		ChatAvailable: true,
+	}
+}
+
+// applySummaryContext finalizes the fields shared by ParseSummary and ParseFile
+// after the scan: a LastActivity fallback to the file mtime, the session name
+// precedence (session_info > header > first user message > filename), and the
+// cwd-derived project / chat-availability. Kept in one place so the two parsers
+// (typed vs map) can't drift on name resolution or the disabled-chat reason.
+func applySummaryContext(s *SessionSummary, path, fileName, sessionInfoName, headerName, firstUserText, headerCwd string) {
+	if s.LastActivity == "" {
+		if info, err := os.Stat(path); err == nil {
+			s.LastActivity = info.ModTime().Format(time.RFC3339)
+		}
+	}
+
+	switch {
+	case sessionInfoName != "":
+		s.Name = sessionInfoName
+	case headerName != "":
+		s.Name = headerName
+	case firstUserText != "":
+		s.Name = truncate(firstUserText, 80)
+	default:
+		s.Name = fileName
+	}
+
+	if headerCwd != "" {
+		s.Project = headerCwd
+		if _, err := os.Stat(headerCwd); err != nil {
+			s.ChatAvailable = false
+			s.ChatDisabledReason = chatDisabledMissingCwd
+		}
+	}
+}
+
 // ParseSummary streams path line-by-line, accumulating only the fields the
 // index page needs. Lines are discarded after parsing — unlike ParseFile,
 // the full conversation is not retained in memory.
@@ -160,16 +212,11 @@ func ParseSummary(path, dirName, fileName string) (SessionSummary, error) {
 	}
 	defer f.Close()
 
-	s := SessionSummary{
-		ID:            fileName,
-		Filename:      fileName,
-		Project:       cleanProjectName(dirName),
-		ChatAvailable: true,
-	}
+	s := newSessionSummary(dirName, fileName)
 
 	var headerName, sessionInfoName, firstUserText, headerCwd string
 	scanner := bufio.NewScanner(f)
-	scanner.Buffer(make([]byte, 64*1024), 256*1024*1024)
+	scanner.Buffer(make([]byte, scanInitialBufferBytes), maxScanLineBytes)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if len(line) == 0 {
@@ -230,30 +277,7 @@ func ParseSummary(path, dirName, fileName string) (SessionSummary, error) {
 		return SessionSummary{}, err
 	}
 
-	if s.LastActivity == "" {
-		if info, err := os.Stat(path); err == nil {
-			s.LastActivity = info.ModTime().Format(time.RFC3339)
-		}
-	}
-
-	switch {
-	case sessionInfoName != "":
-		s.Name = sessionInfoName
-	case headerName != "":
-		s.Name = headerName
-	case firstUserText != "":
-		s.Name = truncate(firstUserText, 80)
-	default:
-		s.Name = fileName
-	}
-
-	if headerCwd != "" {
-		s.Project = headerCwd
-		if _, err := os.Stat(headerCwd); err != nil {
-			s.ChatAvailable = false
-			s.ChatDisabledReason = "This session can be viewed, but chat is disabled because its working directory no longer exists."
-		}
-	}
+	applySummaryContext(&s, path, fileName, sessionInfoName, headerName, firstUserText, headerCwd)
 
 	return s, nil
 }
@@ -286,12 +310,6 @@ func extractRawText(content json.RawMessage) string {
 		}
 	}
 	return ""
-}
-
-// ExtractMessageText pulls plain text from a message content value (string or
-// content-block array). Used by both the parser and the session page renderer.
-func ExtractMessageText(content any) string {
-	return extractMessageText(content)
 }
 
 func extractMessageText(content any) string {
@@ -340,14 +358,17 @@ func AutoTitleSession(path, name string, now func() time.Time) error {
 }
 
 func loadEntriesFromFile(path string) ([]map[string]any, error) {
-	data, err := os.ReadFile(path)
+	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
-	lines := strings.Split(string(data), "\n")
-	entries := make([]map[string]any, 0, len(lines))
-	for _, line := range lines {
-		line = strings.TrimSpace(line)
+	defer f.Close()
+
+	entries := make([]map[string]any, 0)
+	scanner := bufio.NewScanner(f)
+	scanner.Buffer(make([]byte, scanInitialBufferBytes), maxScanLineBytes)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
 		if line == "" {
 			continue
 		}
@@ -356,6 +377,9 @@ func loadEntriesFromFile(path string) ([]map[string]any, error) {
 			continue
 		}
 		entries = append(entries, entry)
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, err
 	}
 	return entries, nil
 }
@@ -388,9 +412,13 @@ func LabelSessionEntry(path, targetID, label string, now func() time.Time) error
 		return ErrSessionEntryNotFound
 	}
 
+	entryID, err := randomEntryID()
+	if err != nil {
+		return err
+	}
 	entry := map[string]any{
 		"type":      "label",
-		"id":        randomEntryID(),
+		"id":        entryID,
 		"parentId":  parentID,
 		"timestamp": now().UTC().Format(time.RFC3339Nano),
 		"targetId":  targetID,
@@ -456,12 +484,7 @@ func ParseFile(path, dirName, fileName string) (Session, error) {
 	}
 	defer f.Close()
 
-	s := SessionSummary{
-		ID:            fileName,
-		Filename:      fileName,
-		Project:       cleanProjectName(dirName),
-		ChatAvailable: true,
-	}
+	s := newSessionSummary(dirName, fileName)
 
 	var entries []map[string]any
 	var header map[string]any
@@ -469,7 +492,7 @@ func ParseFile(path, dirName, fileName string) (Session, error) {
 	seenSessionHeaders := make(map[string]bool)
 
 	scanner := bufio.NewScanner(f)
-	scanner.Buffer(make([]byte, 64*1024), 256*1024*1024)
+	scanner.Buffer(make([]byte, scanInitialBufferBytes), maxScanLineBytes)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if line == "" {
@@ -551,30 +574,7 @@ func ParseFile(path, dirName, fileName string) (Session, error) {
 		return Session{}, err
 	}
 
-	if s.LastActivity == "" {
-		if info, err := os.Stat(path); err == nil {
-			s.LastActivity = info.ModTime().Format(time.RFC3339)
-		}
-	}
-
-	switch {
-	case sessionInfoName != "":
-		s.Name = sessionInfoName
-	case headerName != "":
-		s.Name = headerName
-	case firstUserText != "":
-		s.Name = truncate(firstUserText, 80)
-	default:
-		s.Name = fileName
-	}
-
-	if headerCwd != "" {
-		s.Project = headerCwd
-		if _, err := os.Stat(headerCwd); err != nil {
-			s.ChatAvailable = false
-			s.ChatDisabledReason = "This session can be viewed, but chat is disabled because its working directory no longer exists."
-		}
-	}
+	applySummaryContext(&s, path, fileName, sessionInfoName, headerName, firstUserText, headerCwd)
 
 	return Session{SessionSummary: s, Header: header, Entries: entries}, nil
 }
@@ -724,7 +724,7 @@ func readSessionCWD(dir string) string {
 	}
 	defer f.Close()
 	scanner := bufio.NewScanner(f)
-	scanner.Buffer(make([]byte, 64*1024), 256*1024*1024)
+	scanner.Buffer(make([]byte, scanInitialBufferBytes), maxScanLineBytes)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if len(line) == 0 {
@@ -750,10 +750,6 @@ type InitialSettings struct {
 	ModelProvider string
 	ModelID       string
 	ThinkingLevel string
-}
-
-func CreateSessionFile(sessionsDir, path string) (string, error) {
-	return CreateSessionFileWithSettings(sessionsDir, path, InitialSettings{})
 }
 
 func CreateSessionFileWithSettings(sessionsDir, path string, settings InitialSettings) (string, error) {
@@ -787,16 +783,20 @@ func CreateSessionFileWithSettings(sessionsDir, path string, settings InitialSet
 		return "", err
 	}
 
-	id := randomUUID()
-	timestamp := time.Now().UTC().Format("2006-01-02T15-04-05.000Z")
-	filename := timestamp + "_" + id + ".jsonl"
+	id, err := randomUUID()
+	if err != nil {
+		return "", err
+	}
+	now := time.Now().UTC()
+	rfc3339 := now.Format(time.RFC3339Nano)
+	filename := now.Format("2006-01-02T15-04-05.000Z") + "_" + id + ".jsonl"
 	filePath := filepath.Join(projectDir, filename)
 
 	header := map[string]any{
 		"type":      "session",
 		"version":   3,
 		"id":        id,
-		"timestamp": time.Now().UTC().Format(time.RFC3339Nano),
+		"timestamp": rfc3339,
 		"cwd":       path,
 	}
 	data, err := json.Marshal(header)
@@ -808,12 +808,15 @@ func CreateSessionFileWithSettings(sessionsDir, path string, settings InitialSet
 	fileData = append(fileData, '\n')
 	var parentID any
 	if settings.ModelProvider != "" && settings.ModelID != "" {
-		entryID := randomEntryID()
+		entryID, err := randomEntryID()
+		if err != nil {
+			return "", err
+		}
 		line, err := json.Marshal(map[string]any{
 			"type":      "model_change",
 			"id":        entryID,
 			"parentId":  parentID,
-			"timestamp": time.Now().UTC().Format(time.RFC3339Nano),
+			"timestamp": rfc3339,
 			"provider":  settings.ModelProvider,
 			"modelId":   settings.ModelID,
 			"implicit":  true,
@@ -826,12 +829,15 @@ func CreateSessionFileWithSettings(sessionsDir, path string, settings InitialSet
 		parentID = entryID
 	}
 	if settings.ThinkingLevel != "" {
-		entryID := randomEntryID()
+		entryID, err := randomEntryID()
+		if err != nil {
+			return "", err
+		}
 		line, err := json.Marshal(map[string]any{
 			"type":          "thinking_level_change",
 			"id":            entryID,
 			"parentId":      parentID,
-			"timestamp":     time.Now().UTC().Format(time.RFC3339Nano),
+			"timestamp":     rfc3339,
 			"thinkingLevel": settings.ThinkingLevel,
 			"implicit":      true,
 		})
@@ -877,7 +883,7 @@ func createBranchSessionFile(sessionsDir, sourcePath, targetEntryID string, now 
 	seenSessionHeaders := make(map[string]bool)
 
 	scanner := bufio.NewScanner(f)
-	scanner.Buffer(make([]byte, 64*1024), 256*1024*1024)
+	scanner.Buffer(make([]byte, scanInitialBufferBytes), maxScanLineBytes)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if line == "" {
@@ -947,7 +953,10 @@ func createBranchSessionFile(sessionsDir, sourcePath, targetEntryID string, now 
 		return "", err
 	}
 
-	id := randomUUID()
+	id, err := randomUUID()
+	if err != nil {
+		return "", err
+	}
 	timestamp := now().UTC().Format("2006-01-02T15-04-05.000Z")
 	filename := timestamp + "_" + id + ".jsonl"
 	filePath := filepath.Join(projectDir, filename)
@@ -987,20 +996,20 @@ func createBranchSessionFile(sessionsDir, sourcePath, targetEntryID string, now 
 	return filename, nil
 }
 
-func randomUUID() string {
+func randomUUID() (string, error) {
 	b := make([]byte, 16)
 	if _, err := rand.Read(b); err != nil {
-		panic(err)
+		return "", err
 	}
 	b[6] = (b[6] & 0x0f) | 0x40
 	b[8] = (b[8] & 0x3f) | 0x80
-	return fmt.Sprintf("%x-%x-%x-%x-%x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:16])
+	return fmt.Sprintf("%x-%x-%x-%x-%x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:16]), nil
 }
 
-func randomEntryID() string {
+func randomEntryID() (string, error) {
 	b := make([]byte, 4)
 	if _, err := rand.Read(b); err != nil {
-		panic(err)
+		return "", err
 	}
-	return fmt.Sprintf("%x", b)
+	return fmt.Sprintf("%x", b), nil
 }

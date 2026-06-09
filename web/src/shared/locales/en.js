@@ -4,6 +4,7 @@ export default {
   // ── Common ──
   'common.cancel': 'Cancel',
   'common.close': 'Close',
+  'common.closeNamed': 'Close {name}',
   'common.create': 'Create',
   'common.add': 'Add',
   'common.done': 'Done',
@@ -41,7 +42,8 @@ export default {
   'index.loadingSessions': 'Loading sessions…',
   'index.loadingSessionsHint': 'Fetching the latest session list.',
   'index.noSessions': 'No sessions to show',
-  'index.noSessionsHint': 'Enable projects from the menu (⋯ → Manage Projects) to see their sessions.',
+  'index.noSessionsHint':
+    'Enable projects from the menu (⋯ → Manage Projects) to see their sessions.',
   'index.noSessionsYet': 'No sessions yet',
   'index.noSessionsYetHint': 'Start a new session to begin.',
   'index.importSession': 'Import session',
@@ -116,6 +118,13 @@ export default {
   'menu.tree': 'Tree',
   'menu.diff': 'Diff',
   'menu.modelUsage': 'Model Usage',
+  'menu.renamePrompt': 'Rename session',
+  'menu.renamed': 'Renamed',
+  'menu.forkFailed': 'Fork failed',
+  'menu.noUserMessagesToFork': 'No user messages to fork from',
+  'menu.loadMessagesFailed': 'Failed to load messages',
+  'menu.cloneFailed': 'Clone failed',
+  'menu.notImplemented': 'Not yet implemented',
 
   // ── Right sidebar ──
   'sidebar.scratchpad': 'Scratchpad',
@@ -141,15 +150,30 @@ export default {
   'composer.searchModels': 'Search models…',
   'composer.switchModel': 'Switch model',
   'composer.switchEffort': 'Switch effort',
-  'composer.disabledNotice': 'This session can be viewed, but chat is disabled because its working directory no longer exists.',
+  'composer.modelPlaceholder': 'Model',
+  'composer.disabledNotice':
+    'This session can be viewed, but chat is disabled because its working directory no longer exists.',
   'composer.copyPath': 'Click to copy path',
   'composer.focusShortcut': 'Shift + i to focus',
   'composer.cancelRunning': 'Cancel running response',
   'composer.contextDetails': 'Click for details',
   'composer.pathCopied': 'Path copied',
+  'composer.compact': 'Compact conversation context (/compact)',
+  'composer.compactLabel': 'Compact context',
+  'composer.compacting': 'Compacting conversation context…',
 
   // ── Share / export ──
   'share.copiedSuffix': '{label} copied',
+  'share.defaultTitle': 'Share session',
+  'share.failedTitle': 'Share Failed',
+  'share.successTitle': 'Session Shared',
+  'share.gistUrlLabel': 'Gist URL',
+  'share.previewUrlLabel': 'Preview URL',
+  'share.copyGist': 'Copy Gist',
+  'share.copyPreview': 'Copy Preview',
+  'share.gistLabel': 'Gist',
+  'share.previewLabel': 'Preview',
+  'share.networkError': 'Network error',
 
   // ── Settings ──
   'settings.title': 'Settings',
@@ -171,8 +195,10 @@ export default {
   'settings.contentFontSizeHint': 'Size of rendered message text (px).',
   'settings.fontBuiltIn': 'Built-in',
   'settings.fontInstalled': 'Installed',
-  'settings.fontDetectUnsupported': 'This browser cannot list installed fonts. Use Custom… to type a font name.',
-  'settings.fontDetectDenied': 'Could not read installed fonts (permission denied). Use Custom… to type a font name.',
+  'settings.fontDetectUnsupported':
+    'This browser cannot list installed fonts. Use Custom… to type a font name.',
+  'settings.fontDetectDenied':
+    'Could not read installed fonts (permission denied). Use Custom… to type a font name.',
   'settings.fontActions': 'Actions',
   'settings.fontMono': 'Monospace',
   'settings.fontSystem': 'System',
@@ -185,7 +211,8 @@ export default {
   'settings.language': 'Language',
   'settings.languageHint': 'Language for the app interface. Changing it reloads the page.',
   'settings.customLanguages': 'Custom languages',
-  'settings.customLanguagesHint': 'Add or override languages as JSON — an array of { "code", "label", "strings": { … } }. Missing keys fall back to English. Use “Copy English keys” for a starting template, then “Save & apply”.',
+  'settings.customLanguagesHint':
+    'Add or override languages as JSON — an array of { "code", "label", "strings": { … } }. Missing keys fall back to English. Use “Copy English keys” for a starting template, then “Save & apply”.',
   'settings.copyEnglishKeys': 'Copy English keys',
   'settings.saveApply': 'Save & apply',
 
@@ -195,7 +222,8 @@ export default {
   'settings.defaultLayout': 'Default layout',
   'settings.defaultLayoutHint': 'How the sessions list is grouped on load.',
   'settings.showBtw': 'Show btw chats in list',
-  'settings.showBtwHint': 'Include the throwaway btw scratch-chats in the sessions list. Hidden by default.',
+  'settings.showBtwHint':
+    'Include the throwaway btw scratch-chats in the sessions list. Hidden by default.',
 
   'settings.sessionTitles': 'Session Titles',
   'settings.autoTitle': 'Auto-generate titles',
@@ -205,14 +233,17 @@ export default {
   'settings.titleOnce': 'Once per session',
   'settings.titleEachTurn': 'Every new message',
   'settings.titleModel': 'Title model',
-  'settings.titleModelHint': 'Built-in is a free, instant word heuristic (no AI). Pick a model for smarter titles — a small, fast one is ideal.',
+  'settings.titleModelHint':
+    'Built-in is a free, instant word heuristic (no AI). Pick a model for smarter titles — a small, fast one is ideal.',
   'settings.titleBuiltin': 'Built-in heuristic (no AI)',
 
   'settings.artifacts': 'Artifacts',
   'settings.showArtifacts': 'Show Artifacts panel',
-  'settings.showArtifactsHint': 'Surface files the agent wrote and sizeable code blocks in a right-sidebar tab. When off, the tab is hidden.',
+  'settings.showArtifactsHint':
+    'Surface files the agent wrote and sizeable code blocks in a right-sidebar tab. When off, the tab is hidden.',
   'settings.includeFilter': 'Include filter',
-  'settings.includeFilterHint': 'Comma-separated globs (e.g. *.md, *.html, artifacts/**). Only matching files are shown. Leave empty to show everything; any filter also hides loose chat code snippets.',
+  'settings.includeFilterHint':
+    'Comma-separated globs (e.g. *.md, *.html, artifacts/**). Only matching files are shown. Leave empty to show everything; any filter also hides loose chat code snippets.',
 
   'settings.notifications': 'Notifications',
   'settings.notifyReady': 'Notify when a response is ready',
@@ -262,6 +293,7 @@ export default {
   'shortcuts.focusInput': 'Focus chat input',
   'shortcuts.cycleThinking': 'Cycle thinking mode',
   'shortcuts.switchModel': 'Choose/switch model',
+  'shortcuts.compact': 'Compact context (/compact)',
   'shortcuts.submit': 'Submit message',
   'shortcuts.scrollDown': 'Scroll down',
   'shortcuts.scrollUp': 'Scroll up',
@@ -300,7 +332,8 @@ export default {
   'artifact.preview': 'Preview',
   'artifact.runPreview': 'Run preview',
   'artifact.showSource': 'Show source',
-  'artifact.emptyHidden': '{count} {noun} hidden by your filter — adjust in <a href="/settings">Settings</a>.',
+  'artifact.emptyHidden':
+    '{count} {noun} hidden by your filter — adjust in <a href="/settings">Settings</a>.',
   'artifact.emptyNone': 'No artifacts in this session yet.',
   'artifact.nounOne': 'artifact',
   'artifact.nounMany': 'artifacts',
@@ -317,26 +350,32 @@ export default {
   'annotation.comment': 'Annotate',
 
   // ── Artifacts help modal (HTML — rendered via {@html}) ──
-  'artifactHelp.intro': '<strong>Artifacts</strong> are the files the agent wrote and the larger code blocks it shared, pulled out of the conversation so you can find, read, copy, or download them in one place.',
-  'artifactHelp.viewing': '<strong>Viewing.</strong> Pick one from the list to see its source. HTML, SVG, and Markdown files also have a <em>Preview</em> toggle — HTML/SVG run in a secure sandbox, Markdown renders as formatted text.',
-  'artifactHelp.annotating': '<strong>Annotating.</strong> Select text in an artifact\'s source to leave a note. Your notes collect in the <em>Annotations</em> tab, where you can jump back to them or send them to the agent.',
-  'artifactHelp.upToDate': '<strong>Staying up to date.</strong> Files the agent <em>writes</em> or <em>edits</em> update automatically, and simple renames or deletes (<code>mv</code>, <code>git mv</code>, <code>rm</code>) are tracked too. But changes made through other shell commands — like <code>sed</code> or output redirects — can\'t be followed from the conversation, so once in a while an artifact may show an older version. When in doubt, check the file on disk.',
-  'artifactHelp.note': 'Artifacts are part of the live view only and aren\'t included in exported snapshots.',
+  'artifactHelp.intro':
+    '<strong>Artifacts</strong> are the files the agent wrote and the larger code blocks it shared, pulled out of the conversation so you can find, read, copy, or download them in one place.',
+  'artifactHelp.viewing':
+    '<strong>Viewing.</strong> Pick one from the list to see its source. HTML, SVG, and Markdown files also have a <em>Preview</em> toggle — HTML/SVG run in a secure sandbox, Markdown renders as formatted text.',
+  'artifactHelp.annotating':
+    "<strong>Annotating.</strong> Select text in an artifact's source to leave a note. Your notes collect in the <em>Annotations</em> tab, where you can jump back to them or send them to the agent.",
+  'artifactHelp.upToDate':
+    "<strong>Staying up to date.</strong> Files the agent <em>writes</em> or <em>edits</em> update automatically, and simple renames or deletes (<code>mv</code>, <code>git mv</code>, <code>rm</code>) are tracked too. But changes made through other shell commands — like <code>sed</code> or output redirects — can't be followed from the conversation, so once in a while an artifact may show an older version. When in doubt, check the file on disk.",
+  'artifactHelp.note':
+    "Artifacts are part of the live view only and aren't included in exported snapshots.",
 
   // ── Version modal ──
   'version.unavailable': 'Version information is unavailable.',
   'version.checkForUpdates': 'Check for updates',
   'version.checking': 'Checking…',
   'version.couldNotCheck': 'Could not check for updates.',
-  'version.devBuild': 'You\'re running a local development build.',
+  'version.devBuild': "You're running a local development build.",
   'version.latestPublished': 'Latest published: {version}',
-  'version.devUpdateDisabled': 'In-app update is disabled here so it can\'t overwrite local changes.',
+  'version.devUpdateDisabled':
+    "In-app update is disabled here so it can't overwrite local changes.",
   'version.updateAvailable': 'Update available:',
   'version.releaseNotes': 'release notes',
   'version.updateRestart': 'Update & Restart',
   'version.later': 'Later',
   'version.lastChecked': 'Last checked {when}.',
-  'version.onLatest': 'You\'re on the latest version.',
+  'version.onLatest': "You're on the latest version.",
   'version.noReleaseNotes': 'No release notes.',
   'version.installing': 'Installing update…',
   'version.restarting': 'Restarting server…',

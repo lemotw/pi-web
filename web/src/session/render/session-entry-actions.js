@@ -5,6 +5,7 @@
 // copy/download controls.
 
 import { setIconElement, Check } from '../../shared/icons.js';
+import { copyToClipboard as writeClipboard } from '../../shared/clipboard.js';
 
 // Download the session as JSONL: header line + entry lines.
 export function downloadSessionJson({
@@ -29,12 +30,10 @@ export function downloadSessionJson({
 }
 
 // Build a shareable URL for a message: base?gistId&leafId=<leaf>&targetId=<entry>.
-export function buildShareUrl(entryId, {
-  documentImpl = document,
-  windowImpl = window,
-  getCurrentLeafId = () => '',
-  URLImpl = URL,
-} = {}) {
+export function buildShareUrl(
+  entryId,
+  { documentImpl = document, windowImpl = window, getCurrentLeafId = () => '', URLImpl = URL } = {},
+) {
   const baseUrlMeta = documentImpl.querySelector('meta[name="pi-share-base-url"]');
   const baseUrl = baseUrlMeta ? baseUrlMeta.content : windowImpl.location.href.split('?')[0];
 
@@ -55,33 +54,12 @@ export function buildShareUrl(entryId, {
 
 // Copy text to the clipboard (with an execCommand fallback for HTTP) and flash
 // the button with a check icon.
-export async function copyToClipboard(text, button, {
-  documentImpl = document,
-  navigatorImpl = navigator,
-} = {}) {
-  let success = false;
-  try {
-    if (navigatorImpl.clipboard && navigatorImpl.clipboard.writeText) {
-      await navigatorImpl.clipboard.writeText(text);
-      success = true;
-    }
-  } catch { /* fall through to execCommand */ }
-
-  if (!success) {
-    try {
-      const textarea = documentImpl.createElement('textarea');
-      textarea.value = text;
-      textarea.style.position = 'fixed';
-      textarea.style.opacity = '0';
-      documentImpl.body.appendChild(textarea);
-      textarea.select();
-      success = documentImpl.execCommand('copy');
-      documentImpl.body.removeChild(textarea);
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error('Failed to copy:', err);
-    }
-  }
+export async function copyToClipboard(
+  text,
+  button,
+  { documentImpl = document, navigatorImpl = navigator } = {},
+) {
+  const success = await writeClipboard(text, { documentImpl, navigatorImpl });
 
   if (success && button) {
     const originalChildren = Array.from(button.childNodes).map((node) => node.cloneNode(true));

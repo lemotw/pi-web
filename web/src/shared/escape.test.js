@@ -4,7 +4,7 @@ import { escapeHtml } from './escape.js';
 describe('escapeHtml', () => {
   it('escapes text for safe insertion into HTML strings', () => {
     expect(escapeHtml('<img src=x onerror=alert(1)> & "quote"')).toBe(
-      '&lt;img src=x onerror=alert(1)&gt; &amp; &quot;quote&quot;'
+      '&lt;img src=x onerror=alert(1)&gt; &amp; &quot;quote&quot;',
     );
   });
 

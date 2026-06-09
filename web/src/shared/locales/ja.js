@@ -35,7 +35,8 @@ export default {
   'index.loadingSessions': 'セッションを読み込み中…',
   'index.loadingSessionsHint': '最新のセッション一覧を取得しています。',
   'index.noSessions': '表示するセッションがありません',
-  'index.noSessionsHint': 'メニュー（⋯ → プロジェクトを管理）からプロジェクトを有効にすると、そのセッションが表示されます。',
+  'index.noSessionsHint':
+    'メニュー（⋯ → プロジェクトを管理）からプロジェクトを有効にすると、そのセッションが表示されます。',
   'index.noSessionsYet': 'まだセッションがありません',
   'index.noSessionsYetHint': '新しいセッションを開始してください。',
   'index.importSession': 'セッションをインポート',
@@ -118,7 +119,8 @@ export default {
   'composer.searchModels': 'モデルを検索…',
   'composer.switchModel': 'モデルを切り替え',
   'composer.switchEffort': '強度を切り替え',
-  'composer.disabledNotice': 'このセッションは閲覧できますが、作業ディレクトリが存在しないためチャットは無効です。',
+  'composer.disabledNotice':
+    'このセッションは閲覧できますが、作業ディレクトリが存在しないためチャットは無効です。',
   'composer.copyPath': 'クリックしてパスをコピー',
   'composer.focusShortcut': 'Shift + i でフォーカス',
   'composer.cancelRunning': '実行中の応答をキャンセル',
@@ -134,7 +136,8 @@ export default {
   'settings.interfaceFont': 'インターフェースのフォント',
   'settings.interfaceFontHint': 'アプリ UI のフォント — メニュー、リスト、ヘッダー。',
   'settings.contentFont': 'コンテンツのフォント',
-  'settings.contentFontHint': 'レンダリングされたメッセージ本文のフォント。コードはコードフォントを使用します。',
+  'settings.contentFontHint':
+    'レンダリングされたメッセージ本文のフォント。コードはコードフォントを使用します。',
   'settings.codeFont': 'コードのフォント',
   'settings.codeFontHint': 'コード、コマンド、ツール出力のフォント。デフォルトは等幅です。',
   'settings.interfaceFontSize': 'インターフェースの文字サイズ',
@@ -143,7 +146,8 @@ export default {
   'settings.contentFontSizeHint': 'レンダリングされたメッセージテキストのサイズ（px）。',
   'settings.fontBuiltIn': '組み込み',
   'settings.fontInstalled': 'インストール済み',
-  'settings.fontDetectUnsupported': 'このブラウザーではインストール済みフォントを一覧できません。カスタム…を使用してください。',
+  'settings.fontDetectUnsupported':
+    'このブラウザーではインストール済みフォントを一覧できません。カスタム…を使用してください。',
   'settings.fontDetectDenied': 'インストール済みフォントを読み取れませんでした（権限拒否）。',
   'settings.fontActions': 'アクション',
   'settings.fontMono': '等幅',
@@ -157,7 +161,8 @@ export default {
   'settings.language': '言語',
   'settings.languageHint': 'アプリ インターフェースの言語。変更するとページが再読み込みされます。',
   'settings.customLanguages': 'カスタム言語',
-  'settings.customLanguagesHint': '言語を JSON として追加または上書きします — { "code", "label", "strings": { … } } の配列です。欠けているキーは英語にフォールバックします。「英語キーをコピー」で開始テンプレートを取得し、「保存して適用」を押してください。',
+  'settings.customLanguagesHint':
+    '言語を JSON として追加または上書きします — { "code", "label", "strings": { … } } の配列です。欠けているキーは英語にフォールバックします。「英語キーをコピー」で開始テンプレートを取得し、「保存して適用」を押してください。',
   'settings.copyEnglishKeys': '英語キーをコピー',
   'settings.saveApply': '保存して適用',
 
@@ -167,24 +172,29 @@ export default {
   'settings.defaultLayout': 'デフォルトのレイアウト',
   'settings.defaultLayoutHint': '読み込み時にセッション一覧をどうグループ化するか。',
   'settings.showBtw': '一覧に btw チャットを表示',
-  'settings.showBtwHint': '使い捨ての btw メモチャットをセッション一覧に含めます。既定では非表示です。',
+  'settings.showBtwHint':
+    '使い捨ての btw メモチャットをセッション一覧に含めます。既定では非表示です。',
 
   'settings.sessionTitles': 'セッションのタイトル',
   'settings.autoTitle': 'タイトルを自動生成',
   'settings.autoTitleHint': '最初のメッセージから pi-web に自動でセッションを命名させます。',
   'settings.whenToTitle': 'タイトルを付けるタイミング',
-  'settings.whenToTitleHint': 'セッションに一度タイトルを付けるか、焦点の変化に合わせて更新します。',
+  'settings.whenToTitleHint':
+    'セッションに一度タイトルを付けるか、焦点の変化に合わせて更新します。',
   'settings.titleOnce': 'セッションごとに1回',
   'settings.titleEachTurn': '新しいメッセージごと',
   'settings.titleModel': 'タイトル用モデル',
-  'settings.titleModelHint': '組み込みは無料で即時の単語ヒューリスティック（AI なし）です。より賢いタイトルにはモデルを選択してください — 小さく高速なものが理想的です。',
+  'settings.titleModelHint':
+    '組み込みは無料で即時の単語ヒューリスティック（AI なし）です。より賢いタイトルにはモデルを選択してください — 小さく高速なものが理想的です。',
   'settings.titleBuiltin': '組み込みヒューリスティック（AI なし）',
 
   'settings.artifacts': 'アーティファクト',
   'settings.showArtifacts': 'アーティファクトパネルを表示',
-  'settings.showArtifactsHint': 'エージェントが書いたファイルや大きなコードブロックを右サイドバーのタブに表示します。オフのときはタブが非表示になります。',
+  'settings.showArtifactsHint':
+    'エージェントが書いたファイルや大きなコードブロックを右サイドバーのタブに表示します。オフのときはタブが非表示になります。',
   'settings.includeFilter': '含めるフィルター',
-  'settings.includeFilterHint': 'カンマ区切りのグロブ（例：*.md, *.html, artifacts/**）。一致するファイルのみ表示します。空にするとすべて表示します。フィルターを設定すると、散在するチャットのコードスニペットも非表示になります。',
+  'settings.includeFilterHint':
+    'カンマ区切りのグロブ（例：*.md, *.html, artifacts/**）。一致するファイルのみ表示します。空にするとすべて表示します。フィルターを設定すると、散在するチャットのコードスニペットも非表示になります。',
 
   'settings.notifications': '通知',
   'settings.notifyReady': '応答が準備できたら通知',
@@ -262,11 +272,16 @@ export default {
   'btw.emptyHasSession': 'まだメッセージがありません — あいさつしましょう。',
   'btw.emptyNoSession': 'メッセージを入力して btw チャットを開始するか、「新規」を押してください。',
 
-  'artifactHelp.intro': '<strong>アーティファクト</strong>は、エージェントが書いたファイルや共有した大きめのコードブロックを、会話から取り出して一か所で見つけ・読み・コピー・ダウンロードできるようにしたものです。',
-  'artifactHelp.viewing': '<strong>表示。</strong>リストから1つ選ぶとそのソースが表示されます。HTML・SVG・Markdown ファイルには<em>プレビュー</em>切り替えもあります — HTML/SVG は安全なサンドボックスで実行され、Markdown は整形されたテキストとして表示されます。',
-  'artifactHelp.annotating': '<strong>注釈。</strong>アーティファクトのソース内のテキストを選択するとメモを残せます。メモは<em>注釈</em>タブに集まり、そこから戻ったりエージェントに送ったりできます。',
-  'artifactHelp.upToDate': '<strong>最新の状態を保つ。</strong>エージェントが<em>書き込む</em>または<em>編集する</em>ファイルは自動的に更新され、単純な名前変更や削除（<code>mv</code>、<code>git mv</code>、<code>rm</code>）も追跡されます。ただし <code>sed</code> や出力リダイレクトなど、ほかのシェルコマンドによる変更は会話から追えないため、ときどきアーティファクトが古いバージョンを表示することがあります。疑わしい場合はディスク上のファイルを確認してください。',
-  'artifactHelp.note': 'アーティファクトはライブビューのみの機能で、エクスポートしたスナップショットには含まれません。',
+  'artifactHelp.intro':
+    '<strong>アーティファクト</strong>は、エージェントが書いたファイルや共有した大きめのコードブロックを、会話から取り出して一か所で見つけ・読み・コピー・ダウンロードできるようにしたものです。',
+  'artifactHelp.viewing':
+    '<strong>表示。</strong>リストから1つ選ぶとそのソースが表示されます。HTML・SVG・Markdown ファイルには<em>プレビュー</em>切り替えもあります — HTML/SVG は安全なサンドボックスで実行され、Markdown は整形されたテキストとして表示されます。',
+  'artifactHelp.annotating':
+    '<strong>注釈。</strong>アーティファクトのソース内のテキストを選択するとメモを残せます。メモは<em>注釈</em>タブに集まり、そこから戻ったりエージェントに送ったりできます。',
+  'artifactHelp.upToDate':
+    '<strong>最新の状態を保つ。</strong>エージェントが<em>書き込む</em>または<em>編集する</em>ファイルは自動的に更新され、単純な名前変更や削除（<code>mv</code>、<code>git mv</code>、<code>rm</code>）も追跡されます。ただし <code>sed</code> や出力リダイレクトなど、ほかのシェルコマンドによる変更は会話から追えないため、ときどきアーティファクトが古いバージョンを表示することがあります。疑わしい場合はディスク上のファイルを確認してください。',
+  'artifactHelp.note':
+    'アーティファクトはライブビューのみの機能で、エクスポートしたスナップショットには含まれません。',
 
   'common.back': '戻る',
   'common.copied': 'コピーしました',
@@ -282,7 +297,8 @@ export default {
   'index.failedUpdateProject': 'プロジェクトの更新に失敗しました',
   'index.failedRemoveProject': 'プロジェクトの削除に失敗しました',
   'index.filterOnDesc': 'チェックしたプロジェクトのみホームに表示されます。',
-  'index.filterOffDesc': 'すべてのプロジェクトを表示中。オンにするとチェックしたものだけ表示します。',
+  'index.filterOffDesc':
+    'すべてのプロジェクトを表示中。オンにするとチェックしたものだけ表示します。',
   'composer.pathCopied': 'パスをコピーしました',
   'share.copiedSuffix': '{label}をコピーしました',
   'artifact.copy': 'コピー',
@@ -291,7 +307,8 @@ export default {
   'artifact.preview': 'プレビュー',
   'artifact.runPreview': 'プレビューを実行',
   'artifact.showSource': 'ソースを表示',
-  'artifact.emptyHidden': '{count} 件の{noun}がフィルターで非表示です — <a href="/settings">設定</a>で調整できます。',
+  'artifact.emptyHidden':
+    '{count} 件の{noun}がフィルターで非表示です — <a href="/settings">設定</a>で調整できます。',
   'artifact.emptyNone': 'このセッションにはまだアーティファクトがありません。',
   'artifact.nounOne': 'アーティファクト',
   'artifact.nounMany': 'アーティファクト',
@@ -326,7 +343,8 @@ export default {
   'version.reconnecting': '再接続中…',
   'version.serverNotBack': 'サーバーが復帰しませんでした。手動でページを再読み込みしてください。',
   'settings.copiedTemplate': '英語テンプレートをクリップボードにコピーしました。',
-  'settings.clipboardUnavailable': 'クリップボードを利用できません — テンプレートを下に挿入しました。',
+  'settings.clipboardUnavailable':
+    'クリップボードを利用できません — テンプレートを下に挿入しました。',
   'settings.invalidJson': '無効な JSON：{error}',
   'settings.expectedArray': '{ "code", "label", "strings" } オブジェクトの配列が必要です。',
 };

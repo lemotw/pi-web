@@ -18,7 +18,7 @@ import (
 func newTestServer(t *testing.T) *Server {
 	t.Helper()
 	dir := t.TempDir()
-	return New(Deps{
+	s, err := New(Deps{
 		AgentDir:            dir,
 		SessionsDir:         dir,
 		Auth:                auth.New(""),
@@ -26,6 +26,10 @@ func newTestServer(t *testing.T) *Server {
 		RenderExportSession: func(s sessions.Session, theme string) string { return "" },
 		Models:              func(ctx context.Context) (json.RawMessage, error) { return nil, nil },
 	})
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+	return s
 }
 
 func TestHandleCustomThemesServesConfiguredStylesheet(t *testing.T) {
@@ -68,6 +72,37 @@ func TestHandleCustomThemesFallbackWhenMissing(t *testing.T) {
 	}
 	if !strings.Contains(w.Body.String(), "No custom themes configured") {
 		t.Fatalf("expected fallback CSS comment, got %q", w.Body.String())
+	}
+}
+
+func TestCustomThemesPublicWhenAuthEnabled(t *testing.T) {
+	// The login gate loads /custom-themes.css before the user authenticates, so
+	// the route must stay reachable without a token even when auth is on.
+	dir := t.TempDir()
+	s, err := New(Deps{
+		AgentDir:            dir,
+		SessionsDir:         dir,
+		Auth:                auth.New("secret"),
+		Cache:               sessions.NewCache(),
+		RenderExportSession: func(s sessions.Session, theme string) string { return "" },
+		Models:              func(ctx context.Context) (json.RawMessage, error) { return nil, nil },
+	})
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+	mux := http.NewServeMux()
+	s.Register(mux)
+
+	req := httptest.NewRequest(http.MethodGet, "/custom-themes.css", nil)
+	req.Header.Set("Accept", "text/css")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("GET /custom-themes.css without token = %d, want 200 (public)", rec.Code)
+	}
+	if got := rec.Header().Get("Content-Type"); !strings.Contains(got, "text/css") {
+		t.Fatalf("Content-Type = %q, want text/css", got)
 	}
 }
 

@@ -219,8 +219,8 @@ func TestHandleSuccess(t *testing.T) {
 	if runner.gotHTMLPath == "" {
 		t.Fatal("CreateGist never received an html path")
 	}
-	if filepath.Base(runner.gotHTMLPath) != "session.html" {
-		t.Fatalf("html path = %q; want a session.html file", runner.gotHTMLPath)
+	if filepath.Base(runner.gotHTMLPath) != "share-session.html" {
+		t.Fatalf("html path = %q; want a share-session.html file", runner.gotHTMLPath)
 	}
 }
 

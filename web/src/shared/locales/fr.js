@@ -35,7 +35,8 @@ export default {
   'index.loadingSessions': 'Chargement des sessions…',
   'index.loadingSessionsHint': 'Récupération de la liste des sessions la plus récente.',
   'index.noSessions': 'Aucune session à afficher',
-  'index.noSessionsHint': 'Activez des projets depuis le menu (⋯ → Gérer les projets) pour voir leurs sessions.',
+  'index.noSessionsHint':
+    'Activez des projets depuis le menu (⋯ → Gérer les projets) pour voir leurs sessions.',
   'index.noSessionsYet': 'Aucune session pour l’instant',
   'index.noSessionsYetHint': 'Démarrez une nouvelle session pour commencer.',
   'index.importSession': 'Importer une session',
@@ -118,7 +119,8 @@ export default {
   'composer.searchModels': 'Rechercher des modèles…',
   'composer.switchModel': 'Changer de modèle',
   'composer.switchEffort': 'Changer l’effort',
-  'composer.disabledNotice': 'Cette session peut être consultée, mais le chat est désactivé car son répertoire de travail n’existe plus.',
+  'composer.disabledNotice':
+    'Cette session peut être consultée, mais le chat est désactivé car son répertoire de travail n’existe plus.',
   'composer.copyPath': 'Cliquer pour copier le chemin',
   'composer.focusShortcut': 'Maj + i pour activer',
   'composer.cancelRunning': 'Annuler la réponse en cours',
@@ -134,17 +136,21 @@ export default {
   'settings.interfaceFont': 'Police de l’interface',
   'settings.interfaceFontHint': 'Police de l’interface de l’app : menus, listes, en-têtes.',
   'settings.contentFont': 'Police du contenu',
-  'settings.contentFontHint': 'Police pour le texte des messages. Le code utilise la police de code.',
+  'settings.contentFontHint':
+    'Police pour le texte des messages. Le code utilise la police de code.',
   'settings.codeFont': 'Police du code',
-  'settings.codeFontHint': 'Police pour le code, les commandes et la sortie des outils. À chasse fixe par défaut.',
+  'settings.codeFontHint':
+    'Police pour le code, les commandes et la sortie des outils. À chasse fixe par défaut.',
   'settings.interfaceFontSize': 'Taille de police de l’interface',
   'settings.interfaceFontSizeHint': 'Taille du texte de l’interface (px).',
   'settings.contentFontSize': 'Taille de police du contenu',
   'settings.contentFontSizeHint': 'Taille du texte des messages (px).',
   'settings.fontBuiltIn': 'Intégrées',
   'settings.fontInstalled': 'Installées',
-  'settings.fontDetectUnsupported': 'Ce navigateur ne peut pas lister les polices installées. Utilisez Personnalisé…',
-  'settings.fontDetectDenied': 'Impossible de lire les polices installées (autorisation refusée). Utilisez Personnalisé…',
+  'settings.fontDetectUnsupported':
+    'Ce navigateur ne peut pas lister les polices installées. Utilisez Personnalisé…',
+  'settings.fontDetectDenied':
+    'Impossible de lire les polices installées (autorisation refusée). Utilisez Personnalisé…',
   'settings.fontActions': 'Actions',
   'settings.fontMono': 'À chasse fixe',
   'settings.fontSystem': 'Système',
@@ -157,7 +163,8 @@ export default {
   'settings.language': 'Langue',
   'settings.languageHint': 'Langue de l’interface de l’app. La modifier recharge la page.',
   'settings.customLanguages': 'Langues personnalisées',
-  'settings.customLanguagesHint': 'Ajoutez ou remplacez des langues au format JSON — un tableau de { "code", "label", "strings": { … } }. Les clés manquantes utilisent l’anglais. Utilisez « Copier les clés anglaises » pour un modèle de départ, puis « Enregistrer et appliquer ».',
+  'settings.customLanguagesHint':
+    'Ajoutez ou remplacez des langues au format JSON — un tableau de { "code", "label", "strings": { … } }. Les clés manquantes utilisent l’anglais. Utilisez « Copier les clés anglaises » pour un modèle de départ, puis « Enregistrer et appliquer ».',
   'settings.copyEnglishKeys': 'Copier les clés anglaises',
   'settings.saveApply': 'Enregistrer et appliquer',
 
@@ -167,24 +174,30 @@ export default {
   'settings.defaultLayout': 'Disposition par défaut',
   'settings.defaultLayoutHint': 'Comment la liste des sessions est regroupée au chargement.',
   'settings.showBtw': 'Afficher les chats btw dans la liste',
-  'settings.showBtwHint': 'Inclure les chats jetables btw dans la liste des sessions. Masqués par défaut.',
+  'settings.showBtwHint':
+    'Inclure les chats jetables btw dans la liste des sessions. Masqués par défaut.',
 
   'settings.sessionTitles': 'Titres de session',
   'settings.autoTitle': 'Générer les titres automatiquement',
-  'settings.autoTitleHint': 'Laissez pi-web nommer les sessions automatiquement à partir du premier message.',
+  'settings.autoTitleHint':
+    'Laissez pi-web nommer les sessions automatiquement à partir du premier message.',
   'settings.whenToTitle': 'Quand titrer',
-  'settings.whenToTitleHint': 'Titrer une session une fois, ou l’actualiser au fil des changements de sujet.',
+  'settings.whenToTitleHint':
+    'Titrer une session une fois, ou l’actualiser au fil des changements de sujet.',
   'settings.titleOnce': 'Une fois par session',
   'settings.titleEachTurn': 'À chaque nouveau message',
   'settings.titleModel': 'Modèle de titrage',
-  'settings.titleModelHint': 'L’intégré est une heuristique de mots gratuite et instantanée (sans IA). Choisissez un modèle pour des titres plus pertinents — un petit modèle rapide est idéal.',
+  'settings.titleModelHint':
+    'L’intégré est une heuristique de mots gratuite et instantanée (sans IA). Choisissez un modèle pour des titres plus pertinents — un petit modèle rapide est idéal.',
   'settings.titleBuiltin': 'Heuristique intégrée (sans IA)',
 
   'settings.artifacts': 'Artefacts',
   'settings.showArtifacts': 'Afficher le panneau Artefacts',
-  'settings.showArtifactsHint': 'Affiche les fichiers écrits par l’agent et les blocs de code volumineux dans un onglet de la barre latérale droite. Lorsqu’il est désactivé, l’onglet est masqué.',
+  'settings.showArtifactsHint':
+    'Affiche les fichiers écrits par l’agent et les blocs de code volumineux dans un onglet de la barre latérale droite. Lorsqu’il est désactivé, l’onglet est masqué.',
   'settings.includeFilter': 'Filtre d’inclusion',
-  'settings.includeFilterHint': 'Globs séparés par des virgules (par ex. *.md, *.html, artifacts/**). Seuls les fichiers correspondants sont affichés. Laissez vide pour tout afficher ; tout filtre masque aussi les extraits de code épars du chat.',
+  'settings.includeFilterHint':
+    'Globs séparés par des virgules (par ex. *.md, *.html, artifacts/**). Seuls les fichiers correspondants sont affichés. Laissez vide pour tout afficher ; tout filtre masque aussi les extraits de code épars du chat.',
 
   'settings.notifications': 'Notifications',
   'settings.notifyReady': 'Avertir quand une réponse est prête',
@@ -214,7 +227,8 @@ export default {
   'settings.githubHint': 'Si pi-web vous est utile, donnez une ⭐ au dépôt.',
   'settings.starGithub': 'Mettre une étoile sur GitHub',
   'settings.sponsor': 'Sponsoriser',
-  'settings.sponsorHint': 'Soutenez le développement continu de pi-web en sponsorisant le créateur.',
+  'settings.sponsorHint':
+    'Soutenez le développement continu de pi-web en sponsorisant le créateur.',
   'settings.becomeSponsor': 'Devenir sponsor',
 
   'shortcuts.title': 'Raccourcis clavier',
@@ -262,11 +276,16 @@ export default {
   'btw.emptyHasSession': 'Pas encore de messages — dites bonjour.',
   'btw.emptyNoSession': 'Écrivez un message pour démarrer un chat btw, ou appuyez sur « nouveau ».',
 
-  'artifactHelp.intro': 'Les <strong>artefacts</strong> sont les fichiers écrits par l’agent et les blocs de code plus volumineux qu’il a partagés, extraits de la conversation pour que vous puissiez les trouver, les lire, les copier ou les télécharger au même endroit.',
-  'artifactHelp.viewing': '<strong>Consultation.</strong> Choisissez-en un dans la liste pour voir sa source. Les fichiers HTML, SVG et Markdown ont aussi un bouton <em>Aperçu</em> — HTML/SVG s’exécutent dans un bac à sable sécurisé, Markdown s’affiche en texte mis en forme.',
-  'artifactHelp.annotating': '<strong>Annotation.</strong> Sélectionnez du texte dans la source d’un artefact pour laisser une note. Vos notes se regroupent dans l’onglet <em>Annotations</em>, où vous pouvez y revenir ou les envoyer à l’agent.',
-  'artifactHelp.upToDate': '<strong>Rester à jour.</strong> Les fichiers que l’agent <em>écrit</em> ou <em>modifie</em> se mettent à jour automatiquement, et les renommages ou suppressions simples (<code>mv</code>, <code>git mv</code>, <code>rm</code>) sont aussi suivis. Mais les changements faits via d’autres commandes shell — comme <code>sed</code> ou les redirections de sortie — ne peuvent pas être suivis depuis la conversation, donc de temps en temps un artefact peut afficher une version plus ancienne. En cas de doute, vérifiez le fichier sur le disque.',
-  'artifactHelp.note': 'Les artefacts font partie de la vue en direct uniquement et ne sont pas inclus dans les instantanés exportés.',
+  'artifactHelp.intro':
+    'Les <strong>artefacts</strong> sont les fichiers écrits par l’agent et les blocs de code plus volumineux qu’il a partagés, extraits de la conversation pour que vous puissiez les trouver, les lire, les copier ou les télécharger au même endroit.',
+  'artifactHelp.viewing':
+    '<strong>Consultation.</strong> Choisissez-en un dans la liste pour voir sa source. Les fichiers HTML, SVG et Markdown ont aussi un bouton <em>Aperçu</em> — HTML/SVG s’exécutent dans un bac à sable sécurisé, Markdown s’affiche en texte mis en forme.',
+  'artifactHelp.annotating':
+    '<strong>Annotation.</strong> Sélectionnez du texte dans la source d’un artefact pour laisser une note. Vos notes se regroupent dans l’onglet <em>Annotations</em>, où vous pouvez y revenir ou les envoyer à l’agent.',
+  'artifactHelp.upToDate':
+    '<strong>Rester à jour.</strong> Les fichiers que l’agent <em>écrit</em> ou <em>modifie</em> se mettent à jour automatiquement, et les renommages ou suppressions simples (<code>mv</code>, <code>git mv</code>, <code>rm</code>) sont aussi suivis. Mais les changements faits via d’autres commandes shell — comme <code>sed</code> ou les redirections de sortie — ne peuvent pas être suivis depuis la conversation, donc de temps en temps un artefact peut afficher une version plus ancienne. En cas de doute, vérifiez le fichier sur le disque.',
+  'artifactHelp.note':
+    'Les artefacts font partie de la vue en direct uniquement et ne sont pas inclus dans les instantanés exportés.',
 
   'common.back': 'Retour',
   'common.copied': 'Copié',
@@ -291,7 +310,8 @@ export default {
   'artifact.preview': 'Aperçu',
   'artifact.runPreview': 'Lancer l’aperçu',
   'artifact.showSource': 'Afficher la source',
-  'artifact.emptyHidden': '{count} {noun} masqué(s) par votre filtre — ajustez-le dans <a href="/settings">Paramètres</a>.',
+  'artifact.emptyHidden':
+    '{count} {noun} masqué(s) par votre filtre — ajustez-le dans <a href="/settings">Paramètres</a>.',
   'artifact.emptyNone': 'Aucun artefact dans cette session pour le moment.',
   'artifact.nounOne': 'artefact',
   'artifact.nounMany': 'artefacts',
@@ -312,7 +332,8 @@ export default {
   'version.couldNotCheck': 'Impossible de rechercher des mises à jour.',
   'version.devBuild': 'Vous exécutez une build de développement local.',
   'version.latestPublished': 'Dernière publiée : {version}',
-  'version.devUpdateDisabled': 'La mise à jour intégrée est désactivée ici pour ne pas écraser les modifications locales.',
+  'version.devUpdateDisabled':
+    'La mise à jour intégrée est désactivée ici pour ne pas écraser les modifications locales.',
   'version.updateAvailable': 'Mise à jour disponible :',
   'version.releaseNotes': 'notes de version',
   'version.updateRestart': 'Mettre à jour et redémarrer',
@@ -326,7 +347,8 @@ export default {
   'version.reconnecting': 'Reconnexion…',
   'version.serverNotBack': 'Le serveur n’est pas revenu. Rechargez la page manuellement.',
   'settings.copiedTemplate': 'Un modèle anglais a été copié dans le presse-papiers.',
-  'settings.clipboardUnavailable': 'Presse-papiers indisponible — le modèle a été inséré ci-dessous.',
+  'settings.clipboardUnavailable':
+    'Presse-papiers indisponible — le modèle a été inséré ci-dessous.',
   'settings.invalidJson': 'JSON invalide : {error}',
   'settings.expectedArray': 'Un tableau d’objets { "code", "label", "strings" } était attendu.',
 };

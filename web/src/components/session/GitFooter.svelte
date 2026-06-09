@@ -63,7 +63,9 @@
     let existingPrUrl = '';
     let primaryAction = () => {};
 
-    const show = (el, visible) => { if (el) el.hidden = !visible; };
+    const show = (el, visible) => {
+      if (el) el.hidden = !visible;
+    };
 
     function insertPrompt(text) {
       const textarea = documentImpl.getElementById('pi-chat-message');
@@ -146,7 +148,10 @@
     }
 
     function refresh() {
-      return gitApi.getGitInfo(sessionId).then(applyInfo).catch(() => {});
+      return gitApi
+        .getGitInfo(sessionId)
+        .then(applyInfo)
+        .catch(() => {});
     }
 
     // ── Branch rename ──
@@ -171,7 +176,8 @@
         closeEditor();
         return;
       }
-      gitApi.renameBranch(sessionId, next)
+      gitApi
+        .renameBranch(sessionId, next)
         .then(() => {
           closeEditor();
           return refresh();
@@ -186,12 +192,20 @@
     }
 
     if (editBtn) {
-      on(editBtn, 'click', (e) => { e.preventDefault(); openEditor(); });
+      on(editBtn, 'click', (e) => {
+        e.preventDefault();
+        openEditor();
+      });
     }
     if (input) {
       on(input, 'keydown', (e) => {
-        if (e.key === 'Enter') { e.preventDefault(); commitRename(); }
-        else if (e.key === 'Escape') { e.preventDefault(); closeEditor(); }
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          commitRename();
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          closeEditor();
+        }
       });
       on(input, 'blur', () => closeEditor());
     }
@@ -203,7 +217,11 @@
       caretBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
     }
     if (primaryBtn) {
-      on(primaryBtn, 'click', (e) => { e.preventDefault(); setMenuOpen(false); primaryAction(); });
+      on(primaryBtn, 'click', (e) => {
+        e.preventDefault();
+        setMenuOpen(false);
+        primaryAction();
+      });
     }
     if (caretBtn) {
       on(caretBtn, 'click', (e) => {
@@ -219,13 +237,70 @@
     Object.keys(items).forEach((key) => {
       const el = items[key];
       if (!el) return;
-      on(el, 'click', (e) => { e.preventDefault(); setMenuOpen(false); ACTIONS[key].run(); });
+      on(el, 'click', (e) => {
+        e.preventDefault();
+        setMenuOpen(false);
+        ACTIONS[key].run();
+      });
     });
 
     refresh();
 
-    return () => { for (const fn of cleanups) fn(); };
+    return () => {
+      for (const fn of cleanups) fn();
+    };
   });
 </script>
 
-<div class="pi-git-bar" id="pi-git-bar"><div class="pi-git-branch" id="pi-git-branch" hidden><span class="pi-git-branch-name" id="pi-git-branch-name" title={t('git.currentBranch')}></span><button type="button" class="pi-git-edit" id="pi-git-branch-edit" title={t('git.renameBranch')} aria-label={t('git.renameBranch')}></button><input type="text" class="pi-git-branch-input" id="pi-git-branch-input" autocomplete="off" spellcheck="false" aria-label={t('git.newBranchName')} hidden></div><div class="pi-git-right"><button type="button" class="pi-git-pr-button pi-btw-button" id="pi-btw-button" title="btw">btw</button><div class="pi-git-pr" id="pi-git-pr" hidden><button type="button" class="pi-git-pr-button pi-git-primary" id="pi-git-primary"><span id="pi-git-primary-label">{t('git.createPr')}</span></button><button type="button" class="pi-git-pr-button pi-git-caret" id="pi-git-caret" aria-haspopup="true" aria-expanded="false" aria-label={t('git.moreActions')}>{@html icon(ChevronDown, { size: 12 })}</button><div class="pi-git-pr-menu" id="pi-git-pr-menu" role="menu" hidden><button type="button" class="pi-git-pr-item" id="pi-git-pr-view" role="menuitem" hidden>{t('git.viewPr')} {@html icon(ExternalLink, { size: 12 })}</button><button type="button" class="pi-git-pr-item" id="pi-git-pr-draft" role="menuitem" hidden>{t('git.createDraftPr')}</button><button type="button" class="pi-git-pr-item" id="pi-git-pr-manual" role="menuitem">{t('git.createPrManually')} {@html icon(ExternalLink, { size: 12 })}</button><button type="button" class="pi-git-pr-item" id="pi-git-pr-merge" role="menuitem" hidden>{t('git.mergePr')}</button><button type="button" class="pi-git-pr-item" id="pi-git-pr-commit" role="menuitem" hidden>{t('git.commitPush')}</button></div></div></div></div>
+<!-- eslint-disable svelte/no-at-html-tags -- trusted: Lucide icon SVG and rendered session markdown -->
+
+<div class="pi-git-bar" id="pi-git-bar">
+  <div class="pi-git-branch" id="pi-git-branch" hidden>
+    <span class="pi-git-branch-name" id="pi-git-branch-name" title={t('git.currentBranch')}
+    ></span><button
+      type="button"
+      class="pi-git-edit"
+      id="pi-git-branch-edit"
+      title={t('git.renameBranch')}
+      aria-label={t('git.renameBranch')}
+    ></button><input
+      type="text"
+      class="pi-git-branch-input"
+      id="pi-git-branch-input"
+      autocomplete="off"
+      spellcheck="false"
+      aria-label={t('git.newBranchName')}
+      hidden
+    />
+  </div>
+  <div class="pi-git-right">
+    <button type="button" class="pi-git-pr-button pi-btw-button" id="pi-btw-button" title="btw"
+      >btw</button
+    >
+    <div class="pi-git-pr" id="pi-git-pr" hidden>
+      <button type="button" class="pi-git-pr-button pi-git-primary" id="pi-git-primary"
+        ><span id="pi-git-primary-label">{t('git.createPr')}</span></button
+      ><button
+        type="button"
+        class="pi-git-pr-button pi-git-caret"
+        id="pi-git-caret"
+        aria-haspopup="true"
+        aria-expanded="false"
+        aria-label={t('git.moreActions')}>{@html icon(ChevronDown, { size: 12 })}</button
+      >
+      <div class="pi-git-pr-menu" id="pi-git-pr-menu" role="menu" hidden>
+        <button type="button" class="pi-git-pr-item" id="pi-git-pr-view" role="menuitem" hidden
+          >{t('git.viewPr')} {@html icon(ExternalLink, { size: 12 })}</button
+        ><button type="button" class="pi-git-pr-item" id="pi-git-pr-draft" role="menuitem" hidden
+          >{t('git.createDraftPr')}</button
+        ><button type="button" class="pi-git-pr-item" id="pi-git-pr-manual" role="menuitem"
+          >{t('git.createPrManually')} {@html icon(ExternalLink, { size: 12 })}</button
+        ><button type="button" class="pi-git-pr-item" id="pi-git-pr-merge" role="menuitem" hidden
+          >{t('git.mergePr')}</button
+        ><button type="button" class="pi-git-pr-item" id="pi-git-pr-commit" role="menuitem" hidden
+          >{t('git.commitPush')}</button
+        >
+      </div>
+    </div>
+  </div>
+</div>

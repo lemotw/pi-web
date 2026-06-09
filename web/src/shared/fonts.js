@@ -58,6 +58,8 @@ export function applyFonts(documentImpl, { ui, content, code, uiSize, contentSiz
   if (ui) root.style.setProperty('--font-sans', resolveFontStack(ui));
   if (content) root.style.setProperty('--font-content', resolveFontStack(content));
   if (code) root.style.setProperty('--font-code', resolveFontStack(code));
-  if (uiSize != null && uiSize !== '') root.style.setProperty('--font-size-ui', `${clampSize(uiSize)}px`);
-  if (contentSize != null && contentSize !== '') root.style.setProperty('--font-content-size', `${clampSize(contentSize)}px`);
+  if (uiSize != null && uiSize !== '')
+    root.style.setProperty('--font-size-ui', `${clampSize(uiSize)}px`);
+  if (contentSize != null && contentSize !== '')
+    root.style.setProperty('--font-content-size', `${clampSize(contentSize)}px`);
 }

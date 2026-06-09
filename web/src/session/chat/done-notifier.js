@@ -27,7 +27,11 @@ export function setSelectedSound(name, { storage = globalThis.localStorage } = {
   writeSetting(DONE_SOUND_STORAGE_KEY, name || 'cat.mp3', { storage });
 }
 
-export function playDoneSound({ windowImpl = window, audioSrc, storage = globalThis.localStorage } = {}) {
+export function playDoneSound({
+  windowImpl = window,
+  audioSrc,
+  storage = globalThis.localStorage,
+} = {}) {
   try {
     const AudioCtor = windowImpl.Audio;
     if (!AudioCtor) return;
@@ -41,15 +45,21 @@ export function playDoneSound({ windowImpl = window, audioSrc, storage = globalT
   }
 }
 
-
-export function showDoneNotification({ windowImpl = window, documentImpl = document, title = 'pi session', body = 'Response ready' } = {}) {
+export function showDoneNotification({
+  windowImpl = window,
+  documentImpl = document,
+  title = 'pi session',
+  body = 'Response ready',
+} = {}) {
   try {
     const N = windowImpl.Notification;
     if (!N || N.permission !== 'granted') return;
     if (!documentImpl.hidden) return;
     const n = new N(title, { body, icon: '/icon.svg', tag: 'pi-session-done' });
     n.onclick = () => {
-      try { windowImpl.focus(); } catch (_) {}
+      try {
+        windowImpl.focus();
+      } catch (_) {}
       n.close();
     };
   } catch {
@@ -114,11 +124,13 @@ export async function registerPushSubscription({ windowImpl = window, fetchImpl 
     await fetchImpl('/api/push/subscribe', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
     });
     return true;
   } catch (err) {
-    try { windowImpl.console?.warn('push subscribe failed', err); } catch (_) {}
+    try {
+      windowImpl.console?.warn('push subscribe failed', err);
+    } catch (_) {}
     return false;
   }
 }
@@ -135,14 +147,19 @@ export async function unregisterPushSubscription({ windowImpl = window, fetchImp
     await fetchImpl('/api/push/unsubscribe', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ endpoint })
+      body: JSON.stringify({ endpoint }),
     });
   } catch {
     // ignore
   }
 }
 
-export function setupDoneNotifyToggle({ documentImpl = document, windowImpl = window, storage = globalThis.localStorage, fetchImpl = (typeof fetch !== 'undefined' ? fetch : null) } = {}) {
+export function setupDoneNotifyToggle({
+  documentImpl = document,
+  windowImpl = window,
+  storage = globalThis.localStorage,
+  fetchImpl = typeof fetch !== 'undefined' ? fetch : null,
+} = {}) {
   const btn = documentImpl.getElementById('notify-toggle');
   if (!btn) return;
 
@@ -182,7 +199,11 @@ export function setupDoneNotifyToggle({ documentImpl = document, windowImpl = wi
   });
 }
 
-export function notifyDone({ windowImpl = window, documentImpl = document, storage = globalThis.localStorage } = {}) {
+export function notifyDone({
+  windowImpl = window,
+  documentImpl = document,
+  storage = globalThis.localStorage,
+} = {}) {
   if (!isDoneNotifyEnabled({ storage })) return;
   playDoneSound({ windowImpl, storage });
   showDoneNotification({ windowImpl, documentImpl });
@@ -240,12 +261,17 @@ export async function fetchAvailableSounds({ fetchImpl = fetch } = {}) {
   }
 }
 
-export async function setupSoundSelector({ documentImpl = document, windowImpl = window, storage = globalThis.localStorage, fetchImpl = (typeof fetch !== 'undefined' ? fetch : null) } = {}) {
+export async function setupSoundSelector({
+  documentImpl = document,
+  windowImpl = window,
+  storage = globalThis.localStorage,
+  fetchImpl = typeof fetch !== 'undefined' ? fetch : null,
+} = {}) {
   const selectors = Array.from(documentImpl.querySelectorAll('.sound-selector'));
   if (selectors.length === 0) return;
 
   // Prevent event propagation inside the selector from triggering the parent button's click toggle
-  selectors.forEach(sel => {
+  selectors.forEach((sel) => {
     sel.addEventListener('click', (e) => e.stopPropagation());
     sel.addEventListener('mousedown', (e) => e.stopPropagation());
   });
@@ -257,12 +283,12 @@ export async function setupSoundSelector({ documentImpl = document, windowImpl =
   const sounds = data.sounds || ['cat.mp3', 'done.mp3'];
   const activeSound = getSelectedSound({ storage });
 
-  selectors.forEach(sel => {
+  selectors.forEach((sel) => {
     // Clear existing options
     sel.replaceChildren();
-    
+
     // Add options
-    sounds.forEach(soundName => {
+    sounds.forEach((soundName) => {
       const opt = documentImpl.createElement('option');
       opt.value = soundName;
       opt.textContent = soundName;
@@ -278,7 +304,7 @@ export async function setupSoundSelector({ documentImpl = document, windowImpl =
       setSelectedSound(newSound, { storage });
 
       // Sync all other selectors on the page to the new value
-      selectors.forEach(otherSel => {
+      selectors.forEach((otherSel) => {
         if (otherSel !== sel) {
           otherSel.value = newSound;
         }
@@ -289,4 +315,3 @@ export async function setupSoundSelector({ documentImpl = document, windowImpl =
     });
   });
 }
-

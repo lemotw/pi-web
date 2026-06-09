@@ -16,7 +16,7 @@ export function createAnnotationApi({ sessionId, fetchImpl = fetch } = {}) {
     const res = await fetchImpl(base, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(annotation)
+      body: JSON.stringify(annotation),
     });
     if (!res.ok) throw new Error(`create annotation: HTTP ${res.status}`);
     const data = await res.json();

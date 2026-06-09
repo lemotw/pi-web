@@ -96,11 +96,17 @@
     busy = true;
     setStatus(t('version.installing'), 'info');
     try {
-      const res = await effectiveFetch('/api/update', { method: 'POST', headers: { Accept: 'application/json' } });
+      const res = await effectiveFetch('/api/update', {
+        method: 'POST',
+        headers: { Accept: 'application/json' },
+      });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
       setStatus(t('version.restarting'), 'info');
-      effectiveFetch('/api/restart', { method: 'POST', headers: { Accept: 'application/json' } }).catch(() => {});
+      effectiveFetch('/api/restart', {
+        method: 'POST',
+        headers: { Accept: 'application/json' },
+      }).catch(() => {});
       awaitReconnect();
     } catch (err) {
       setStatus(t('version.updateFailed', { error: err?.message || String(err) }), 'error');
@@ -119,7 +125,11 @@
         return;
       }
       try {
-        const res = await effectiveFetch('/api/version', { method: 'GET', headers: { Accept: 'application/json' }, cache: 'no-store' });
+        const res = await effectiveFetch('/api/version', {
+          method: 'GET',
+          headers: { Accept: 'application/json' },
+          cache: 'no-store',
+        });
         if (res.ok) {
           window.location.reload();
           return;
@@ -150,39 +160,84 @@
   });
 </script>
 
+<!-- eslint-disable svelte/no-at-html-tags -- trusted: Lucide icon SVG and rendered session markdown -->
+
 {#if open}
-  <div class="version-modal-overlay open" role="presentation" onclick={(e) => { if (e.currentTarget === e.target) closeModal(); }}>
+  <div
+    class="version-modal-overlay open"
+    role="presentation"
+    onclick={(e) => {
+      if (e.currentTarget === e.target) closeModal();
+    }}
+  >
     <div class="version-modal" role="dialog" aria-modal="true" aria-label="pi-web version">
       <div class="version-modal-header">
         <span class="version-modal-title">pi-web</span>
         <span class="version-modal-current">{info?.current ? cleanVersion(info.current) : ''}</span>
-        <button type="button" class="version-modal-close" aria-label={t('common.close')} onclick={closeModal}>{@html icon(X, { size: 16 })}</button>
+        <button
+          type="button"
+          class="version-modal-close"
+          aria-label={t('common.close')}
+          onclick={closeModal}>{@html icon(X, { size: 16 })}</button
+        >
       </div>
       <div class="version-modal-body">
         {#if !info}
           <p>{t('version.unavailable')}</p>
         {:else if info.isDev}
           <p>{t('version.devBuild')}</p>
-          {#if info.latest}<p class="version-modal-notes">{t('version.latestPublished', { version: cleanVersion(info.latest) })}</p>{/if}
+          {#if info.latest}<p class="version-modal-notes">
+              {t('version.latestPublished', { version: cleanVersion(info.latest) })}
+            </p>{/if}
           <p class="version-modal-notes">{t('version.devUpdateDisabled')}</p>
         {:else if info.hasUpdate}
-          <p class="version-modal-lead">{t('version.updateAvailable')} <strong>{cleanVersion(info.current)} → {cleanVersion(info.latest)}</strong></p>
+          <p class="version-modal-lead">
+            {t('version.updateAvailable')}
+            <strong>{cleanVersion(info.current)} → {cleanVersion(info.latest)}</strong>
+          </p>
           <div class="version-changelog">{@html changelogHtml}</div>
           {#if info.changelogUrl}
-            <p class="version-modal-notes"><a href={info.changelogUrl} target="_blank" rel="noreferrer">{t('version.releaseNotes')} {@html icon(ExternalLink, { size: 12 })}</a></p>
+            <p class="version-modal-notes">
+              <a href={info.changelogUrl} target="_blank" rel="noreferrer"
+                >{t('version.releaseNotes')} {@html icon(ExternalLink, { size: 12 })}</a
+              >
+            </p>
           {/if}
         {:else}
           <p>{t('version.onLatest')}</p>
-          {#if info.checkedAt}<p class="version-modal-notes">{t('version.lastChecked', { when: new Date(info.checkedAt).toLocaleString() })}</p>{/if}
+          {#if info.checkedAt}<p class="version-modal-notes">
+              {t('version.lastChecked', { when: new Date(info.checkedAt).toLocaleString() })}
+            </p>{/if}
         {/if}
       </div>
-      <div class="version-modal-status" class:info={statusKind === 'info'} class:error={statusKind === 'error'} hidden={!status && !error}>{error || status}</div>
+      <div
+        class="version-modal-status"
+        class:info={statusKind === 'info'}
+        class:error={statusKind === 'error'}
+        hidden={!status && !error}
+      >
+        {error || status}
+      </div>
       <div class="version-modal-actions">
         {#if info?.hasUpdate && !info?.isDev}
-          <button type="button" class="version-modal-btn primary" disabled={busy} onclick={runUpdate}>{t('version.updateRestart')}</button>
-          <button type="button" class="version-modal-btn ghost" disabled={busy} onclick={closeModal}>{t('version.later')}</button>
+          <button
+            type="button"
+            class="version-modal-btn primary"
+            disabled={busy}
+            onclick={runUpdate}>{t('version.updateRestart')}</button
+          >
+          <button type="button" class="version-modal-btn ghost" disabled={busy} onclick={closeModal}
+            >{t('version.later')}</button
+          >
         {:else}
-          <button type="button" class="version-modal-btn ghost" class:is-loading={checking} disabled={checking || busy} onclick={doManualCheck}>{checking ? t('version.checking') : t('version.checkForUpdates')}</button>
+          <button
+            type="button"
+            class="version-modal-btn ghost"
+            class:is-loading={checking}
+            disabled={checking || busy}
+            onclick={doManualCheck}
+            >{checking ? t('version.checking') : t('version.checkForUpdates')}</button
+          >
         {/if}
       </div>
     </div>

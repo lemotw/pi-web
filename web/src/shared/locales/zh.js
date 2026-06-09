@@ -157,7 +157,8 @@ export default {
   'settings.language': '语言',
   'settings.languageHint': '应用界面的语言。更改后会重新加载页面。',
   'settings.customLanguages': '自定义语言',
-  'settings.customLanguagesHint': '以 JSON 添加或覆盖语言——一个由 { "code", "label", "strings": { … } } 组成的数组。缺失的键回退到英文。使用“复制英文键”获取起始模板，然后“保存并应用”。',
+  'settings.customLanguagesHint':
+    '以 JSON 添加或覆盖语言——一个由 { "code", "label", "strings": { … } } 组成的数组。缺失的键回退到英文。使用“复制英文键”获取起始模板，然后“保存并应用”。',
   'settings.copyEnglishKeys': '复制英文键',
   'settings.saveApply': '保存并应用',
 
@@ -177,14 +178,17 @@ export default {
   'settings.titleOnce': '每个会话一次',
   'settings.titleEachTurn': '每条新消息',
   'settings.titleModel': '标题模型',
-  'settings.titleModelHint': '内置是免费、即时的词语启发式（无 AI）。选择一个模型以获得更智能的标题——小而快的模型最为理想。',
+  'settings.titleModelHint':
+    '内置是免费、即时的词语启发式（无 AI）。选择一个模型以获得更智能的标题——小而快的模型最为理想。',
   'settings.titleBuiltin': '内置启发式（无 AI）',
 
   'settings.artifacts': '产物',
   'settings.showArtifacts': '显示产物面板',
-  'settings.showArtifactsHint': '在右侧边栏标签中展示代理写入的文件和较大的代码块。关闭时隐藏该标签。',
+  'settings.showArtifactsHint':
+    '在右侧边栏标签中展示代理写入的文件和较大的代码块。关闭时隐藏该标签。',
   'settings.includeFilter': '包含过滤器',
-  'settings.includeFilterHint': '以逗号分隔的通配符（例如 *.md, *.html, artifacts/**）。仅显示匹配的文件。留空则显示全部；任何过滤器也会隐藏零散的聊天代码片段。',
+  'settings.includeFilterHint':
+    '以逗号分隔的通配符（例如 *.md, *.html, artifacts/**）。仅显示匹配的文件。留空则显示全部；任何过滤器也会隐藏零散的聊天代码片段。',
 
   'settings.notifications': '通知',
   'settings.notifyReady': '响应就绪时通知',
@@ -262,10 +266,14 @@ export default {
   'btw.emptyHasSession': '还没有消息——打个招呼吧。',
   'btw.emptyNoSession': '输入消息以开始 btw 聊天，或点击“新建”。',
 
-  'artifactHelp.intro': '<strong>产物</strong>是代理写入的文件以及它分享的较大代码块，从对话中提取出来，便于你在一个地方查找、阅读、复制或下载。',
-  'artifactHelp.viewing': '<strong>查看。</strong>从列表中选择一个以查看其源代码。HTML、SVG 和 Markdown 文件还有<em>预览</em>开关——HTML/SVG 在安全沙箱中运行，Markdown 渲染为带格式的文本。',
-  'artifactHelp.annotating': '<strong>批注。</strong>在产物的源代码中选择文本即可留下批注。你的批注会汇集在<em>批注</em>标签中，你可以在那里跳回它们或将其发送给代理。',
-  'artifactHelp.upToDate': '<strong>保持最新。</strong>代理<em>写入</em>或<em>编辑</em>的文件会自动更新，简单的重命名或删除（<code>mv</code>、<code>git mv</code>、<code>rm</code>）也会被跟踪。但通过其他 shell 命令所做的更改——例如 <code>sed</code> 或输出重定向——无法从对话中跟踪，因此产物偶尔可能显示较旧的版本。如有疑问，请检查磁盘上的文件。',
+  'artifactHelp.intro':
+    '<strong>产物</strong>是代理写入的文件以及它分享的较大代码块，从对话中提取出来，便于你在一个地方查找、阅读、复制或下载。',
+  'artifactHelp.viewing':
+    '<strong>查看。</strong>从列表中选择一个以查看其源代码。HTML、SVG 和 Markdown 文件还有<em>预览</em>开关——HTML/SVG 在安全沙箱中运行，Markdown 渲染为带格式的文本。',
+  'artifactHelp.annotating':
+    '<strong>批注。</strong>在产物的源代码中选择文本即可留下批注。你的批注会汇集在<em>批注</em>标签中，你可以在那里跳回它们或将其发送给代理。',
+  'artifactHelp.upToDate':
+    '<strong>保持最新。</strong>代理<em>写入</em>或<em>编辑</em>的文件会自动更新，简单的重命名或删除（<code>mv</code>、<code>git mv</code>、<code>rm</code>）也会被跟踪。但通过其他 shell 命令所做的更改——例如 <code>sed</code> 或输出重定向——无法从对话中跟踪，因此产物偶尔可能显示较旧的版本。如有疑问，请检查磁盘上的文件。',
   'artifactHelp.note': '产物仅属于实时视图，不会包含在导出的快照中。',
 
   'common.back': '返回',
@@ -291,7 +299,8 @@ export default {
   'artifact.preview': '预览',
   'artifact.runPreview': '运行预览',
   'artifact.showSource': '显示源代码',
-  'artifact.emptyHidden': '你的筛选器隐藏了 {count} 个{noun} — 可在<a href="/settings">设置</a>中调整。',
+  'artifact.emptyHidden':
+    '你的筛选器隐藏了 {count} 个{noun} — 可在<a href="/settings">设置</a>中调整。',
   'artifact.emptyNone': '此会话还没有产物。',
   'artifact.nounOne': '产物',
   'artifact.nounMany': '产物',

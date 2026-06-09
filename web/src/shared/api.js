@@ -24,7 +24,7 @@ export async function postJSON(url, body, { fetchImpl = fetch } = {}) {
   const response = await fetchImpl(url, {
     method: 'POST',
     headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
+    body: JSON.stringify(body),
   });
   return parseJSONResponse(response);
 }

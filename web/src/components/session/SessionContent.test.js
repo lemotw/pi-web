@@ -4,10 +4,33 @@ import SessionContent from './SessionContent.svelte';
 import { SessionDataModel } from '../../session/data/session-data.svelte.js';
 
 const entries = [
-  { id: 'root', timestamp: '2026-01-01T00:00:00Z', type: 'message', message: { role: 'user', content: 'hi' } },
-  { id: 'mid', parentId: 'root', timestamp: '2026-01-01T00:01:00Z', type: 'message', message: { role: 'assistant', content: 'mid' } },
-  { id: 'leaf', parentId: 'mid', timestamp: '2026-01-01T00:02:00Z', type: 'message', message: { role: 'user', content: 'leaf' } },
-  { id: 'other', parentId: 'root', timestamp: '2026-01-01T00:03:00Z', type: 'message', message: { role: 'assistant', content: 'other branch' } },
+  {
+    id: 'root',
+    timestamp: '2026-01-01T00:00:00Z',
+    type: 'message',
+    message: { role: 'user', content: 'hi' },
+  },
+  {
+    id: 'mid',
+    parentId: 'root',
+    timestamp: '2026-01-01T00:01:00Z',
+    type: 'message',
+    message: { role: 'assistant', content: 'mid' },
+  },
+  {
+    id: 'leaf',
+    parentId: 'mid',
+    timestamp: '2026-01-01T00:02:00Z',
+    type: 'message',
+    message: { role: 'user', content: 'leaf' },
+  },
+  {
+    id: 'other',
+    parentId: 'root',
+    timestamp: '2026-01-01T00:03:00Z',
+    type: 'message',
+    message: { role: 'assistant', content: 'other branch' },
+  },
 ];
 
 const renderEntry = (entry) => `<div id="entry-${entry.id}" class="msg">${entry.id}</div>`;
@@ -36,8 +59,14 @@ describe('SessionContent', () => {
 
   it('reactively appends a new entry that extends the active path (live reload)', async () => {
     const { container, model } = mount();
-    const newEntry = { id: 'leaf2', parentId: 'leaf', timestamp: '2026-01-01T00:04:00Z', type: 'message', message: { role: 'assistant', content: 'new' } };
-    // Mimic session.js's live reconcile: in-place entries splice + byId refill.
+    const newEntry = {
+      id: 'leaf2',
+      parentId: 'leaf',
+      timestamp: '2026-01-01T00:04:00Z',
+      type: 'message',
+      message: { role: 'assistant', content: 'new' },
+    };
+    // Mimic live reconcile: in-place entries splice + byId refill.
     model.entries.push(newEntry);
     model.byId.set('leaf2', newEntry);
     model.navigateTo('leaf2');

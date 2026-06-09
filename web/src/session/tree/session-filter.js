@@ -9,7 +9,10 @@ export function hasTextContent(content) {
 export function extractContent(content) {
   if (typeof content === 'string') return content;
   if (Array.isArray(content)) {
-    return content.filter((c) => c.type === 'text' && c.text).map((c) => c.text).join('');
+    return content
+      .filter((c) => c.type === 'text' && c.text)
+      .map((c) => c.text)
+      .join('');
   }
   return '';
 }
@@ -74,16 +77,27 @@ export function recalculateVisualStructure(filteredNodes, allFlatNodes) {
 
   const visibleRootIds = visibleChildren.get(null);
   const multipleRoots = visibleRootIds.length > 1;
-  const filteredNodeMap = new Map(filteredNodes.map((flatNode) => [flatNode.node.entry.id, flatNode]));
+  const filteredNodeMap = new Map(
+    filteredNodes.map((flatNode) => [flatNode.node.entry.id, flatNode]),
+  );
   const stack = [];
 
   for (let i = visibleRootIds.length - 1; i >= 0; i -= 1) {
     const isLast = i === visibleRootIds.length - 1;
-    stack.push([visibleRootIds[i], multipleRoots ? 1 : 0, multipleRoots, multipleRoots, isLast, [], multipleRoots]);
+    stack.push([
+      visibleRootIds[i],
+      multipleRoots ? 1 : 0,
+      multipleRoots,
+      multipleRoots,
+      isLast,
+      [],
+      multipleRoots,
+    ]);
   }
 
   while (stack.length > 0) {
-    const [nodeId, indent, justBranched, showConnector, isLast, gutters, isVirtualRootChild] = stack.pop();
+    const [nodeId, indent, justBranched, showConnector, isLast, gutters, isVirtualRootChild] =
+      stack.pop();
     const flatNode = filteredNodeMap.get(nodeId);
     if (!flatNode) continue;
 
@@ -104,16 +118,30 @@ export function recalculateVisualStructure(filteredNodes, allFlatNodes) {
     const connectorDisplayed = showConnector && !isVirtualRootChild;
     const currentDisplayIndent = multipleRoots ? Math.max(0, indent - 1) : indent;
     const connectorPosition = Math.max(0, currentDisplayIndent - 1);
-    const childGutters = connectorDisplayed ? [...gutters, { position: connectorPosition, show: !isLast }] : gutters;
+    const childGutters = connectorDisplayed
+      ? [...gutters, { position: connectorPosition, show: !isLast }]
+      : gutters;
 
     for (let i = children.length - 1; i >= 0; i -= 1) {
       const childIsLast = i === children.length - 1;
-      stack.push([children[i], childIndent, multipleChildren, multipleChildren, childIsLast, childGutters, false]);
+      stack.push([
+        children[i],
+        childIndent,
+        multipleChildren,
+        multipleChildren,
+        childIsLast,
+        childGutters,
+        false,
+      ]);
     }
   }
 }
 
-export function filterNodes(flatNodes, currentLeafId, { filterMode = 'default', searchQuery = '' } = {}) {
+export function filterNodes(
+  flatNodes,
+  currentLeafId,
+  { filterMode = 'default', searchQuery = '' } = {},
+) {
   const searchTokens = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
 
   const filtered = flatNodes.filter((flatNode) => {
@@ -124,18 +152,22 @@ export function filterNodes(flatNodes, currentLeafId, { filterMode = 'default', 
     if (entry.type === 'message' && entry.message.role === 'assistant') {
       const msg = entry.message;
       const hasText = hasTextContent(msg.content);
-      const isErrorOrAborted = msg.stopReason && msg.stopReason !== 'stop' && msg.stopReason !== 'toolUse';
+      const isErrorOrAborted =
+        msg.stopReason && msg.stopReason !== 'stop' && msg.stopReason !== 'toolUse';
       if (!hasText && !isErrorOrAborted) return false;
     }
 
-    const isSettingsEntry = ['label', 'custom', 'model_change', 'thinking_level_change'].includes(entry.type);
-    let passesFilter = true;
+    const isSettingsEntry = ['label', 'custom', 'model_change', 'thinking_level_change'].includes(
+      entry.type,
+    );
+    let passesFilter;
     switch (filterMode) {
       case 'user-only':
         passesFilter = entry.type === 'message' && entry.message.role === 'user';
         break;
       case 'no-tools':
-        passesFilter = !isSettingsEntry && !(entry.type === 'message' && entry.message.role === 'toolResult');
+        passesFilter =
+          !isSettingsEntry && !(entry.type === 'message' && entry.message.role === 'toolResult');
         break;
       case 'labeled-only':
         passesFilter = label !== undefined;

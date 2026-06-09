@@ -26,7 +26,7 @@ This flow covers a user clicking the **Share** button on a session page, which c
      │             │              │                  │               │              │
      │             │              │─── renderExportSessionPage(session)
      │             │              │                  │               │              │
-     │             │              │                  │─── embedded/session.html │
+     │             │              │                  │─── embedded/share-session.html │
      │             │              │                  │─── styles/session.css │
      │             │              │                  │─── exportJs     │              │
      │             │              │                  │─── marked.js    │              │
@@ -35,9 +35,9 @@ This flow covers a user clicking the **Share** button on a session page, which c
      │             │              │◀───────────────── HTML string (no buttons)        │
      │             │              │                  │               │              │
      │             │              │─── os.MkdirTemp("pi-share-*")                    │
-     │             │              │─── os.WriteFile(temp/session.html)                │
+     │             │              │─── os.WriteFile(temp/share-session.html)                │
      │             │              │                  │               │              │
-     │             │              │─── gh gist create --public=false temp/session.html
+     │             │              │─── gh gist create --public=false temp/share-session.html
      │             │              │                  │               │              │
      │             │              │                  │               │─────────────▶│
      │             │              │                  │               │              │
@@ -100,7 +100,7 @@ The `theme` parameter is extracted from the user's `pi-web-theme` cookie (fallin
 
 ```go
 tmpDir, _ := os.MkdirTemp(os.TempDir(), "pi-share-*")
-tmpFile := filepath.Join(tmpDir, "session.html")
+tmpFile := filepath.Join(tmpDir, "share-session.html")
 os.WriteFile(tmpFile, []byte(html), 0644)
 defer os.RemoveAll(tmpDir)
 ```

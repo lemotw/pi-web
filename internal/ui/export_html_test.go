@@ -15,12 +15,15 @@ func TestSessionViteSourceIncludesChatPreviewSSEHandling(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read web/src/session/live/chat-preview.js: %v", err)
 	}
-	// The live-reload runner + SSE primitives were absorbed into <LiveReload>.
+	events, err := os.ReadFile(repoPath("web/src/session/live/live-events.js"))
+	if err != nil {
+		t.Fatalf("read web/src/session/live/live-events.js: %v", err)
+	}
 	runner, err := os.ReadFile(repoPath("web/src/components/session/LiveReload.svelte"))
 	if err != nil {
 		t.Fatalf("read web/src/components/session/LiveReload.svelte: %v", err)
 	}
-	combined := string(preview) + string(runner)
+	combined := string(preview) + string(events) + string(runner)
 	for _, want := range []string{
 		"chat-preview",
 		"renderChatPreview",
@@ -33,13 +36,22 @@ func TestSessionViteSourceIncludesChatPreviewSSEHandling(t *testing.T) {
 }
 
 func TestSessionViteSourceForcesFollowOnChatSendAndScrollsNewEntries(t *testing.T) {
-	// Follow/scroll + SSE primitives now live in <LiveReload> (absorbed from
-	// live-scroll.js / live-events.js).
+	// Low-level scroll primitives live in session/live/live-scroll.js; the
+	// follow-mode decision state lives in session/live/live-follow.js; the SSE
+	// wiring that calls them remains in <LiveReload>.
 	runner, err := os.ReadFile(repoPath("web/src/components/session/LiveReload.svelte"))
 	if err != nil {
 		t.Fatalf("read web/src/components/session/LiveReload.svelte: %v", err)
 	}
-	combined := string(runner)
+	scroll, err := os.ReadFile(repoPath("web/src/session/live/live-scroll.js"))
+	if err != nil {
+		t.Fatalf("read web/src/session/live/live-scroll.js: %v", err)
+	}
+	follow, err := os.ReadFile(repoPath("web/src/session/live/live-follow.js"))
+	if err != nil {
+		t.Fatalf("read web/src/session/live/live-follow.js: %v", err)
+	}
+	combined := string(runner) + string(scroll) + string(follow)
 	for _, want := range []string{
 		"pi-chat-message-sent",
 		"forcePreviewFollowUntil",
@@ -108,6 +120,24 @@ func TestPrepareSessionPageDataUsesLastNonLabelEntryWithIDAsLeaf(t *testing.T) {
 	}
 }
 
+func TestClipboardHelperGuardsAndFallsBack(t *testing.T) {
+	// The clipboard guard + insecure-context execCommand fallback live in one
+	// shared helper (web/src/shared/clipboard.js); the copy sites delegate to it.
+	source, err := os.ReadFile(repoPath("web/src/shared/clipboard.js"))
+	if err != nil {
+		t.Fatalf("read web/src/shared/clipboard.js: %v", err)
+	}
+	for _, want := range []string{
+		"export async function copyToClipboard(",
+		"navigatorImpl.clipboard && navigatorImpl.clipboard.writeText",
+		"documentImpl.execCommand('copy')",
+	} {
+		if !strings.Contains(string(source), want) {
+			t.Fatalf("shared clipboard helper missing %q", want)
+		}
+	}
+}
+
 func TestShareResultCopyButtonsUseClipboardFallbackAndToast(t *testing.T) {
 	// Share UI now lives in the <ShareDialog> Svelte component (absorbed from the
 	// former live/share-overlay.js in migration Phase 3).
@@ -117,8 +147,7 @@ func TestShareResultCopyButtonsUseClipboardFallbackAndToast(t *testing.T) {
 	}
 	for _, want := range []string{
 		"function copyShareUrl(",
-		"navigator.clipboard && navigator.clipboard.writeText",
-		"document.execCommand('copy')",
+		"copyToClipboard(text)",
 		"share-copy-notice",
 		"t('share.copiedSuffix', { label })",
 	} {
@@ -135,11 +164,8 @@ func TestResumeButtonClipboardGuardAndFallback(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read web/src/components/session/SessionHeader.svelte: %v", err)
 	}
-	if !strings.Contains(string(source), "navigator.clipboard && navigator.clipboard.writeText") {
-		t.Fatalf("resume clipboard code should guard navigator.clipboard before writeText")
-	}
-	if !strings.Contains(string(source), "document.execCommand('copy')") {
-		t.Fatalf("resume clipboard code should include execCommand fallback")
+	if !strings.Contains(string(source), "copyToClipboard(text)") {
+		t.Fatalf("resume clipboard code should delegate to the shared copyToClipboard helper")
 	}
 }
 

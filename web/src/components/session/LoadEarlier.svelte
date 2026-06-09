@@ -11,7 +11,9 @@
   const remaining = $derived(Math.max(0, model?.from || 0));
   const nextCount = $derived(Math.min(windowSize, remaining));
   const visible = $derived(!!model && !!model.truncated && remaining > 0);
-  const effectiveFetch = $derived(fetchImpl || (typeof window !== 'undefined' ? window.fetch.bind(window) : null));
+  const effectiveFetch = $derived(
+    fetchImpl || (typeof window !== 'undefined' ? window.fetch.bind(window) : null),
+  );
 
   async function loadEarlier() {
     if (loading || !visible || !effectiveFetch) return;
@@ -44,11 +46,30 @@
 </script>
 
 {#if visible}
-  <div id="load-earlier-banner" class="load-earlier-banner" role="region" aria-label={t('session.earlierMessages')}>
-    <span class="load-earlier-label">{t('session.showingLatestMessages', { shown: shown.toLocaleString(), total: total.toLocaleString() })}</span>
-    <button type="button" class="load-earlier-button" disabled={loading || remaining <= 0} onclick={loadEarlier}>
-      {#if loading}{t('session.loadingEarlier')}{:else}{t('session.loadEarlierCount', { count: nextCount.toLocaleString() })}{/if}
+  <div
+    id="load-earlier-banner"
+    class="load-earlier-banner"
+    role="region"
+    aria-label={t('session.earlierMessages')}
+  >
+    <span class="load-earlier-label"
+      >{t('session.showingLatestMessages', {
+        shown: shown.toLocaleString(),
+        total: total.toLocaleString(),
+      })}</span
+    >
+    <button
+      type="button"
+      class="load-earlier-button"
+      disabled={loading || remaining <= 0}
+      onclick={loadEarlier}
+    >
+      {#if loading}{t('session.loadingEarlier')}{:else}{t('session.loadEarlierCount', {
+          count: nextCount.toLocaleString(),
+        })}{/if}
     </button>
-    <span class="load-earlier-status">{#if error}{t('session.loadEarlierFailed', { error })}{/if}</span>
+    <span class="load-earlier-status"
+      >{#if error}{t('session.loadEarlierFailed', { error })}{/if}</span
+    >
   </div>
 {/if}

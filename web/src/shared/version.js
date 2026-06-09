@@ -15,7 +15,8 @@ export function openVersionModal() {
 }
 
 export function renderChangelog(markdown) {
-  if (!markdown) return `<p class="version-changelog-empty">${escapeHtml(t('version.noReleaseNotes'))}</p>`;
+  if (!markdown)
+    return `<p class="version-changelog-empty">${escapeHtml(t('version.noReleaseNotes'))}</p>`;
   const lines = String(markdown).replace(/\r\n/g, '\n').split('\n');
   const out = [];
   let inList = false;
@@ -77,7 +78,8 @@ export function shortVersion(v) {
 
 export function versionLabel(info) {
   if (!info || !info.current) return '…';
-  if (info.hasUpdate && info.latest) return `${shortVersion(info.current)} → ${shortVersion(info.latest)}`;
+  if (info.hasUpdate && info.latest)
+    return `${shortVersion(info.current)} → ${shortVersion(info.latest)}`;
   return shortVersion(info.current);
 }
 

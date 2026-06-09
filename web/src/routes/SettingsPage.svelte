@@ -18,7 +18,9 @@
   function flashSaved() {
     savedVisible = true;
     clearTimeout(savedTimer);
-    savedTimer = setTimeout(() => { savedVisible = false; }, 1200);
+    savedTimer = setTimeout(() => {
+      savedVisible = false;
+    }, 1200);
   }
 
   function saveSetting(key, value) {
@@ -31,7 +33,11 @@
     const previousTitle = document.title;
     document.title = `${t('settings.title')} — Pi Sessions`;
     setupBackLink(document, window);
-    loadSettings({ windowImpl: window }).then((loaded) => { settings = loaded || {}; }).catch(() => {});
+    loadSettings({ windowImpl: window })
+      .then((loaded) => {
+        settings = loaded || {};
+      })
+      .catch(() => {});
     return () => {
       document.title = previousTitle;
       clearTimeout(savedTimer);
@@ -41,7 +47,9 @@
 
 <div class="settings-page">
   <div class="settings-header">
-    <a class="settings-back" href="/" data-settings-back><span aria-hidden="true">←</span><span data-settings-back-label>{t('session.back')}</span></a>
+    <a class="settings-back" href="/" data-settings-back
+      ><span aria-hidden="true">←</span><span data-settings-back-label>{t('session.back')}</span></a
+    >
     <h1>{t('settings.title')}</h1>
   </div>
 
@@ -54,5 +62,7 @@
   <CatGatekeeperSettings {settings} onSave={saveSetting} />
   <AboutSettings />
 
-  <div class="settings-saved-hint" class:visible={savedVisible} data-settings-saved>{t('common.saved')}</div>
+  <div class="settings-saved-hint" class:visible={savedVisible} data-settings-saved>
+    {t('common.saved')}
+  </div>
 </div>

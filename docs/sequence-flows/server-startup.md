@@ -108,7 +108,7 @@ Non-loopback binds **require** `PI_WEB_TOKEN` to prevent unauthorized access ove
 ### 5. Server Construction
 
 ```go
-srv := server.New(server.Deps{
+srv, err := server.New(server.Deps{
     AgentDir:      agentDir,
     SessionsDir:   sessionsDir,
     Auth:          authMiddleware,
@@ -124,9 +124,14 @@ srv := server.New(server.Deps{
     RenderExportSession: ui.RenderExportSessionPage,
     Models:              func(ctx context.Context) (json.RawMessage, error) { … },
 })
+if err != nil { os.Exit(1) } // agent-dir / SQLite schema init failed
 ```
 
-Server creation immediately spawns three background goroutines:
+`server.New` returns an error and aborts startup if the agent directory or
+SQLite schema (`initDB`) can't be initialized, rather than running with a
+half-initialized database that fails opaquely on first use.
+
+On success, server creation immediately spawns three background goroutines:
 
 1. **`watchFiles()`** — watches `sessionsDir` for changes (fsnotify + polling fallback)
 2. **`startSessionStatusWatcher()`** — watches `session-status/` for terminal activity

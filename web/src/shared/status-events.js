@@ -10,7 +10,7 @@ function normalizeRunning(payload) {
   if (!Array.isArray(payload?.running)) return null;
   return {
     ids: payload.running,
-    statuses: payload.statuses && typeof payload.statuses === 'object' ? payload.statuses : {}
+    statuses: payload.statuses && typeof payload.statuses === 'object' ? payload.statuses : {},
   };
 }
 
@@ -21,7 +21,7 @@ function normalizeDelta(payload) {
     running: !!payload.running,
     model: typeof payload.model === 'string' ? payload.model : '',
     modelName: typeof payload.modelName === 'string' ? payload.modelName : '',
-    modelProvider: typeof payload.modelProvider === 'string' ? payload.modelProvider : ''
+    modelProvider: typeof payload.modelProvider === 'string' ? payload.modelProvider : '',
   };
 }
 
@@ -31,7 +31,7 @@ export function createStatusEvents({
   windowImpl = globalThis.window,
   onSnapshot = () => {},
   onDelta = () => {},
-  onMessage = () => {}
+  onMessage = () => {},
 } = {}) {
   let stream = null;
   let pagehideHandler = null;

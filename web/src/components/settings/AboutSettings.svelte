@@ -1,5 +1,6 @@
 <script>
   import { t } from '../../shared/i18n.js';
+  import { REPO_URL, USER_DOCS_URL } from '../../shared/links.js';
 </script>
 
 <section class="settings-section">
@@ -10,7 +11,9 @@
       <span class="hint">pi-web</span>
     </div>
     <div class="settings-control">
-      <button class="settings-link" type="button" data-version-row><span data-version-status>…</span></button>
+      <button class="settings-link" type="button" data-version-row
+        ><span data-version-status>…</span></button
+      >
     </div>
   </div>
   <div class="settings-row">
@@ -19,7 +22,9 @@
       <span class="hint">{t('settings.docsHint')}</span>
     </div>
     <div class="settings-control">
-      <a class="settings-link" href="https://github.com/ygncode/pi-web/tree/main/user-docs" target="_blank" rel="noreferrer">{t('settings.openDocs')}</a>
+      <a class="settings-link" href={USER_DOCS_URL} target="_blank" rel="noreferrer"
+        >{t('settings.openDocs')}</a
+      >
     </div>
   </div>
   <div class="settings-row">
@@ -28,7 +33,9 @@
       <span class="hint">{t('settings.githubHint')}</span>
     </div>
     <div class="settings-control">
-      <a class="settings-link" href="https://github.com/ygncode/pi-web" target="_blank" rel="noreferrer">{t('settings.starGithub')}</a>
+      <a class="settings-link" href={REPO_URL} target="_blank" rel="noreferrer"
+        >{t('settings.starGithub')}</a
+      >
     </div>
   </div>
   <div class="settings-row">
@@ -37,7 +44,12 @@
       <span class="hint">{t('settings.sponsorHint')}</span>
     </div>
     <div class="settings-control">
-      <a class="settings-link" href="https://github.com/sponsors/setkyar" target="_blank" rel="noreferrer">{t('settings.becomeSponsor')}</a>
+      <a
+        class="settings-link"
+        href="https://github.com/sponsors/setkyar"
+        target="_blank"
+        rel="noreferrer">{t('settings.becomeSponsor')}</a
+      >
     </div>
   </div>
 </section>

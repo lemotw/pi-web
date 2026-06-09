@@ -22,6 +22,12 @@ test.describe("cat gatekeeper", () => {
     const { entries } = buildSession({ cwd });
     const id = writeSession(sessionsDir, uniqueSessionName(testInfo, "cat"), entries);
 
+    // Pin the browser clock to a non-bedtime hour. The gatekeeper's bedtime
+    // "sleep" overlay (default 23:00–07:00, read from the live Date.now()) would
+    // otherwise pre-empt skip-to-break whenever CI runs during that window. Use
+    // setFixedTime (not install) so the app's other timers keep running.
+    await page.clock.setFixedTime(new Date("2026-06-08T12:00:00"));
+
     await page.route("**/api/settings", async (route) => {
       if (route.request().method() === "GET") {
         await route.fulfill({
@@ -30,6 +36,12 @@ test.describe("cat gatekeeper", () => {
               "pi-web:v1:cat:enabled": "true",
               "pi-web:v1:cat:focus-min": "25",
               "pi-web:v1:cat:break-min": "5",
+              // Equal bedtime/wakeup = zero-width sleep window, so the gatekeeper
+              // never enters bedtime mode. Otherwise a run during 23:00–07:00
+              // (the default window) shows the sleep overlay and skip-to-break,
+              // which only fires in the focus phase, can't open the break.
+              "pi-web:v1:cat:bedtime": "07:00",
+              "pi-web:v1:cat:wakeup": "07:00",
             },
           },
         });
@@ -40,6 +52,10 @@ test.describe("cat gatekeeper", () => {
     await page.addInitScript(() => {
       try {
         localStorage.setItem("pi-web:v1:cat:enabled", "true");
+        // Mirror the zero-width sleep window for the synchronous pre-hydration
+        // read so the controller's first tick never enters bedtime mode.
+        localStorage.setItem("pi-web:v1:cat:bedtime", "07:00");
+        localStorage.setItem("pi-web:v1:cat:wakeup", "07:00");
       } catch {
         /* ignore */
       }

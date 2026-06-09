@@ -46,7 +46,7 @@ func newBenchServer(b *testing.B, numSessions, messagesPerSession int) (*Server,
 		lastID = name
 	}
 
-	srv := New(Deps{
+	srv, err := New(Deps{
 		AgentDir:            dir,
 		SessionsDir:         dir,
 		Auth:                auth.New(""),
@@ -58,6 +58,9 @@ func newBenchServer(b *testing.B, numSessions, messagesPerSession int) (*Server,
 		},
 		Models: func(ctx context.Context) (json.RawMessage, error) { return nil, nil },
 	})
+	if err != nil {
+		b.Fatalf("New: %v", err)
+	}
 	return srv, lastID
 }
 

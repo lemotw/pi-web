@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { tick } from 'svelte';
 import { render, cleanup } from '@testing-library/svelte';
 import AnnotationLayer from './AnnotationLayer.svelte';
+import { sessionRuntime, resetSessionRuntime } from '../../session/session-runtime.js';
 
 const flush = () => new Promise((r) => setTimeout(r, 0));
 const waitFor = async (fn, { timeout = 1000, interval = 5 } = {}) => {
@@ -17,7 +18,7 @@ const waitFor = async (fn, { timeout = 1000, interval = 5 } = {}) => {
 afterEach(() => {
   cleanup();
   document.body.innerHTML = '';
-  delete window.__piAnnotationLayer;
+  resetSessionRuntime();
   vi.restoreAllMocks();
 });
 
@@ -31,14 +32,24 @@ function fakeApi(initial = []) {
       store.push(saved);
       return saved;
     }),
-    remove: vi.fn(async (id) => { store = store.filter((x) => x.id !== id); return true; }),
+    remove: vi.fn(async (id) => {
+      store = store.filter((x) => x.id !== id);
+      return true;
+    }),
     _store: () => store,
   };
 }
 
 // Builds the standard transcript + composer + count badge scopes, renders the
 // component, and returns the window-bridge layer plus the created hosts.
-function setup({ api, selectionDelayMs = 250, onCreate = null, onSend = null, onAddToChat = null, init = true } = {}) {
+function setup({
+  api,
+  selectionDelayMs = 250,
+  onCreate = null,
+  onSend = null,
+  onAddToChat = null,
+  init = true,
+} = {}) {
   const messages = document.createElement('div');
   messages.id = 'messages';
   messages.innerHTML = '<div id="entry-e1">hello world</div>';
@@ -51,12 +62,21 @@ function setup({ api, selectionDelayMs = 250, onCreate = null, onSend = null, on
   count.hidden = true;
   document.body.appendChild(count);
 
-  render(AnnotationLayer);
-  const layer = window.__piAnnotationLayer;
   const resolvedApi = api || fakeApi();
-  if (init) {
-    layer.init({ api: resolvedApi, scopes: [messages], composerEl: composer, countEl: count, onCreate, onSend, onAddToChat, selectionDelayMs });
-  }
+  const props = init
+    ? {
+        api: resolvedApi,
+        scopes: [messages],
+        composerEl: composer,
+        countEl: count,
+        onCreate,
+        onSend,
+        onAddToChat,
+        selectionDelayMs,
+      }
+    : {};
+  render(AnnotationLayer, { props });
+  const layer = sessionRuntime.annotations;
   return { layer, messages, composer, count, api: resolvedApi };
 }
 
@@ -82,18 +102,27 @@ describe('AnnotationLayer', () => {
   it('renders notes, count, and highlights from a snapshot', async () => {
     const { layer, messages, count } = setup();
     layer.setAnnotations([
-      { id: 'a1', anchorId: 'entry-e1', startOffset: 0, endOffset: 5, text: 'note', original: 'hello' },
+      {
+        id: 'a1',
+        anchorId: 'entry-e1',
+        startOffset: 0,
+        endOffset: 5,
+        text: 'note',
+        original: 'hello',
+      },
     ]);
     await tick();
     expect(document.querySelectorAll('.annotation-item')).toHaveLength(1);
     expect(document.querySelector('.annotation-note').textContent).toBe('note');
     expect(count.textContent).toBe('1');
-    expect(messages.querySelector('mark.pi-annotation[data-annotation-id="a1"]').textContent).toBe('hello');
+    expect(messages.querySelector('mark.pi-annotation[data-annotation-id="a1"]').textContent).toBe(
+      'hello',
+    );
   });
 
   it('creates a comment from a selection through the popover', async () => {
     const api = fakeApi();
-    const { } = setup({ api });
+    setup({ api });
     await flush(); // initial refresh
 
     selectWorld();
@@ -108,9 +137,16 @@ describe('AnnotationLayer', () => {
     await flush();
     await flush();
 
-    expect(api.create).toHaveBeenCalledWith(expect.objectContaining({
-      anchorId: 'entry-e1', startOffset: 6, endOffset: 11, kind: 'comment', text: 'fix this', original: 'world',
-    }));
+    expect(api.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        anchorId: 'entry-e1',
+        startOffset: 6,
+        endOffset: 11,
+        kind: 'comment',
+        text: 'fix this',
+        original: 'world',
+      }),
+    );
     expect(document.querySelector('.annotation-note').textContent).toBe('fix this');
     expect(document.querySelector('mark.pi-annotation').textContent).toBe('world');
   });
@@ -155,13 +191,26 @@ describe('AnnotationLayer', () => {
 
     selectWorld();
     document.dispatchEvent(new Event('selectionchange'));
-    await waitFor(() => document.querySelector('.annotation-popover [data-action="start-comment"]'));
+    await waitFor(() =>
+      document.querySelector('.annotation-popover [data-action="start-comment"]'),
+    );
 
-    expect(document.querySelector('.annotation-popover [data-action="start-comment"]')).not.toBeNull();
+    expect(
+      document.querySelector('.annotation-popover [data-action="start-comment"]'),
+    ).not.toBeNull();
   });
 
   it('deletes a note on click', async () => {
-    const api = fakeApi([{ id: 'a1', anchorId: 'entry-e1', startOffset: 0, endOffset: 5, text: 'n', original: 'hello' }]);
+    const api = fakeApi([
+      {
+        id: 'a1',
+        anchorId: 'entry-e1',
+        startOffset: 0,
+        endOffset: 5,
+        text: 'n',
+        original: 'hello',
+      },
+    ]);
     setup({ api });
     await flush();
     await tick();
@@ -177,7 +226,14 @@ describe('AnnotationLayer', () => {
   it('fills the composer when sending transcript notes to pi', async () => {
     const { layer, composer } = setup();
     layer.setAnnotations([
-      { id: 'a1', anchorId: 'entry-e1', startOffset: 0, endOffset: 5, text: 'rename this', original: 'hello' },
+      {
+        id: 'a1',
+        anchorId: 'entry-e1',
+        startOffset: 0,
+        endOffset: 5,
+        text: 'rename this',
+        original: 'hello',
+      },
     ]);
     await tick();
     document.querySelector('[data-action="send-to-pi"]').click();
@@ -193,7 +249,14 @@ describe('AnnotationLayer', () => {
     const { layer, composer } = setup({ onSend });
     composer.focus = vi.fn(() => calls.push('focus'));
     layer.setAnnotations([
-      { id: 'a1', anchorId: 'entry-e1', startOffset: 0, endOffset: 5, text: 'note', original: 'hello' },
+      {
+        id: 'a1',
+        anchorId: 'entry-e1',
+        startOffset: 0,
+        endOffset: 5,
+        text: 'note',
+        original: 'hello',
+      },
     ]);
     await tick();
     document.querySelector('[data-action="send-to-pi"]').click();
@@ -209,16 +272,32 @@ describe('AnnotationLayer', () => {
     composer.id = 'pi-chat-message';
     document.body.appendChild(composer);
     const content = 'line one\nline two\nline three\nline four\n';
-    const resolveArtifact = (id) => (id === 'art-1'
-      ? { id: 'art-1', filePath: '/Users/setkyar/milktea/the-silver-flute-of-bagan.md', content }
-      : null);
+    const resolveArtifact = (id) =>
+      id === 'art-1'
+        ? { id: 'art-1', filePath: '/Users/setkyar/milktea/the-silver-flute-of-bagan.md', content }
+        : null;
 
-    render(AnnotationLayer);
-    const layer = window.__piAnnotationLayer;
-    layer.init({ api: fakeApi(), scopes: [messages], composerEl: composer, resolveArtifact });
+    render(AnnotationLayer, {
+      props: { api: fakeApi(), scopes: [messages], composerEl: composer, resolveArtifact },
+    });
+    const layer = sessionRuntime.annotations;
     layer.setAnnotations([
-      { id: 'n1', anchorId: 'artifact-art-1', startOffset: 0, endOffset: 4, text: 'add (burmese)', original: 'line' },
-      { id: 'n2', anchorId: 'artifact-art-1', startOffset: 9, endOffset: 28, text: 'spans lines', original: 'two..three' },
+      {
+        id: 'n1',
+        anchorId: 'artifact-art-1',
+        startOffset: 0,
+        endOffset: 4,
+        text: 'add (burmese)',
+        original: 'line',
+      },
+      {
+        id: 'n2',
+        anchorId: 'artifact-art-1',
+        startOffset: 9,
+        endOffset: 28,
+        text: 'spans lines',
+        original: 'two..three',
+      },
     ]);
     await tick();
     document.querySelector('[data-action="send-to-pi"]').click();
@@ -231,15 +310,24 @@ describe('AnnotationLayer', () => {
 
   it('does not let a slow initial load clobber a newer optimistic create', async () => {
     let releaseList;
-    const slow = new Promise((r) => { releaseList = r; });
+    const slow = new Promise((r) => {
+      releaseList = r;
+    });
     const store = [];
     let firstList = true;
     const api = {
       list: vi.fn(() => {
-        if (firstList) { firstList = false; return slow; }
+        if (firstList) {
+          firstList = false;
+          return slow;
+        }
         return Promise.resolve(store.slice());
       }),
-      create: vi.fn(async (a) => { const s = { ...a, id: 'real-1' }; store.push(s); return s; }),
+      create: vi.fn(async (a) => {
+        const s = { ...a, id: 'real-1' };
+        store.push(s);
+        return s;
+      }),
       remove: vi.fn(),
     };
     setup({ api }); // init() kicks off the slow refresh
@@ -274,9 +362,7 @@ describe('AnnotationLayer', () => {
     document.body.appendChild(count);
     const api = fakeApi();
 
-    render(AnnotationLayer);
-    const layer = window.__piAnnotationLayer;
-    layer.init({ api, scopes: [messages, artHost], countEl: count });
+    render(AnnotationLayer, { props: { api, scopes: [messages, artHost], countEl: count } });
     await flush();
 
     const node = document.getElementById('artifact-art-1').firstChild;
@@ -294,13 +380,18 @@ describe('AnnotationLayer', () => {
     await flush();
     await flush();
 
-    expect(api.create).toHaveBeenCalledWith(expect.objectContaining({ anchorId: 'artifact-art-1', original: 'main' }));
+    expect(api.create).toHaveBeenCalledWith(
+      expect.objectContaining({ anchorId: 'artifact-art-1', original: 'main' }),
+    );
     expect(document.querySelector('#artifact-art-1 mark.pi-annotation').textContent).toBe('main');
   });
 
   it('is a no-op when required deps are missing', () => {
     render(AnnotationLayer);
-    const layer = window.__piAnnotationLayer;
-    expect(() => { layer.init({}); layer.setAnnotations([]); layer.reapply(); }).not.toThrow();
+    const layer = sessionRuntime.annotations;
+    expect(() => {
+      layer.setAnnotations([]);
+      layer.reapply();
+    }).not.toThrow();
   });
 });

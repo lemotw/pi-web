@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { buildSessionPageState, firstMessageStub, loadSessionPageState, newestLeaf } from './session-page-data.js';
+import {
+  buildSessionPageState,
+  firstMessageStub,
+  loadSessionPageState,
+  newestLeaf,
+} from './session-page-data.js';
 
 const btoaImpl = (value) => Buffer.from(value, 'binary').toString('base64');
 const decodePayload = (encoded) => JSON.parse(Buffer.from(encoded, 'base64').toString('utf8'));
@@ -66,7 +71,11 @@ describe('session-page-data', () => {
       throw new Error('unexpected url');
     };
 
-    const state = await loadSessionPageState({ locationSearch: '?id=s.jsonl', fetchImpl, btoaImpl });
+    const state = await loadSessionPageState({
+      locationSearch: '?id=s.jsonl',
+      fetchImpl,
+      btoaImpl,
+    });
 
     expect(state.title).toBe('Loaded');
     expect(state.scratchpad).toBe('pad');
@@ -93,8 +102,7 @@ describe('session-page-data', () => {
       }),
     );
     const documentImpl = {
-      getElementById: (id) =>
-        id === 'pi-session-bootstrap' ? { textContent: bootstrap } : null,
+      getElementById: (id) => (id === 'pi-session-bootstrap' ? { textContent: bootstrap } : null),
     };
     let fetched = false;
     const fetchImpl = async () => {
@@ -117,10 +125,11 @@ describe('session-page-data', () => {
 
   it('falls back to fetch when the bootstrap is for a different session', async () => {
     const b64utf8 = (value) => Buffer.from(value, 'utf8').toString('base64');
-    const bootstrap = b64utf8(JSON.stringify({ id: 'other.jsonl', data: { name: 'Other', entries: [] } }));
+    const bootstrap = b64utf8(
+      JSON.stringify({ id: 'other.jsonl', data: { name: 'Other', entries: [] } }),
+    );
     const documentImpl = {
-      getElementById: (id) =>
-        id === 'pi-session-bootstrap' ? { textContent: bootstrap } : null,
+      getElementById: (id) => (id === 'pi-session-bootstrap' ? { textContent: bootstrap } : null),
     };
     let fetched = false;
     const fetchImpl = async (url) => {
@@ -131,7 +140,12 @@ describe('session-page-data', () => {
       return { ok: true, json: async () => ({ content: '' }) };
     };
 
-    const state = await loadSessionPageState({ locationSearch: '?id=s.jsonl', fetchImpl, btoaImpl, documentImpl });
+    const state = await loadSessionPageState({
+      locationSearch: '?id=s.jsonl',
+      fetchImpl,
+      btoaImpl,
+      documentImpl,
+    });
 
     expect(fetched).toBe(true);
     expect(state.title).toBe('Fetched');

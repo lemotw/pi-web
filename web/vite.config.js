@@ -11,13 +11,13 @@ export default defineConfig({
     chunkSizeWarningLimit: 1200,
     rollupOptions: {
       input: {
-        app: resolve(__dirname, 'src/main.js')
+        app: resolve(__dirname, 'src/main.js'),
       },
       output: {
         manualChunks(id) {
           if (id.includes('highlight.js')) return 'hljs';
-        }
-      }
-    }
-  }
+        },
+      },
+    },
+  },
 });

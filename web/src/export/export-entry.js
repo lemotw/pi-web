@@ -10,13 +10,8 @@
 // <script> tags (see internal/ui/export.go); they are marked external in the
 // export Vite build, so this bundle reads window.marked / window.hljs.
 
-import {
-  loadSessionData,
-  getSessionSearchParams,
-} from '../session/data/session-data.js';
-import {
-  extractContent,
-} from '../session/tree/session-filter.js';
+import { loadSessionData } from '../session/data/session-data.js';
+import { extractContent } from '../session/tree/session-filter.js';
 import {
   escapeHtml,
   formatToolCall,
@@ -37,6 +32,7 @@ import * as toggleStateApi from '../session/ui/toggle-state.js';
 import * as sidebarApi from '../session/ui/sidebar.js';
 import * as searchFiltersApi from '../session/ui/search-filters.js';
 import { setupSessionUi } from '../session/ui/session-ui-runner.js';
+import { sessionRuntime } from '../session/session-runtime.js';
 import { setupKeyboardNav } from '../shared/keyboard-nav.js';
 
 // In a sandboxed iframe (e.g. a srcdoc preview without `allow-same-origin`),
@@ -55,9 +51,15 @@ function safeLocalStorage(target) {
   const mem = new Map();
   return {
     getItem: (key) => (mem.has(key) ? mem.get(key) : null),
-    setItem: (key, value) => { mem.set(key, String(value)); },
-    removeItem: (key) => { mem.delete(key); },
-    clear: () => { mem.clear(); },
+    setItem: (key, value) => {
+      mem.set(key, String(value));
+    },
+    removeItem: (key) => {
+      mem.delete(key);
+    },
+    clear: () => {
+      mem.clear();
+    },
   };
 }
 
@@ -76,22 +78,21 @@ export function runExportApp({ target = window } = {}) {
   // component the live app uses). The snapshot renders once — no live updates —
   // so this just computes the tree/active-path derivations a single time.
   const treeModel = new SessionDataModel(dataModel);
-  const sessionId = getSessionSearchParams(target.location).get('id') || '';
 
   let filterMode = 'default';
   let searchQuery = '';
-  target.__piFilterState = { filterMode, searchQuery };
 
   const sessionFormat = {
     shortenPath,
     formatToolCall,
     escapeHtml: (text) => escapeHtml(text, { documentImpl }),
     truncate,
-    getTreeNodeDisplayHtml: (entry, label) => getTreeNodeDisplayHtmlForState(entry, label, {
-      extractContent,
-      toolCallMap: dataModel.toolCallMap,
-      escapeHtmlImpl: (text) => escapeHtml(text, { documentImpl }),
-    }),
+    getTreeNodeDisplayHtml: (entry, label) =>
+      getTreeNodeDisplayHtmlForState(entry, label, {
+        extractContent,
+        toolCallMap: dataModel.toolCallMap,
+        escapeHtmlImpl: (text) => escapeHtml(text, { documentImpl }),
+      }),
   };
 
   let currentLeafId = dataModel.leafId;
@@ -100,23 +101,26 @@ export function runExportApp({ target = window } = {}) {
 
   // Push view state into the reactive model; <SessionTreeNodes> recomputes.
   const syncTreeRendererState = () => {
-    target.__piFilterState.filterMode = filterMode;
-    target.__piFilterState.searchQuery = searchQuery;
     treeModel.filterMode = filterMode;
     treeModel.searchQuery = searchQuery;
     treeModel.currentLeafId = currentLeafId;
     treeModel.currentTargetId = currentTargetId;
   };
-  const renderTree = () => { syncTreeRendererState(); };
-  const forceTreeRerender = () => { syncTreeRendererState(); };
+  const renderTree = () => {
+    syncTreeRendererState();
+  };
+  const forceTreeRerender = () => {
+    syncTreeRendererState();
+  };
 
-  target.downloadSessionJson = () => downloadSessionJson({
-    entries: dataModel.entries,
-    header: dataModel.header,
-    documentImpl,
-    URLImpl: target.URL,
-    BlobImpl: target.Blob,
-  });
+  target.downloadSessionJson = () =>
+    downloadSessionJson({
+      entries: dataModel.entries,
+      header: dataModel.header,
+      documentImpl,
+      URLImpl: target.URL,
+      BlobImpl: target.Blob,
+    });
 
   // hljs is available synchronously (inlined vendor script). <SessionEntry>/
   // <ToolOutput> emit code with `data-highlight-pending`; this colours them in
@@ -127,10 +131,13 @@ export function runExportApp({ target = window } = {}) {
       const lang = el.dataset.lang;
       const text = el.textContent;
       try {
-        el.innerHTML = lang && hljs.getLanguage(lang)
-          ? hljs.highlight(text, { language: lang }).value
-          : hljs.highlightAuto(text).value;
-      } catch { /* keep plain text */ }
+        el.innerHTML =
+          lang && hljs.getLanguage(lang)
+            ? hljs.highlight(text, { language: lang }).value
+            : hljs.highlightAuto(text).value;
+      } catch {
+        /* keep plain text */
+      }
       el.removeAttribute('data-highlight-pending');
       el.removeAttribute('data-lang');
     });
@@ -148,8 +155,12 @@ export function runExportApp({ target = window } = {}) {
     sidebarApi,
     toggleStateApi,
     getLeafId: () => dataModel.leafId,
-    setSearchQuery: (value) => { searchQuery = value; },
-    setFilterMode: (value) => { filterMode = value; },
+    setSearchQuery: (value) => {
+      searchQuery = value;
+    },
+    setFilterMode: (value) => {
+      filterMode = value;
+    },
     forceTreeRerender,
     navigateTo: (...args) => navigateTo(...args),
     projectPath: dataModel.header?.cwd || '',
@@ -181,7 +192,7 @@ export function runExportApp({ target = window } = {}) {
       props: {
         model: treeModel,
         afterRender: (container) => {
-          target.applyToggleStateToNode?.(container);
+          sessionRuntime.toggleState?.applyToNode(container);
           highlightPending(container);
         },
       },
@@ -189,7 +200,7 @@ export function runExportApp({ target = window } = {}) {
   }
 
   // Mount the Svelte tree sidebar into #sidebar (the static #tree-container /
-  // #tree-status were removed from session.html; the component renders them).
+  // #tree-status were removed from share-session.html; the component renders them).
   const sidebarEl = documentImpl.getElementById('sidebar');
   if (sidebarEl) {
     mount(SessionTreeNodes, {
@@ -214,9 +225,6 @@ export function runExportApp({ target = window } = {}) {
   }
   ui.attachHeaderHandlers();
 
-  target.navigateTo = navigateTo;
-  target.__piSessionNavigator = navigatorInstance;
-
   setupKeyboardNav({ windowImpl: target, documentImpl });
   const imageModalHost = documentImpl.getElementById('image-modal-host');
   if (imageModalHost) mount(ImageModal, { target: imageModalHost });
@@ -235,6 +243,10 @@ export function runExportApp({ target = window } = {}) {
   }
 }
 
-if (typeof window !== 'undefined' && typeof document !== 'undefined' && document.getElementById('session-data')) {
+if (
+  typeof window !== 'undefined' &&
+  typeof document !== 'undefined' &&
+  document.getElementById('session-data')
+) {
   runExportApp();
 }

@@ -2,13 +2,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { tick } from 'svelte';
 import { render, cleanup } from '@testing-library/svelte';
 import RightSidebar from './RightSidebar.svelte';
+import { sessionRuntime, resetSessionRuntime } from '../../session/session-runtime.js';
 
 afterEach(() => {
   cleanup();
   document.body.className = '';
   document.documentElement.removeAttribute('style');
   localStorage.clear();
-  delete window.__piRightSidebar;
+  resetSessionRuntime();
 });
 
 beforeEach(() => {
@@ -22,9 +23,15 @@ describe('RightSidebar tabs', () => {
     document.querySelector('[data-pane="artifacts"]').click();
     await tick();
 
-    expect(document.querySelector('[data-pane="artifacts"]').classList.contains('active')).toBe(true);
-    expect(document.querySelector('[data-pane="artifacts"]').getAttribute('aria-selected')).toBe('true');
-    expect(document.querySelector('[data-pane="scratchpad"]').getAttribute('aria-selected')).toBe('false');
+    expect(document.querySelector('[data-pane="artifacts"]').classList.contains('active')).toBe(
+      true,
+    );
+    expect(document.querySelector('[data-pane="artifacts"]').getAttribute('aria-selected')).toBe(
+      'true',
+    );
+    expect(document.querySelector('[data-pane="scratchpad"]').getAttribute('aria-selected')).toBe(
+      'false',
+    );
     expect(document.getElementById('right-pane-artifacts').hasAttribute('hidden')).toBe(false);
     expect(document.getElementById('right-pane-scratchpad').hasAttribute('hidden')).toBe(true);
   });
@@ -39,7 +46,9 @@ describe('RightSidebar tabs', () => {
     render(RightSidebar);
     await tick();
     expect(document.getElementById('right-pane-artifacts').hasAttribute('hidden')).toBe(false);
-    expect(document.querySelector('[data-pane="artifacts"]').classList.contains('active')).toBe(true);
+    expect(document.querySelector('[data-pane="artifacts"]').classList.contains('active')).toBe(
+      true,
+    );
   });
 
   it('marks the active tab on the sidebar for tab-scoped chrome', async () => {
@@ -52,8 +61,10 @@ describe('RightSidebar tabs', () => {
 
   it('ignores activation for an unknown pane name via the window bridge', () => {
     render(RightSidebar);
-    window.__piRightSidebar.activateTab('nonexistent');
-    expect(document.querySelector('[data-pane="scratchpad"]').classList.contains('active')).toBe(true);
+    sessionRuntime.rightSidebar.activateTab('nonexistent');
+    expect(document.querySelector('[data-pane="scratchpad"]').classList.contains('active')).toBe(
+      true,
+    );
   });
 });
 
@@ -62,13 +73,13 @@ describe('RightSidebar visibility controls', () => {
     document.body.classList.add('right-sidebar-collapsed');
     render(RightSidebar);
 
-    window.__piRightSidebar.open();
+    sessionRuntime.rightSidebar.open();
     expect(document.body.classList.contains('right-sidebar-collapsed')).toBe(false);
 
-    window.__piRightSidebar.collapse();
+    sessionRuntime.rightSidebar.collapse();
     expect(document.body.classList.contains('right-sidebar-collapsed')).toBe(true);
 
-    window.__piRightSidebar.toggle();
+    sessionRuntime.rightSidebar.toggle();
     expect(document.body.classList.contains('right-sidebar-collapsed')).toBe(false);
   });
 
@@ -96,7 +107,10 @@ describe('RightSidebar scratchpad', () => {
     expect(fetchMock).not.toHaveBeenCalled();
     await vi.advanceTimersByTimeAsync(1000);
 
-    expect(fetchMock).toHaveBeenCalledWith('/api/scratchpad', expect.objectContaining({ method: 'POST' }));
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/scratchpad',
+      expect.objectContaining({ method: 'POST' }),
+    );
     const body = JSON.parse(fetchMock.mock.calls[0][1].body);
     expect(body).toEqual({ project: '/proj', content: 'hello notes' });
 

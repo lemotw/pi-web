@@ -23,13 +23,36 @@
  */
 
 const EXT_TO_LANG = {
-  ts: 'typescript', tsx: 'typescript', js: 'javascript', jsx: 'javascript',
-  py: 'python', rb: 'ruby', rs: 'rust', go: 'go', java: 'java',
-  c: 'c', cpp: 'cpp', h: 'c', hpp: 'cpp', cs: 'csharp',
-  php: 'php', sh: 'bash', bash: 'bash', zsh: 'bash',
-  sql: 'sql', html: 'html', htm: 'html', css: 'css', scss: 'scss',
-  json: 'json', yaml: 'yaml', yml: 'yaml', xml: 'xml',
-  md: 'markdown', svg: 'svg', dockerfile: 'dockerfile'
+  ts: 'typescript',
+  tsx: 'typescript',
+  js: 'javascript',
+  jsx: 'javascript',
+  py: 'python',
+  rb: 'ruby',
+  rs: 'rust',
+  go: 'go',
+  java: 'java',
+  c: 'c',
+  cpp: 'cpp',
+  h: 'c',
+  hpp: 'cpp',
+  cs: 'csharp',
+  php: 'php',
+  sh: 'bash',
+  bash: 'bash',
+  zsh: 'bash',
+  sql: 'sql',
+  html: 'html',
+  htm: 'html',
+  css: 'css',
+  scss: 'scss',
+  json: 'json',
+  yaml: 'yaml',
+  yml: 'yaml',
+  xml: 'xml',
+  md: 'markdown',
+  svg: 'svg',
+  dockerfile: 'dockerfile',
 };
 
 function extOf(filePath) {
@@ -81,7 +104,7 @@ function makeFileArtifact(id, path, content, entry) {
     filePath: path,
     entryId: entry.id,
     anchorId: `entry-${entry.id}`,
-    source: 'write'
+    source: 'write',
   };
 }
 
@@ -92,8 +115,12 @@ function applyEdits(content, edits) {
   for (const e of edits) {
     if (!e) continue;
     const oldText = typeof e.oldText === 'string' ? e.oldText : e.old_string;
-    const newText = typeof e.newText === 'string' ? e.newText
-      : (typeof e.new_string === 'string' ? e.new_string : '');
+    const newText =
+      typeof e.newText === 'string'
+        ? e.newText
+        : typeof e.new_string === 'string'
+          ? e.new_string
+          : '';
     if (typeof oldText !== 'string' || oldText === '') continue;
     const i = out.indexOf(oldText);
     if (i === -1) continue; // mismatch (e.g. file changed via untracked means) — skip
@@ -121,7 +148,11 @@ function tokenizeShell(s) {
       quote = ch;
       started = true;
     } else if (ch === ' ' || ch === '\t') {
-      if (started) { tokens.push(cur); cur = ''; started = false; }
+      if (started) {
+        tokens.push(cur);
+        cur = '';
+        started = false;
+      }
     } else {
       cur += ch;
       started = true;
@@ -145,7 +176,10 @@ export function parseFileOps(command) {
 
   let verb = tokens[0];
   let rest = tokens.slice(1);
-  if (verb === 'git' && rest[0] === 'mv') { verb = 'mv'; rest = rest.slice(1); }
+  if (verb === 'git' && rest[0] === 'mv') {
+    verb = 'mv';
+    rest = rest.slice(1);
+  }
   if (verb !== 'mv' && verb !== 'rm') return [];
 
   const args = rest.filter((t) => !t.startsWith('-'));
@@ -166,7 +200,10 @@ function applyBashOps(command, byPath) {
   for (const op of parseFileOps(command)) {
     if (op.op === 'rm') {
       const art = byPath.get(op.path);
-      if (art) { art._removed = true; byPath.delete(op.path); }
+      if (art) {
+        art._removed = true;
+        byPath.delete(op.path);
+      }
     } else if (op.op === 'mv' && op.from !== op.to) {
       const art = byPath.get(op.from);
       if (!art) continue;
@@ -274,7 +311,7 @@ function* artifactsFromText(text, entry, blockIndex, minCodeBlockLines) {
       filePath: null,
       entryId: entry.id,
       anchorId: `entry-${entry.id}`,
-      source: 'fenced'
+      source: 'fenced',
     };
   }
 }
@@ -292,8 +329,8 @@ function* artifactsFromText(text, entry, blockIndex, minCodeBlockLines) {
  */
 export function collectArtifacts(entries, { minCodeBlockLines = 6 } = {}) {
   if (!Array.isArray(entries)) return [];
-  const order = [];          // file + snippet artifacts in first-seen order
-  const byPath = new Map();   // current path -> file artifact
+  const order = []; // file + snippet artifacts in first-seen order
+  const byPath = new Map(); // current path -> file artifact
   const results = indexToolResults(entries);
 
   for (const entry of entries) {
@@ -327,6 +364,12 @@ export function collectArtifacts(entries, { minCodeBlockLines = 6 } = {}) {
 }
 
 export const __test__ = {
-  fencedBlocks, langFromPath, previewTypeFor, basename, extOf,
-  parseFileOps, applyEdits, tokenizeShell
+  fencedBlocks,
+  langFromPath,
+  previewTypeFor,
+  basename,
+  extOf,
+  parseFileOps,
+  applyEdits,
+  tokenizeShell,
 };

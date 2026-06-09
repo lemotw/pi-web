@@ -1,5 +1,15 @@
 import { describe, expect, it, vi } from 'vitest';
-import { cancelChat, chatUrl, getCommands, getFiles, getWorkerStatus, listModels, sendChat, setModel, setThinkingLevel } from './chat-api.js';
+import {
+  cancelChat,
+  chatUrl,
+  getCommands,
+  getFiles,
+  getWorkerStatus,
+  listModels,
+  sendChat,
+  setModel,
+  setThinkingLevel,
+} from './chat-api.js';
 
 describe('chat api helpers', () => {
   it('builds encoded session URLs', () => {
@@ -24,12 +34,12 @@ describe('chat api helpers', () => {
     expect(fetchImpl).toHaveBeenNthCalledWith(5, '/api/set-model?id=s.jsonl', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ provider: 'p', modelId: 'm' })
+      body: JSON.stringify({ provider: 'p', modelId: 'm' }),
     });
     expect(fetchImpl).toHaveBeenNthCalledWith(6, '/api/set-thinking-level?id=s.jsonl', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ level: 'medium' })
+      body: JSON.stringify({ level: 'medium' }),
     });
   });
 

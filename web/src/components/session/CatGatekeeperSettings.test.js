@@ -30,7 +30,9 @@ describe('CatGatekeeperSettings', () => {
     const controller = { getStatusText: () => 'Next break in 5m', skipToBreak: vi.fn() };
     render(CatGatekeeperSettings, { props: { open: true, controller } });
     await tick();
-    expect(document.querySelector('.cat-settings-status-text').textContent).toContain('Next break in 5m');
+    expect(document.querySelector('.cat-settings-status-text').textContent).toContain(
+      'Next break in 5m',
+    );
     await fireEvent.click(document.querySelector('.cat-settings-skip'));
     expect(controller.skipToBreak).toHaveBeenCalled();
   });

@@ -1,15 +1,38 @@
 import { describe, expect, it } from 'vitest';
-import { render, screen } from '@testing-library/svelte';
+import { render } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import SessionTreeNodes from './SessionTreeNodes.svelte';
 import { SessionDataModel } from '../../session/data/session-data.svelte.js';
 
 // root → (old) and root → mid → leaf
 const entries = [
-  { id: 'root', timestamp: '2026-01-01T00:00:00Z', type: 'message', message: { role: 'user', content: 'hello world' } },
-  { id: 'old', parentId: 'root', timestamp: '2026-01-01T00:01:00Z', type: 'message', message: { role: 'assistant', content: 'old branch reply' } },
-  { id: 'mid', parentId: 'root', timestamp: '2026-01-01T00:02:00Z', type: 'message', message: { role: 'assistant', content: 'mid reply' } },
-  { id: 'leaf', parentId: 'mid', timestamp: '2026-01-01T00:03:00Z', type: 'message', message: { role: 'user', content: 'tell me about widgets' } },
+  {
+    id: 'root',
+    timestamp: '2026-01-01T00:00:00Z',
+    type: 'message',
+    message: { role: 'user', content: 'hello world' },
+  },
+  {
+    id: 'old',
+    parentId: 'root',
+    timestamp: '2026-01-01T00:01:00Z',
+    type: 'message',
+    message: { role: 'assistant', content: 'old branch reply' },
+  },
+  {
+    id: 'mid',
+    parentId: 'root',
+    timestamp: '2026-01-01T00:02:00Z',
+    type: 'message',
+    message: { role: 'assistant', content: 'mid reply' },
+  },
+  {
+    id: 'leaf',
+    parentId: 'mid',
+    timestamp: '2026-01-01T00:03:00Z',
+    type: 'message',
+    message: { role: 'user', content: 'tell me about widgets' },
+  },
 ];
 
 function mount(extra = {}) {
@@ -46,10 +69,13 @@ describe('SessionTreeNodes', () => {
   it('reactively grows the sidebar when entries are appended (live reload)', async () => {
     const { container, model } = mount();
     expect(container.querySelector('[data-id="leaf2"]')).not.toBeInTheDocument();
-    // mimic session.js's in-place splice on the reactive entries array
+    // mimic live reconcile's in-place splice on the reactive entries array
     model.entries.push({
-      id: 'leaf2', parentId: 'leaf', timestamp: '2026-01-01T00:04:00Z',
-      type: 'message', message: { role: 'assistant', content: 'appended' },
+      id: 'leaf2',
+      parentId: 'leaf',
+      timestamp: '2026-01-01T00:04:00Z',
+      type: 'message',
+      message: { role: 'assistant', content: 'appended' },
     });
     await Promise.resolve();
     expect(container.querySelector('[data-id="leaf2"]')).toBeInTheDocument();

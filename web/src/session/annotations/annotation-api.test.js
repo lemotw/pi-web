@@ -23,7 +23,12 @@ describe('annotation api', () => {
   it('creates an annotation via POST', async () => {
     const fetchImpl = vi.fn().mockResolvedValue(jsonResponse({ annotation: { id: 'a9' } }));
     const api = createAnnotationApi({ sessionId: 's1', fetchImpl });
-    const created = await api.create({ anchorId: 'entry-e1', startOffset: 0, endOffset: 2, text: 'x' });
+    const created = await api.create({
+      anchorId: 'entry-e1',
+      startOffset: 0,
+      endOffset: 2,
+      text: 'x',
+    });
     expect(created).toEqual({ id: 'a9' });
     const [url, opts] = fetchImpl.mock.calls[0];
     expect(url).toBe('/api/annotations?session=s1');
@@ -35,7 +40,9 @@ describe('annotation api', () => {
     const fetchImpl = vi.fn().mockResolvedValue(jsonResponse({ ok: true }));
     const api = createAnnotationApi({ sessionId: 's1', fetchImpl });
     await api.remove('a1');
-    expect(fetchImpl).toHaveBeenCalledWith('/api/annotations?session=s1&id=a1', { method: 'DELETE' });
+    expect(fetchImpl).toHaveBeenCalledWith('/api/annotations?session=s1&id=a1', {
+      method: 'DELETE',
+    });
   });
 
   it('throws on a non-ok response', async () => {

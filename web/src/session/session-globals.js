@@ -1,24 +1,20 @@
-// Page-global wiring for the live session view — the "tail" of the old
-// runSessionApp glue, relocated out of session.js (Svelte migration teardown,
-// docs/dev/svelte-migration-plan.md §11). Called once by <SessionPage> after the
-// model + navigateTo are ready. Everything here is live-only (SSE/clipboard/
-// keyboard) and never runs in the static export.
+// Page-global wiring for the live session view. Called once by <SessionPage>
+// after the model + navigateTo are ready. Everything here is live-only
+// (notifications/clipboard/keyboard/mobile viewport) and never runs in the
+// static export.
 //
 // Covers: done-notifier, keyboard navigation, global keyboard shortcuts, and
 // the mobile visual-viewport / scroll-lock handlers.
 
 import * as doneNotifier from './chat/done-notifier.js';
 import * as sidebarApi from './ui/sidebar.js';
+import { openSessionPalette } from '../shared/command-palette-runtime.js';
 import { setupKeyboardNav } from '../shared/keyboard-nav.js';
+import { openShortcuts } from './session-modals.svelte.js';
+import { sessionRuntime } from './session-runtime.js';
 import { toggleTheme, syncThemeIcons } from '../shared/theme.js';
 
-export function setupSessionGlobals({
-  windowImpl,
-  documentImpl,
-  model,
-  sessionId = '',
-  navigateTo,
-}) {
+export function setupSessionGlobals({ windowImpl, documentImpl }) {
   const target = windowImpl;
 
   // Track the listeners we add directly so the SPA can tear them down on
@@ -40,15 +36,15 @@ export function setupSessionGlobals({
   setupKeyboardNav({ windowImpl: target, documentImpl });
 
   // Session list palette (Cmd+K / "List Sessions" menu item). The Svelte
-  // <CommandPalette> component owns the palette and exposes
-  // window.__piOpenSessionPalette for this global shortcut and <CommandMenu>.
+  // <CommandPalette> component owns the palette and registers its API in
+  // command-palette-runtime.
 
   // ── Global keyboard shortcuts ──────────────────────────────────────────────
   // Cmd+K — session list palette
   on(target, 'keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
       e.preventDefault();
-      target.__piOpenSessionPalette?.();
+      openSessionPalette();
     }
   });
 
@@ -57,7 +53,7 @@ export function setupSessionGlobals({
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'b') {
       e.preventDefault();
       const sidebar = documentImpl.getElementById('sidebar');
-      if (target.matchMedia('(max-width: 900px)').matches) {
+      if (sidebarApi.isMobileLayout({ windowImpl: target })) {
         const isOpen = sidebar?.classList.contains('open');
         sidebarApi.setSidebarOpen(!isOpen, { documentImpl });
       } else {
@@ -80,29 +76,34 @@ export function setupSessionGlobals({
 
   // Cmd+Shift+L — system theme toggle. Capture phase so the browser doesn't
   // swallow it before we see it.
-  on(target, 'keydown', (e) => {
-    if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'l') {
-      e.preventDefault();
-      e.stopPropagation();
-      toggleTheme(target, documentImpl);
-      syncThemeIcons(documentImpl);
-    }
-  }, { capture: true });
+  on(
+    target,
+    'keydown',
+    (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'l') {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleTheme(target, documentImpl);
+        syncThemeIcons(documentImpl);
+      }
+    },
+    { capture: true },
+  );
 
   // Cmd+Shift+N — toggle scratchpad (right sidebar)
   on(target, 'keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'n') {
       e.preventDefault();
-      target.__piRightSidebar?.toggle();
+      sessionRuntime.rightSidebar?.toggle();
     }
   });
 
   // Cmd+/ — keyboard shortcuts help modal (the <ShortcutsModal> Svelte
-  // component; SessionPage exposes the opener on window).
+  // component, opened via the shared sessionModals store).
   on(target, 'keydown', (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key === '/') {
       e.preventDefault();
-      target.__piOpenShortcuts?.();
+      openShortcuts();
     }
   });
 
@@ -110,7 +111,7 @@ export function setupSessionGlobals({
   if (shortcutsBtn) {
     on(shortcutsBtn, 'click', (e) => {
       e.stopPropagation();
-      target.__piOpenShortcuts?.();
+      openShortcuts();
     });
   }
 
@@ -143,7 +144,10 @@ export function setupSessionGlobals({
     if (target.scrollY !== 0 || target.scrollX !== 0) target.scrollTo(0, 0);
   });
   on(documentImpl, 'scroll', () => {
-    if (documentImpl.documentElement.scrollTop !== 0 || documentImpl.documentElement.scrollLeft !== 0) {
+    if (
+      documentImpl.documentElement.scrollTop !== 0 ||
+      documentImpl.documentElement.scrollLeft !== 0
+    ) {
       documentImpl.documentElement.scrollTop = 0;
       documentImpl.documentElement.scrollLeft = 0;
     }

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { setupModelSelector } from './ChatComposer.svelte';
+import { setupModelSelector } from './chat/model-selector.js';
 
 function createDom() {
   const div = document.createElement('div');
@@ -35,7 +35,8 @@ describe('setupModelSelector', () => {
     it('shows the popup and focuses the search input', () => {
       const el = createDom();
       const chatApi = {
-        listModels: () => Promise.resolve({ ok: true, json: () => Promise.resolve({ models: [] }) }),
+        listModels: () =>
+          Promise.resolve({ ok: true, json: () => Promise.resolve({ models: [] }) }),
       };
       const api = setupModelSelector({ documentImpl: document, sessionId: 's', chatApi });
       const popup = document.getElementById('pi-chat-model-popup');
@@ -52,7 +53,8 @@ describe('setupModelSelector', () => {
     it('clears the search input on open', () => {
       const el = createDom();
       const chatApi = {
-        listModels: () => Promise.resolve({ ok: true, json: () => Promise.resolve({ models: [] }) }),
+        listModels: () =>
+          Promise.resolve({ ok: true, json: () => Promise.resolve({ models: [] }) }),
       };
       const api = setupModelSelector({ documentImpl: document, sessionId: 's', chatApi });
       const search = document.getElementById('pi-chat-model-search');
@@ -69,7 +71,8 @@ describe('setupModelSelector', () => {
     it('hides the popup', () => {
       const el = createDom();
       const chatApi = {
-        listModels: () => Promise.resolve({ ok: true, json: () => Promise.resolve({ models: [] }) }),
+        listModels: () =>
+          Promise.resolve({ ok: true, json: () => Promise.resolve({ models: [] }) }),
       };
       const api = setupModelSelector({ documentImpl: document, sessionId: 's', chatApi });
       const popup = document.getElementById('pi-chat-model-popup');
@@ -85,7 +88,8 @@ describe('setupModelSelector', () => {
     it('re-focuses the chat textarea when close(true) is called', () => {
       const el = createDom();
       const chatApi = {
-        listModels: () => Promise.resolve({ ok: true, json: () => Promise.resolve({ models: [] }) }),
+        listModels: () =>
+          Promise.resolve({ ok: true, json: () => Promise.resolve({ models: [] }) }),
       };
       const api = setupModelSelector({ documentImpl: document, sessionId: 's', chatApi });
       const textarea = document.getElementById('pi-chat-message');
@@ -101,7 +105,8 @@ describe('setupModelSelector', () => {
     it('does not focus the textarea when close(false) is called', () => {
       const el = createDom();
       const chatApi = {
-        listModels: () => Promise.resolve({ ok: true, json: () => Promise.resolve({ models: [] }) }),
+        listModels: () =>
+          Promise.resolve({ ok: true, json: () => Promise.resolve({ models: [] }) }),
       };
       const api = setupModelSelector({ documentImpl: document, sessionId: 's', chatApi });
       const textarea = document.getElementById('pi-chat-message');

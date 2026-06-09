@@ -57,7 +57,10 @@ function measureOffset(anchorEl, node, nodeOffset, documentImpl) {
  * Returns null if there is no usable selection (collapsed, cross-anchor, or
  * outside any anchor).
  */
-export function getSelectionInfo(selection, { documentImpl = document, isAnchor = isAnnotationAnchor } = {}) {
+export function getSelectionInfo(
+  selection,
+  { documentImpl = document, isAnchor = isAnnotationAnchor } = {},
+) {
   if (!selection || selection.rangeCount === 0 || selection.isCollapsed) return null;
   const range = selection.getRangeAt(0);
   const anchorEl = findAnchor(range.startContainer, isAnchor);
@@ -78,7 +81,12 @@ export function getSelectionInfo(selection, { documentImpl = document, isAnchor 
  * Returns true if anything was wrapped. Each wrapped run lives inside a single
  * text node, so surroundContents never crosses element boundaries.
  */
-export function wrapRange(anchorEl, start, end, { className = 'pi-annotation', dataset = {}, documentImpl = document } = {}) {
+export function wrapRange(
+  anchorEl,
+  start,
+  end,
+  { className = 'pi-annotation', dataset = {}, documentImpl = document } = {},
+) {
   if (!anchorEl || end <= start) return false;
   const walker = documentImpl.createTreeWalker(anchorEl, SHOW_TEXT);
   const targets = [];
@@ -93,7 +101,7 @@ export function wrapRange(anchorEl, start, end, { className = 'pi-annotation', d
     targets.push({
       node,
       from: Math.max(start, nodeStart) - nodeStart,
-      to: Math.min(end, nodeEnd) - nodeStart
+      to: Math.min(end, nodeEnd) - nodeStart,
     });
   }
   // Wrap last→first so splitting a later node can't invalidate an earlier ref.
@@ -131,7 +139,11 @@ export function unwrapAll(container, { className = 'pi-annotation' } = {}) {
  * Re-render all highlights for a container: clear existing marks, then wrap each
  * annotation against its anchor. Idempotent — safe to call after every render.
  */
-export function applyHighlights(container, annotations, { className = 'pi-annotation', documentImpl = document } = {}) {
+export function applyHighlights(
+  container,
+  annotations,
+  { className = 'pi-annotation', documentImpl = document } = {},
+) {
   if (!container) return;
   unwrapAll(container, { className });
   for (const a of annotations || []) {
@@ -140,7 +152,7 @@ export function applyHighlights(container, annotations, { className = 'pi-annota
     wrapRange(anchorEl, a.startOffset, a.endOffset, {
       className,
       dataset: { annotationId: a.id },
-      documentImpl
+      documentImpl,
     });
   }
 }

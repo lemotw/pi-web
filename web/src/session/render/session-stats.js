@@ -11,8 +11,13 @@ export function formatTokens(count) {
 }
 
 export function computeSessionStats(entryList = []) {
-  let userMessages = 0, assistantMessages = 0, toolResults = 0;
-  let customMessages = 0, compactions = 0, branchSummaries = 0, toolCalls = 0;
+  let userMessages = 0,
+    assistantMessages = 0,
+    toolResults = 0;
+  let customMessages = 0,
+    compactions = 0,
+    branchSummaries = 0,
+    toolCalls = 0;
   const tokens = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 };
   const cost = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 };
   const models = new Set();
@@ -36,11 +41,12 @@ export function computeSessionStats(entryList = []) {
             cost.cacheWrite += msg.usage.cost.cacheWrite || 0;
           }
         }
-        toolCalls += (msg.content || []).filter(c => c.type === 'toolCall').length;
+        toolCalls += (msg.content || []).filter((c) => c.type === 'toolCall').length;
       }
       if (msg.role === 'toolResult') toolResults++;
     } else if (entry.type === 'model_change') {
-      if (entry.modelId) models.add(entry.provider ? `${entry.provider}/${entry.modelId}` : entry.modelId);
+      if (entry.modelId)
+        models.add(entry.provider ? `${entry.provider}/${entry.modelId}` : entry.modelId);
     } else if (entry.type === 'compaction') {
       compactions++;
     } else if (entry.type === 'branch_summary') {
@@ -50,13 +56,25 @@ export function computeSessionStats(entryList = []) {
     }
   }
 
-  return { userMessages, assistantMessages, toolResults, customMessages, compactions, branchSummaries, toolCalls, tokens, cost, models: Array.from(models) };
+  return {
+    userMessages,
+    assistantMessages,
+    toolResults,
+    customMessages,
+    compactions,
+    branchSummaries,
+    toolCalls,
+    tokens,
+    cost,
+    models: Array.from(models),
+  };
 }
 
 // Pre-formatted summary strings used by the header card (kept here so they are
 // unit-testable and identical between live + export).
 export function summarizeSessionStats(stats) {
-  const totalCost = stats.cost.input + stats.cost.output + stats.cost.cacheRead + stats.cost.cacheWrite;
+  const totalCost =
+    stats.cost.input + stats.cost.output + stats.cost.cacheRead + stats.cost.cacheWrite;
 
   const tokenParts = [];
   if (stats.tokens.input) tokenParts.push(`↑${formatTokens(stats.tokens.input)}`);

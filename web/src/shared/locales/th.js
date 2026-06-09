@@ -118,7 +118,8 @@ export default {
   'composer.searchModels': 'ค้นหาโมเดล…',
   'composer.switchModel': 'สลับโมเดล',
   'composer.switchEffort': 'สลับระดับความพยายาม',
-  'composer.disabledNotice': 'เซสชันนี้สามารถดูได้ แต่แชทถูกปิดเพราะไดเรกทอรีทำงานของมันไม่มีอยู่แล้ว',
+  'composer.disabledNotice':
+    'เซสชันนี้สามารถดูได้ แต่แชทถูกปิดเพราะไดเรกทอรีทำงานของมันไม่มีอยู่แล้ว',
   'composer.copyPath': 'คลิกเพื่อคัดลอกพาธ',
   'composer.focusShortcut': 'Shift + i เพื่อโฟกัส',
   'composer.cancelRunning': 'ยกเลิกการตอบที่กำลังทำงาน',
@@ -136,15 +137,18 @@ export default {
   'settings.contentFont': 'ฟอนต์เนื้อหา',
   'settings.contentFontHint': 'ฟอนต์สำหรับข้อความที่แสดง โค้ดใช้ฟอนต์โค้ด',
   'settings.codeFont': 'ฟอนต์โค้ด',
-  'settings.codeFontHint': 'ฟอนต์สำหรับโค้ด คำสั่ง และผลลัพธ์ของเครื่องมือ ค่าเริ่มต้นเป็น monospace',
+  'settings.codeFontHint':
+    'ฟอนต์สำหรับโค้ด คำสั่ง และผลลัพธ์ของเครื่องมือ ค่าเริ่มต้นเป็น monospace',
   'settings.interfaceFontSize': 'ขนาดฟอนต์อินเทอร์เฟซ',
   'settings.interfaceFontSizeHint': 'ขนาดข้อความ UI ของแอป (px)',
   'settings.contentFontSize': 'ขนาดฟอนต์เนื้อหา',
   'settings.contentFontSizeHint': 'ขนาดข้อความที่แสดง (px)',
   'settings.fontBuiltIn': 'ในตัว',
   'settings.fontInstalled': 'Installed',
-  'settings.fontDetectUnsupported': 'This browser cannot list installed fonts. Use Custom… to type a font name.',
-  'settings.fontDetectDenied': 'Could not read installed fonts (permission denied). Use Custom… to type a font name.',
+  'settings.fontDetectUnsupported':
+    'This browser cannot list installed fonts. Use Custom… to type a font name.',
+  'settings.fontDetectDenied':
+    'Could not read installed fonts (permission denied). Use Custom… to type a font name.',
   'settings.fontActions': 'การดำเนินการ',
   'settings.fontMono': 'Monospace',
   'settings.fontSystem': 'ระบบ',
@@ -157,7 +161,8 @@ export default {
   'settings.language': 'ภาษา',
   'settings.languageHint': 'ภาษาสำหรับอินเทอร์เฟซแอป การเปลี่ยนจะโหลดหน้าใหม่',
   'settings.customLanguages': 'ภาษาที่กำหนดเอง',
-  'settings.customLanguagesHint': 'เพิ่มหรือแทนที่ภาษาเป็น JSON — อาร์เรย์ของ { "code", "label", "strings": { … } } คีย์ที่ขาดจะกลับไปใช้ภาษาอังกฤษ ใช้ "คัดลอกคีย์ภาษาอังกฤษ" เพื่อเป็นเทมเพลตเริ่มต้น แล้ว "บันทึกและใช้งาน"',
+  'settings.customLanguagesHint':
+    'เพิ่มหรือแทนที่ภาษาเป็น JSON — อาร์เรย์ของ { "code", "label", "strings": { … } } คีย์ที่ขาดจะกลับไปใช้ภาษาอังกฤษ ใช้ "คัดลอกคีย์ภาษาอังกฤษ" เพื่อเป็นเทมเพลตเริ่มต้น แล้ว "บันทึกและใช้งาน"',
   'settings.copyEnglishKeys': 'คัดลอกคีย์ภาษาอังกฤษ',
   'settings.saveApply': 'บันทึกและใช้งาน',
 
@@ -177,14 +182,17 @@ export default {
   'settings.titleOnce': 'ครั้งเดียวต่อเซสชัน',
   'settings.titleEachTurn': 'ทุกข้อความใหม่',
   'settings.titleModel': 'โมเดลตั้งชื่อ',
-  'settings.titleModelHint': 'ในตัวเป็นฮิวริสติกคำที่ฟรีและทันที (ไม่มี AI) เลือกโมเดลเพื่อชื่อที่ฉลาดขึ้น — โมเดลเล็กและเร็วเหมาะที่สุด',
+  'settings.titleModelHint':
+    'ในตัวเป็นฮิวริสติกคำที่ฟรีและทันที (ไม่มี AI) เลือกโมเดลเพื่อชื่อที่ฉลาดขึ้น — โมเดลเล็กและเร็วเหมาะที่สุด',
   'settings.titleBuiltin': 'ฮิวริสติกในตัว (ไม่มี AI)',
 
   'settings.artifacts': 'อาร์ติแฟกต์',
   'settings.showArtifacts': 'แสดงแผงอาร์ติแฟกต์',
-  'settings.showArtifactsHint': 'แสดงไฟล์ที่เอเจนต์เขียนและบล็อกโค้ดขนาดใหญ่ในแท็บแถบด้านขวา เมื่อปิด แท็บจะถูกซ่อน',
+  'settings.showArtifactsHint':
+    'แสดงไฟล์ที่เอเจนต์เขียนและบล็อกโค้ดขนาดใหญ่ในแท็บแถบด้านขวา เมื่อปิด แท็บจะถูกซ่อน',
   'settings.includeFilter': 'ตัวกรองรวม',
-  'settings.includeFilterHint': 'glob คั่นด้วยจุลภาค (เช่น *.md, *.html, artifacts/**) แสดงเฉพาะไฟล์ที่ตรงกัน เว้นว่างเพื่อแสดงทั้งหมด ตัวกรองใด ๆ ก็ซ่อนสิ่งโค้ดแชทที่กระจัดกระจายด้วย',
+  'settings.includeFilterHint':
+    'glob คั่นด้วยจุลภาค (เช่น *.md, *.html, artifacts/**) แสดงเฉพาะไฟล์ที่ตรงกัน เว้นว่างเพื่อแสดงทั้งหมด ตัวกรองใด ๆ ก็ซ่อนสิ่งโค้ดแชทที่กระจัดกระจายด้วย',
 
   'settings.notifications': 'การแจ้งเตือน',
   'settings.notifyReady': 'แจ้งเตือนเมื่อการตอบพร้อม',
@@ -262,11 +270,16 @@ export default {
   'btw.emptyHasSession': 'ยังไม่มีข้อความ — ทักทายก่อนสิ',
   'btw.emptyNoSession': 'พิมพ์ข้อความเพื่อเริ่มแชท btw หรือกด "ใหม่"',
 
-  'artifactHelp.intro': '<strong>อาร์ติแฟกต์</strong> คือไฟล์ที่เอเจนต์เขียนและบล็อกโค้ดขนาดใหญ่ที่มันแชร์ ดึงออกจากการสนทนาเพื่อให้คุณค้นหา อ่าน คัดลอก หรือดาวน์โหลดได้ในที่เดียว',
-  'artifactHelp.viewing': '<strong>การดู</strong> เลือกหนึ่งรายการจากรายการเพื่อดูซอร์สของมัน ไฟล์ HTML, SVG และ Markdown ยังมีปุ่มสลับ <em>ดูตัวอย่าง</em> — HTML/SVG ทำงานในแซนด์บ็อกซ์ที่ปลอดภัย ส่วน Markdown แสดงเป็นข้อความที่จัดรูปแบบ',
-  'artifactHelp.annotating': '<strong>การใส่คำอธิบายประกอบ</strong> เลือกข้อความในซอร์สของอาร์ติแฟกต์เพื่อทิ้งโน้ตไว้ โน้ตของคุณจะรวมอยู่ในแท็บ <em>คำอธิบายประกอบ</em> ซึ่งคุณสามารถย้อนกลับไปหาหรือส่งให้เอเจนต์ได้',
-  'artifactHelp.upToDate': '<strong>การอัปเดตให้ทันสมัย</strong> ไฟล์ที่เอเจนต์ <em>เขียน</em> หรือ <em>แก้ไข</em> จะอัปเดตโดยอัตโนมัติ และการเปลี่ยนชื่อหรือลบอย่างง่าย (<code>mv</code>, <code>git mv</code>, <code>rm</code>) ก็ถูกติดตามด้วย แต่การเปลี่ยนแปลงผ่านคำสั่งเชลล์อื่น — เช่น <code>sed</code> หรือการเปลี่ยนทิศทางเอาต์พุต — ไม่สามารถติดตามได้จากการสนทนา ดังนั้นบางครั้งอาร์ติแฟกต์อาจแสดงเวอร์ชันเก่ากว่า เมื่อสงสัย ให้ตรวจสอบไฟล์บนดิสก์',
-  'artifactHelp.note': 'อาร์ติแฟกต์เป็นส่วนหนึ่งของมุมมองสดเท่านั้นและไม่รวมอยู่ในสแนปช็อตที่ส่งออก',
+  'artifactHelp.intro':
+    '<strong>อาร์ติแฟกต์</strong> คือไฟล์ที่เอเจนต์เขียนและบล็อกโค้ดขนาดใหญ่ที่มันแชร์ ดึงออกจากการสนทนาเพื่อให้คุณค้นหา อ่าน คัดลอก หรือดาวน์โหลดได้ในที่เดียว',
+  'artifactHelp.viewing':
+    '<strong>การดู</strong> เลือกหนึ่งรายการจากรายการเพื่อดูซอร์สของมัน ไฟล์ HTML, SVG และ Markdown ยังมีปุ่มสลับ <em>ดูตัวอย่าง</em> — HTML/SVG ทำงานในแซนด์บ็อกซ์ที่ปลอดภัย ส่วน Markdown แสดงเป็นข้อความที่จัดรูปแบบ',
+  'artifactHelp.annotating':
+    '<strong>การใส่คำอธิบายประกอบ</strong> เลือกข้อความในซอร์สของอาร์ติแฟกต์เพื่อทิ้งโน้ตไว้ โน้ตของคุณจะรวมอยู่ในแท็บ <em>คำอธิบายประกอบ</em> ซึ่งคุณสามารถย้อนกลับไปหาหรือส่งให้เอเจนต์ได้',
+  'artifactHelp.upToDate':
+    '<strong>การอัปเดตให้ทันสมัย</strong> ไฟล์ที่เอเจนต์ <em>เขียน</em> หรือ <em>แก้ไข</em> จะอัปเดตโดยอัตโนมัติ และการเปลี่ยนชื่อหรือลบอย่างง่าย (<code>mv</code>, <code>git mv</code>, <code>rm</code>) ก็ถูกติดตามด้วย แต่การเปลี่ยนแปลงผ่านคำสั่งเชลล์อื่น — เช่น <code>sed</code> หรือการเปลี่ยนทิศทางเอาต์พุต — ไม่สามารถติดตามได้จากการสนทนา ดังนั้นบางครั้งอาร์ติแฟกต์อาจแสดงเวอร์ชันเก่ากว่า เมื่อสงสัย ให้ตรวจสอบไฟล์บนดิสก์',
+  'artifactHelp.note':
+    'อาร์ติแฟกต์เป็นส่วนหนึ่งของมุมมองสดเท่านั้นและไม่รวมอยู่ในสแนปช็อตที่ส่งออก',
 
   'common.back': 'กลับ',
   'common.copied': 'คัดลอกแล้ว',
@@ -291,7 +304,8 @@ export default {
   'artifact.preview': 'ดูตัวอย่าง',
   'artifact.runPreview': 'เรียกใช้ตัวอย่าง',
   'artifact.showSource': 'แสดงซอร์ส',
-  'artifact.emptyHidden': '{count} {noun} ถูกซ่อนโดยตัวกรองของคุณ — ปรับได้ใน <a href="/settings">การตั้งค่า</a>',
+  'artifact.emptyHidden':
+    '{count} {noun} ถูกซ่อนโดยตัวกรองของคุณ — ปรับได้ใน <a href="/settings">การตั้งค่า</a>',
   'artifact.emptyNone': 'ยังไม่มีอาร์ติแฟกต์ในเซสชันนี้',
   'artifact.nounOne': 'อาร์ติแฟกต์',
   'artifact.nounMany': 'อาร์ติแฟกต์',
@@ -312,7 +326,8 @@ export default {
   'version.couldNotCheck': 'ไม่สามารถตรวจหาการอัปเดตได้',
   'version.devBuild': 'คุณกำลังรันบิลด์สำหรับการพัฒนาในเครื่อง',
   'version.latestPublished': 'เผยแพร่ล่าสุด: {version}',
-  'version.devUpdateDisabled': 'การอัปเดตในแอปถูกปิดที่นี่เพื่อไม่ให้เขียนทับการเปลี่ยนแปลงในเครื่อง',
+  'version.devUpdateDisabled':
+    'การอัปเดตในแอปถูกปิดที่นี่เพื่อไม่ให้เขียนทับการเปลี่ยนแปลงในเครื่อง',
   'version.updateAvailable': 'มีการอัปเดต:',
   'version.releaseNotes': 'บันทึกการเผยแพร่',
   'version.updateRestart': 'อัปเดตและรีสตาร์ท',

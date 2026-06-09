@@ -8,7 +8,9 @@ describe('renderChangelog', () => {
     expect(html).toContain('<h4>v1.2.3</h4>');
     expect(html).toContain('<li>Added <code>foo</code></li>');
     expect(html).toContain('<strong>Bold</strong>');
-    expect(html).toContain('<a href="https://example.com" target="_blank" rel="noreferrer">docs</a>');
+    expect(html).toContain(
+      '<a href="https://example.com" target="_blank" rel="noreferrer">docs</a>',
+    );
   });
 
   it('escapes HTML to prevent injection', () => {
@@ -31,6 +33,8 @@ describe('version labels', () => {
   it('formats and shortens versions', () => {
     expect(cleanVersion('v2.3.4')).toBe('v2.3.4');
     expect(shortVersion('v0.0.1-beta.24-3-gd7e8bf2-dirty')).toBe('v0.0.1-beta.24');
-    expect(versionLabel({ current: '1.0.0', latest: '1.1.0', hasUpdate: true })).toBe('v1.0.0 → v1.1.0');
+    expect(versionLabel({ current: '1.0.0', latest: '1.1.0', hasUpdate: true })).toBe(
+      'v1.0.0 → v1.1.0',
+    );
   });
 });

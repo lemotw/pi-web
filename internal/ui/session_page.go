@@ -11,9 +11,9 @@ import (
 	"pi-web/internal/sessions"
 )
 
-// session.html renders the static export/share snapshot only; the live
+// share-session.html renders the static export/share snapshot only; the live
 // session page is the Svelte SPA served via the app.html shell.
-//go:embed embedded/session.html
+//go:embed embedded/share-session.html
 var exportSessionHtml string
 
 var exportSessionTmpl = template.Must(template.New("export_session").Parse(exportSessionHtml))

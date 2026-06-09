@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 import { JSDOM } from 'jsdom';
-import { isEditableTarget, setupSessionKeyboardShortcuts, setupSessionSearchAndFilters } from './search-filters.js';
+import {
+  isEditableTarget,
+  setupSessionKeyboardShortcuts,
+  setupSessionSearchAndFilters,
+} from './search-filters.js';
 
 function dom() {
   return new JSDOM(`<body>
@@ -23,7 +27,7 @@ describe('session search/filter UI', () => {
       setSearchQuery,
       setFilterMode,
       forceTreeRerender,
-      navigateTo
+      navigateTo,
     });
 
     const input = jsdom.window.document.getElementById('tree-search');
@@ -34,7 +38,9 @@ describe('session search/filter UI', () => {
 
     jsdom.window.document.querySelector('[data-filter="all"]').click();
     expect(setFilterMode).toHaveBeenCalledWith('all');
-    expect(jsdom.window.document.querySelector('[data-filter="all"]').classList.contains('active')).toBe(true);
+    expect(
+      jsdom.window.document.querySelector('[data-filter="all"]').classList.contains('active'),
+    ).toBe(true);
 
     controls.clearAndNavigateBottom();
     expect(input.value).toBe('');
@@ -60,10 +66,12 @@ describe('session search/filter UI', () => {
       clearSearch,
       toggleThinking,
       toggleToolsVisibility,
-      toggleToolOutputs
+      toggleToolOutputs,
     });
 
-    jsdom.window.document.dispatchEvent(new jsdom.window.KeyboardEvent('keydown', { key: 'Escape' }));
+    jsdom.window.document.dispatchEvent(
+      new jsdom.window.KeyboardEvent('keydown', { key: 'Escape' }),
+    );
     jsdom.window.document.dispatchEvent(new jsdom.window.KeyboardEvent('keydown', { key: 't' }));
     jsdom.window.document.dispatchEvent(new jsdom.window.KeyboardEvent('keydown', { key: 'o' }));
     jsdom.window.document.dispatchEvent(new jsdom.window.KeyboardEvent('keydown', { key: 'p' }));

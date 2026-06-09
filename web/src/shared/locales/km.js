@@ -118,7 +118,8 @@ export default {
   'composer.searchModels': 'ស្វែងរកម៉ូដែល…',
   'composer.switchModel': 'ប្ដូរម៉ូដែល',
   'composer.switchEffort': 'ប្ដូរកម្រិតការខិតខំ',
-  'composer.disabledNotice': 'វគ្គនេះអាចមើលបាន ប៉ុន្តែការជជែកត្រូវបានបិទ ព្រោះថតការងាររបស់វាលែងមានទៀតហើយ។',
+  'composer.disabledNotice':
+    'វគ្គនេះអាចមើលបាន ប៉ុន្តែការជជែកត្រូវបានបិទ ព្រោះថតការងាររបស់វាលែងមានទៀតហើយ។',
   'composer.copyPath': 'ចុចដើម្បីចម្លងផ្លូវ',
   'composer.focusShortcut': 'Shift + i ដើម្បីផ្ដោត',
   'composer.cancelRunning': 'បោះបង់ការឆ្លើយតបដែលកំពុងដំណើរការ',
@@ -143,8 +144,10 @@ export default {
   'settings.contentFontSizeHint': 'ទំហំអត្ថបទសារដែលបង្ហាញ (px)។',
   'settings.fontBuiltIn': 'មានស្រាប់',
   'settings.fontInstalled': 'Installed',
-  'settings.fontDetectUnsupported': 'This browser cannot list installed fonts. Use Custom… to type a font name.',
-  'settings.fontDetectDenied': 'Could not read installed fonts (permission denied). Use Custom… to type a font name.',
+  'settings.fontDetectUnsupported':
+    'This browser cannot list installed fonts. Use Custom… to type a font name.',
+  'settings.fontDetectDenied':
+    'Could not read installed fonts (permission denied). Use Custom… to type a font name.',
   'settings.fontActions': 'សកម្មភាព',
   'settings.fontMono': 'Monospace',
   'settings.fontSystem': 'ប្រព័ន្ធ',
@@ -157,7 +160,8 @@ export default {
   'settings.language': 'ភាសា',
   'settings.languageHint': 'ភាសាសម្រាប់ផ្ទៃប្រទាក់កម្មវិធី។ ការផ្លាស់ប្ដូរនឹងផ្ទុកទំព័រឡើងវិញ។',
   'settings.customLanguages': 'ភាសាផ្ទាល់ខ្លួន',
-  'settings.customLanguagesHint': 'បន្ថែម ឬជំនួសភាសាជា JSON — អារេនៃ { "code", "label", "strings": { … } }។ កូនសោដែលបាត់នឹងត្រឡប់ទៅអង់គ្លេស។ ប្រើ "ចម្លងកូនសោអង់គ្លេស" សម្រាប់គំរូចាប់ផ្ដើម បន្ទាប់មក "រក្សាទុក និងអនុវត្ត"។',
+  'settings.customLanguagesHint':
+    'បន្ថែម ឬជំនួសភាសាជា JSON — អារេនៃ { "code", "label", "strings": { … } }។ កូនសោដែលបាត់នឹងត្រឡប់ទៅអង់គ្លេស។ ប្រើ "ចម្លងកូនសោអង់គ្លេស" សម្រាប់គំរូចាប់ផ្ដើម បន្ទាប់មក "រក្សាទុក និងអនុវត្ត"។',
   'settings.copyEnglishKeys': 'ចម្លងកូនសោអង់គ្លេស',
   'settings.saveApply': 'រក្សាទុក និងអនុវត្ត',
 
@@ -177,14 +181,17 @@ export default {
   'settings.titleOnce': 'ម្ដងក្នុងមួយវគ្គ',
   'settings.titleEachTurn': 'រាល់សារថ្មី',
   'settings.titleModel': 'ម៉ូដែលចំណងជើង',
-  'settings.titleModelHint': 'មានស្រាប់គឺជា heuristic ពាក្យឥតគិតថ្លៃ ភ្លាមៗ (គ្មាន AI)។ ជ្រើសម៉ូដែលសម្រាប់ចំណងជើងឆ្លាតវៃជាងមុន — តូច និងលឿនគឺល្អបំផុត។',
+  'settings.titleModelHint':
+    'មានស្រាប់គឺជា heuristic ពាក្យឥតគិតថ្លៃ ភ្លាមៗ (គ្មាន AI)។ ជ្រើសម៉ូដែលសម្រាប់ចំណងជើងឆ្លាតវៃជាងមុន — តូច និងលឿនគឺល្អបំផុត។',
   'settings.titleBuiltin': 'Heuristic មានស្រាប់ (គ្មាន AI)',
 
   'settings.artifacts': 'អាទីហ្វាក់',
   'settings.showArtifacts': 'បង្ហាញផ្ទាំងអាទីហ្វាក់',
-  'settings.showArtifactsHint': 'បង្ហាញឯកសារដែលភ្នាក់ងារបានសរសេរ និងប្លុកកូដធំៗក្នុងផ្ទាំងរបារចំហៀងស្ដាំ។ ពេលបិទ ផ្ទាំងត្រូវបានលាក់។',
+  'settings.showArtifactsHint':
+    'បង្ហាញឯកសារដែលភ្នាក់ងារបានសរសេរ និងប្លុកកូដធំៗក្នុងផ្ទាំងរបារចំហៀងស្ដាំ។ ពេលបិទ ផ្ទាំងត្រូវបានលាក់។',
   'settings.includeFilter': 'តម្រងរួមបញ្ចូល',
-  'settings.includeFilterHint': 'glob បំបែកដោយសញ្ញាក្បៀស (ឧ. *.md, *.html, artifacts/**)។ បង្ហាញតែឯកសារដែលត្រូវគ្នា។ ទុកទទេដើម្បីបង្ហាញទាំងអស់; តម្រងណាមួយក៏លាក់បំណែកកូដជជែករាយប៉ាយដែរ។',
+  'settings.includeFilterHint':
+    'glob បំបែកដោយសញ្ញាក្បៀស (ឧ. *.md, *.html, artifacts/**)។ បង្ហាញតែឯកសារដែលត្រូវគ្នា។ ទុកទទេដើម្បីបង្ហាញទាំងអស់; តម្រងណាមួយក៏លាក់បំណែកកូដជជែករាយប៉ាយដែរ។',
 
   'settings.notifications': 'ការជូនដំណឹង',
   'settings.notifyReady': 'ជូនដំណឹងពេលការឆ្លើយតបរួចរាល់',
@@ -262,11 +269,16 @@ export default {
   'btw.emptyHasSession': 'មិនទាន់មានសារ — សួរសួស្ដីសិន។',
   'btw.emptyNoSession': 'វាយសារដើម្បីចាប់ផ្ដើមការជជែក btw ឬចុច "ថ្មី"។',
 
-  'artifactHelp.intro': '<strong>អាទីហ្វាក់</strong> គឺជាឯកសារដែលភ្នាក់ងារបានសរសេរ និងប្លុកកូដធំៗដែលវាបានចែករំលែក ដកចេញពីការសន្ទនា ដើម្បីឱ្យអ្នកអាចស្វែងរក អាន ចម្លង ឬទាញយកពួកវានៅកន្លែងតែមួយ។',
-  'artifactHelp.viewing': '<strong>ការមើល។</strong> ជ្រើសមួយពីបញ្ជីដើម្បីមើល source របស់វា។ ឯកសារ HTML, SVG និង Markdown ក៏មានប៊ូតុង <em>មើលជាមុន</em> ផងដែរ — HTML/SVG ដំណើរការក្នុង sandbox សុវត្ថិភាព ហើយ Markdown បង្ហាញជាអត្ថបទមានទម្រង់។',
-  'artifactHelp.annotating': '<strong>ការដាក់ចំណារ។</strong> ជ្រើសអត្ថបទក្នុង source របស់អាទីហ្វាក់ដើម្បីទុកកំណត់ចំណាំ។ កំណត់ចំណាំរបស់អ្នកប្រមូលផ្ដុំក្នុងផ្ទាំង <em>ចំណារ</em> ដែលអ្នកអាចត្រឡប់ទៅពួកវា ឬផ្ញើទៅភ្នាក់ងារ។',
-  'artifactHelp.upToDate': '<strong>ការរក្សាឱ្យទាន់សម័យ។</strong> ឯកសារដែលភ្នាក់ងារ <em>សរសេរ</em> ឬ <em>កែសម្រួល</em> ធ្វើបច្ចុប្បន្នភាពស្វ័យប្រវត្តិ ហើយការប្ដូរឈ្មោះ ឬលុបសាមញ្ញ (<code>mv</code>, <code>git mv</code>, <code>rm</code>) ក៏ត្រូវបានតាមដានដែរ។ ប៉ុន្តែការផ្លាស់ប្ដូរតាមរយៈពាក្យបញ្ជា shell ផ្សេងៗ — ដូចជា <code>sed</code> ឬការប្ដូរទិសលទ្ធផល — មិនអាចតាមដានពីការសន្ទនាបានទេ ដូច្នេះម្ដងម្កាលអាទីហ្វាក់អាចបង្ហាញកំណែចាស់។ នៅពេលសង្ស័យ សូមពិនិត្យឯកសារនៅលើថាស។',
-  'artifactHelp.note': 'អាទីហ្វាក់គឺជាផ្នែកនៃទិដ្ឋភាពផ្ទាល់តែប៉ុណ្ណោះ ហើយមិនរួមបញ្ចូលក្នុង snapshot ដែលនាំចេញទេ។',
+  'artifactHelp.intro':
+    '<strong>អាទីហ្វាក់</strong> គឺជាឯកសារដែលភ្នាក់ងារបានសរសេរ និងប្លុកកូដធំៗដែលវាបានចែករំលែក ដកចេញពីការសន្ទនា ដើម្បីឱ្យអ្នកអាចស្វែងរក អាន ចម្លង ឬទាញយកពួកវានៅកន្លែងតែមួយ។',
+  'artifactHelp.viewing':
+    '<strong>ការមើល។</strong> ជ្រើសមួយពីបញ្ជីដើម្បីមើល source របស់វា។ ឯកសារ HTML, SVG និង Markdown ក៏មានប៊ូតុង <em>មើលជាមុន</em> ផងដែរ — HTML/SVG ដំណើរការក្នុង sandbox សុវត្ថិភាព ហើយ Markdown បង្ហាញជាអត្ថបទមានទម្រង់។',
+  'artifactHelp.annotating':
+    '<strong>ការដាក់ចំណារ។</strong> ជ្រើសអត្ថបទក្នុង source របស់អាទីហ្វាក់ដើម្បីទុកកំណត់ចំណាំ។ កំណត់ចំណាំរបស់អ្នកប្រមូលផ្ដុំក្នុងផ្ទាំង <em>ចំណារ</em> ដែលអ្នកអាចត្រឡប់ទៅពួកវា ឬផ្ញើទៅភ្នាក់ងារ។',
+  'artifactHelp.upToDate':
+    '<strong>ការរក្សាឱ្យទាន់សម័យ។</strong> ឯកសារដែលភ្នាក់ងារ <em>សរសេរ</em> ឬ <em>កែសម្រួល</em> ធ្វើបច្ចុប្បន្នភាពស្វ័យប្រវត្តិ ហើយការប្ដូរឈ្មោះ ឬលុបសាមញ្ញ (<code>mv</code>, <code>git mv</code>, <code>rm</code>) ក៏ត្រូវបានតាមដានដែរ។ ប៉ុន្តែការផ្លាស់ប្ដូរតាមរយៈពាក្យបញ្ជា shell ផ្សេងៗ — ដូចជា <code>sed</code> ឬការប្ដូរទិសលទ្ធផល — មិនអាចតាមដានពីការសន្ទនាបានទេ ដូច្នេះម្ដងម្កាលអាទីហ្វាក់អាចបង្ហាញកំណែចាស់។ នៅពេលសង្ស័យ សូមពិនិត្យឯកសារនៅលើថាស។',
+  'artifactHelp.note':
+    'អាទីហ្វាក់គឺជាផ្នែកនៃទិដ្ឋភាពផ្ទាល់តែប៉ុណ្ណោះ ហើយមិនរួមបញ្ចូលក្នុង snapshot ដែលនាំចេញទេ។',
 
   'common.back': 'ត្រឡប់ក្រោយ',
   'common.copied': 'បានចម្លង',
@@ -291,7 +303,8 @@ export default {
   'artifact.preview': 'មើលជាមុន',
   'artifact.runPreview': 'ដំណើរការមើលជាមុន',
   'artifact.showSource': 'បង្ហាញ source',
-  'artifact.emptyHidden': '{count} {noun} ត្រូវបានលាក់ដោយតម្រងរបស់អ្នក — កែតម្រូវក្នុង <a href="/settings">ការកំណត់</a>។',
+  'artifact.emptyHidden':
+    '{count} {noun} ត្រូវបានលាក់ដោយតម្រងរបស់អ្នក — កែតម្រូវក្នុង <a href="/settings">ការកំណត់</a>។',
   'artifact.emptyNone': 'មិនទាន់មានអាទីហ្វាក់ក្នុង session នេះទេ។',
   'artifact.nounOne': 'អាទីហ្វាក់',
   'artifact.nounMany': 'អាទីហ្វាក់',
@@ -312,7 +325,8 @@ export default {
   'version.couldNotCheck': 'មិនអាចពិនិត្យបច្ចុប្បន្នភាពបានទេ។',
   'version.devBuild': 'អ្នកកំពុងដំណើរការ build អភិវឌ្ឍន៍មូលដ្ឋាន។',
   'version.latestPublished': 'ផ្សាយចុងក្រោយ៖ {version}',
-  'version.devUpdateDisabled': 'ការអាប់ដេតក្នុងកម្មវិធីត្រូវបានបិទនៅទីនេះ ដើម្បីកុំឱ្យសរសេរជាន់លើការផ្លាស់ប្ដូរមូលដ្ឋាន។',
+  'version.devUpdateDisabled':
+    'ការអាប់ដេតក្នុងកម្មវិធីត្រូវបានបិទនៅទីនេះ ដើម្បីកុំឱ្យសរសេរជាន់លើការផ្លាស់ប្ដូរមូលដ្ឋាន។',
   'version.updateAvailable': 'មានបច្ចុប្បន្នភាព៖',
   'version.releaseNotes': 'កំណត់ចំណាំការចេញផ្សាយ',
   'version.updateRestart': 'អាប់ដេត និងចាប់ផ្ដើមឡើងវិញ',

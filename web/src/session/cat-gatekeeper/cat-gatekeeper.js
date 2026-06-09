@@ -14,6 +14,7 @@
  */
 
 import { loadCatSettings } from './cat-settings.js';
+import { openCatSettings } from '../session-modals.svelte.js';
 
 const TICK_MS = 1000;
 // Cap how much a single focus tick can subtract so a throttled/backgrounded
@@ -59,7 +60,7 @@ function sleepWindowMinutes(bedtime, wakeup) {
 export { formatMMSS, timeToMinutes, sleepWindowMinutes };
 
 export function setupCatGatekeeper({
-  windowImpl = (typeof window !== 'undefined' ? window : undefined),
+  windowImpl = typeof window !== 'undefined' ? window : undefined,
   storage = windowImpl?.localStorage,
   nowFn = () => Date.now(),
   // Whether the pi-web tab is currently active (visible + focused). Injected so
@@ -67,8 +68,12 @@ export function setupCatGatekeeper({
   isActive = () => true,
   // Overlay renderer. See <CatGatekeeper.svelte>.
   view = noopView,
-  setIntervalImpl = (typeof windowImpl?.setInterval === 'function' ? windowImpl.setInterval.bind(windowImpl) : () => 0),
-  clearIntervalImpl = (typeof windowImpl?.clearInterval === 'function' ? windowImpl.clearInterval.bind(windowImpl) : () => {}),
+  setIntervalImpl = typeof windowImpl?.setInterval === 'function'
+    ? windowImpl.setInterval.bind(windowImpl)
+    : () => 0,
+  clearIntervalImpl = typeof windowImpl?.clearInterval === 'function'
+    ? windowImpl.clearInterval.bind(windowImpl)
+    : () => {},
 } = {}) {
   let intervalId = null;
 
@@ -89,21 +94,32 @@ export function setupCatGatekeeper({
 
   function persistFocus() {
     try {
-      storage?.setItem(FOCUS_REMAINING_KEY, String(Math.max(0, Math.round(state.focusRemainingMs))));
+      storage?.setItem(
+        FOCUS_REMAINING_KEY,
+        String(Math.max(0, Math.round(state.focusRemainingMs))),
+      );
       storage?.setItem(FOCUS_SAVED_AT_KEY, String(nowFn()));
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }
 
   function restoreFocus(focusTotalMs) {
     try {
       const remaining = Number(storage?.getItem(FOCUS_REMAINING_KEY));
       const savedAt = Number(storage?.getItem(FOCUS_SAVED_AT_KEY));
-      if (Number.isFinite(remaining) && Number.isFinite(savedAt)
-        && remaining > 0 && remaining <= focusTotalMs
-        && nowFn() - savedAt <= FOCUS_RESTORE_MAX_AGE_MS) {
+      if (
+        Number.isFinite(remaining) &&
+        Number.isFinite(savedAt) &&
+        remaining > 0 &&
+        remaining <= focusTotalMs &&
+        nowFn() - savedAt <= FOCUS_RESTORE_MAX_AGE_MS
+      ) {
         return remaining;
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     return focusTotalMs;
   }
 
@@ -167,13 +183,21 @@ export function setupCatGatekeeper({
 
     const cfg = settings();
     if (!cfg.enabled) {
-      if (state.phase !== 'focus') { state.phase = 'focus'; view.hide(); }
+      if (state.phase !== 'focus') {
+        state.phase = 'focus';
+        view.hide();
+      }
       return;
     }
 
     // Bedtime overrides everything and, once triggered, is sticky for the session.
-    if (state.phase !== 'sleep' && state.phase !== 'sleep-locked'
-      && !state.sleepTriggered && isActive() && inSleepWindow(cfg.bedtime, cfg.wakeup)) {
+    if (
+      state.phase !== 'sleep' &&
+      state.phase !== 'sleep-locked' &&
+      !state.sleepTriggered &&
+      isActive() &&
+      inSleepWindow(cfg.bedtime, cfg.wakeup)
+    ) {
       enterSleep();
       return;
     }
@@ -206,7 +230,10 @@ export function setupCatGatekeeper({
         if (state.snoozeRemainingMs <= 0) {
           // Still night? Bring the cat back. Otherwise the window passed — resume focus.
           if (inSleepWindow(cfg.bedtime, cfg.wakeup)) enterSleep();
-          else { state.phase = 'focus'; state.focusRemainingMs = cfg.focusMin * 60000; }
+          else {
+            state.phase = 'focus';
+            state.focusRemainingMs = cfg.focusMin * 60000;
+          }
         }
         break;
       }
@@ -221,11 +248,15 @@ export function setupCatGatekeeper({
     const cfg = settings();
     if (!cfg.enabled) return 'Cat Gatekeeper is off.';
     switch (state.phase) {
-      case 'break': return `On a break — ${formatMMSS(state.breakRemainingMs)} left.`;
-      case 'snooze': return `Snoozed — back to bed in ${formatMMSS(state.snoozeRemainingMs)}.`;
+      case 'break':
+        return `On a break — ${formatMMSS(state.breakRemainingMs)} left.`;
+      case 'snooze':
+        return `Snoozed — back to bed in ${formatMMSS(state.snoozeRemainingMs)}.`;
       case 'sleep':
-      case 'sleep-locked': return 'Bedtime — time to sleep.';
-      default: return `Next break in ${formatMMSS(state.focusRemainingMs)}.`;
+      case 'sleep-locked':
+        return 'Bedtime — time to sleep.';
+      default:
+        return `Next break in ${formatMMSS(state.focusRemainingMs)}.`;
     }
   }
 
@@ -235,9 +266,9 @@ export function setupCatGatekeeper({
   }
 
   function openSettings() {
-    // The settings sheet is the <CatGatekeeperSettings> Svelte component;
-    // SessionPage exposes the opener and reads cat-settings storage directly.
-    return windowImpl?.__piOpenCatSettings?.({
+    // The settings sheet is the <CatGatekeeperSettings> Svelte component, opened
+    // via the shared sessionModals store; it reads cat-settings storage directly.
+    return openCatSettings({
       controller: { getStatusText, skipToBreak },
       onChange: (next) => {
         // Apply focus duration changes immediately when idle in focus phase so
@@ -247,7 +278,7 @@ export function setupCatGatekeeper({
           if (state.focusRemainingMs > focusTotal) state.focusRemainingMs = focusTotal;
           persistFocus();
         }
-        if (!next.enabled && (state.phase === 'break')) {
+        if (!next.enabled && state.phase === 'break') {
           // Disabling mid-break releases the user.
           state.phase = 'focus';
           state.focusRemainingMs = next.focusMin * 60000;
@@ -263,7 +294,11 @@ export function setupCatGatekeeper({
     state.lastTickAt = nowFn();
     // Greet immediately if pi-web is opened after bedtime. Guarded so a hostile
     // or mocked environment can't break the rest of session init.
-    try { tick(); } catch { /* ignore */ }
+    try {
+      tick();
+    } catch {
+      /* ignore */
+    }
     intervalId = setIntervalImpl(tick, TICK_MS);
     return controller;
   }
@@ -274,6 +309,15 @@ export function setupCatGatekeeper({
     view.hide();
   }
 
-  const controller = { start, destroy, tick, getStatusText, skipToBreak, snooze, openSettings, getState: () => ({ ...state }) };
+  const controller = {
+    start,
+    destroy,
+    tick,
+    getStatusText,
+    skipToBreak,
+    snooze,
+    openSettings,
+    getState: () => ({ ...state }),
+  };
   return controller;
 }

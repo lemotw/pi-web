@@ -51,7 +51,11 @@ export function normalizeBedtime(value, fallback = CAT_DEFAULTS.bedtime) {
 
 export function loadCatSettings({ storage = globalThis.localStorage } = {}) {
   const read = (key) => {
-    try { return storage?.getItem(key); } catch { return null; }
+    try {
+      return storage?.getItem(key);
+    } catch {
+      return null;
+    }
   };
   const enabledRaw = read(CAT_KEYS.enabled);
   return {
@@ -69,10 +73,14 @@ export function saveCatSettings(partial = {}, { storage = globalThis.localStorag
     writeSetting(key, String(value), { storage });
   };
   if ('enabled' in partial) write(CAT_KEYS.enabled, !!partial.enabled);
-  if ('focusMin' in partial) write(CAT_KEYS.focusMin, clampInt(partial.focusMin, LIMITS.focusMin, CAT_DEFAULTS.focusMin));
-  if ('breakMin' in partial) write(CAT_KEYS.breakMin, clampInt(partial.breakMin, LIMITS.breakMin, CAT_DEFAULTS.breakMin));
+  if ('focusMin' in partial)
+    write(CAT_KEYS.focusMin, clampInt(partial.focusMin, LIMITS.focusMin, CAT_DEFAULTS.focusMin));
+  if ('breakMin' in partial)
+    write(CAT_KEYS.breakMin, clampInt(partial.breakMin, LIMITS.breakMin, CAT_DEFAULTS.breakMin));
   if ('bedtime' in partial) write(CAT_KEYS.bedtime, normalizeBedtime(partial.bedtime));
-  if ('wakeup' in partial) write(CAT_KEYS.wakeup, normalizeBedtime(partial.wakeup, CAT_DEFAULTS.wakeup));
-  if ('sleepMin' in partial) write(CAT_KEYS.sleepMin, clampInt(partial.sleepMin, LIMITS.sleepMin, CAT_DEFAULTS.sleepMin));
+  if ('wakeup' in partial)
+    write(CAT_KEYS.wakeup, normalizeBedtime(partial.wakeup, CAT_DEFAULTS.wakeup));
+  if ('sleepMin' in partial)
+    write(CAT_KEYS.sleepMin, clampInt(partial.sleepMin, LIMITS.sleepMin, CAT_DEFAULTS.sleepMin));
   return loadCatSettings({ storage });
 }

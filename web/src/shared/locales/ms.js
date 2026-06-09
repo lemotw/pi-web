@@ -118,7 +118,8 @@ export default {
   'composer.searchModels': 'Cari model…',
   'composer.switchModel': 'Tukar model',
   'composer.switchEffort': 'Tukar tahap usaha',
-  'composer.disabledNotice': 'Sesi ini boleh dilihat, tetapi sembang dilumpuhkan kerana direktori kerjanya tidak lagi wujud.',
+  'composer.disabledNotice':
+    'Sesi ini boleh dilihat, tetapi sembang dilumpuhkan kerana direktori kerjanya tidak lagi wujud.',
   'composer.copyPath': 'Klik untuk salin laluan',
   'composer.focusShortcut': 'Shift + i untuk fokus',
   'composer.cancelRunning': 'Batalkan respons yang berjalan',
@@ -143,8 +144,10 @@ export default {
   'settings.contentFontSizeHint': 'Saiz teks mesej yang dipaparkan (px).',
   'settings.fontBuiltIn': 'Terbina dalam',
   'settings.fontInstalled': 'Installed',
-  'settings.fontDetectUnsupported': 'This browser cannot list installed fonts. Use Custom… to type a font name.',
-  'settings.fontDetectDenied': 'Could not read installed fonts (permission denied). Use Custom… to type a font name.',
+  'settings.fontDetectUnsupported':
+    'This browser cannot list installed fonts. Use Custom… to type a font name.',
+  'settings.fontDetectDenied':
+    'Could not read installed fonts (permission denied). Use Custom… to type a font name.',
   'settings.fontActions': 'Tindakan',
   'settings.fontMono': 'Monospace',
   'settings.fontSystem': 'Sistem',
@@ -155,9 +158,11 @@ export default {
   'settings.fontFamilyPlaceholder': 'Nama keluarga fon',
 
   'settings.language': 'Bahasa',
-  'settings.languageHint': 'Bahasa untuk antara muka aplikasi. Mengubahnya akan memuat semula halaman.',
+  'settings.languageHint':
+    'Bahasa untuk antara muka aplikasi. Mengubahnya akan memuat semula halaman.',
   'settings.customLanguages': 'Bahasa tersuai',
-  'settings.customLanguagesHint': 'Tambah atau ganti bahasa sebagai JSON — tatasusunan { "code", "label", "strings": { … } }. Kunci yang hilang akan kembali ke bahasa Inggeris. Guna "Salin kunci Inggeris" untuk templat permulaan, kemudian "Simpan & guna".',
+  'settings.customLanguagesHint':
+    'Tambah atau ganti bahasa sebagai JSON — tatasusunan { "code", "label", "strings": { … } }. Kunci yang hilang akan kembali ke bahasa Inggeris. Guna "Salin kunci Inggeris" untuk templat permulaan, kemudian "Simpan & guna".',
   'settings.copyEnglishKeys': 'Salin kunci Inggeris',
   'settings.saveApply': 'Simpan & guna',
 
@@ -167,28 +172,34 @@ export default {
   'settings.defaultLayout': 'Susun atur lalai',
   'settings.defaultLayoutHint': 'Cara senarai sesi dikumpulkan semasa dimuatkan.',
   'settings.showBtw': 'Tunjukkan sembang btw dalam senarai',
-  'settings.showBtwHint': 'Sertakan sembang conteng btw sekali guna dalam senarai sesi. Disembunyikan secara lalai.',
+  'settings.showBtwHint':
+    'Sertakan sembang conteng btw sekali guna dalam senarai sesi. Disembunyikan secara lalai.',
 
   'settings.sessionTitles': 'Tajuk Sesi',
   'settings.autoTitle': 'Jana tajuk secara automatik',
-  'settings.autoTitleHint': 'Biarkan pi-web menamakan sesi secara automatik daripada mesej pertama.',
+  'settings.autoTitleHint':
+    'Biarkan pi-web menamakan sesi secara automatik daripada mesej pertama.',
   'settings.whenToTitle': 'Bila hendak beri tajuk',
   'settings.whenToTitleHint': 'Beri tajuk sesi sekali, atau segarkan apabila fokus berubah.',
   'settings.titleOnce': 'Sekali setiap sesi',
   'settings.titleEachTurn': 'Setiap mesej baharu',
   'settings.titleModel': 'Model tajuk',
-  'settings.titleModelHint': 'Terbina dalam ialah heuristik perkataan percuma dan segera (tanpa AI). Pilih model untuk tajuk yang lebih bijak — yang kecil dan pantas adalah ideal.',
+  'settings.titleModelHint':
+    'Terbina dalam ialah heuristik perkataan percuma dan segera (tanpa AI). Pilih model untuk tajuk yang lebih bijak — yang kecil dan pantas adalah ideal.',
   'settings.titleBuiltin': 'Heuristik terbina dalam (tanpa AI)',
 
   'settings.artifacts': 'Artifak',
   'settings.showArtifacts': 'Tunjukkan panel Artifak',
-  'settings.showArtifactsHint': 'Paparkan fail yang ditulis ejen dan blok kod besar dalam tab bar sisi kanan. Apabila dimatikan, tab disembunyikan.',
+  'settings.showArtifactsHint':
+    'Paparkan fail yang ditulis ejen dan blok kod besar dalam tab bar sisi kanan. Apabila dimatikan, tab disembunyikan.',
   'settings.includeFilter': 'Penapis sertakan',
-  'settings.includeFilterHint': 'Glob dipisahkan koma (cth. *.md, *.html, artifacts/**). Hanya fail yang sepadan dipaparkan. Biarkan kosong untuk paparkan semua; sebarang penapis juga menyembunyikan cebisan kod sembang yang terlepas.',
+  'settings.includeFilterHint':
+    'Glob dipisahkan koma (cth. *.md, *.html, artifacts/**). Hanya fail yang sepadan dipaparkan. Biarkan kosong untuk paparkan semua; sebarang penapis juga menyembunyikan cebisan kod sembang yang terlepas.',
 
   'settings.notifications': 'Pemberitahuan',
   'settings.notifyReady': 'Beritahu apabila respons sedia',
-  'settings.notifyReadyHint': 'Memainkan bunyi dan menunjukkan pemberitahuan apabila sembang selesai.',
+  'settings.notifyReadyHint':
+    'Memainkan bunyi dan menunjukkan pemberitahuan apabila sembang selesai.',
   'settings.doneSound': 'Bunyi selesai',
   'settings.doneSoundHint': 'Bunyi yang dimainkan apabila respons sedia.',
 
@@ -262,11 +273,16 @@ export default {
   'btw.emptyHasSession': 'Belum ada mesej — beri salam.',
   'btw.emptyNoSession': 'Taip mesej untuk memulakan sembang btw, atau tekan "baharu".',
 
-  'artifactHelp.intro': '<strong>Artifak</strong> ialah fail yang ditulis ejen dan blok kod besar yang dikongsikannya, ditarik keluar daripada perbualan supaya anda boleh mencari, membaca, menyalin atau memuat turunnya di satu tempat.',
-  'artifactHelp.viewing': '<strong>Melihat.</strong> Pilih satu daripada senarai untuk melihat sumbernya. Fail HTML, SVG dan Markdown juga mempunyai togol <em>Pratonton</em> — HTML/SVG berjalan dalam kotak pasir selamat, Markdown dipaparkan sebagai teks berformat.',
-  'artifactHelp.annotating': '<strong>Anotasi.</strong> Pilih teks dalam sumber artifak untuk meninggalkan nota. Nota anda terkumpul dalam tab <em>Anotasi</em>, di mana anda boleh kembali kepadanya atau menghantarnya kepada ejen.',
-  'artifactHelp.upToDate': '<strong>Kekal terkini.</strong> Fail yang <em>ditulis</em> atau <em>disunting</em> ejen dikemas kini secara automatik, dan penamaan semula atau pemadaman mudah (<code>mv</code>, <code>git mv</code>, <code>rm</code>) turut dijejaki. Tetapi perubahan melalui perintah shell lain — seperti <code>sed</code> atau pengalihan output — tidak dapat diikuti daripada perbualan, jadi sekali-sekala artifak mungkin memaparkan versi lama. Jika ragu, periksa fail pada cakera.',
-  'artifactHelp.note': 'Artifak hanya sebahagian daripada paparan langsung dan tidak disertakan dalam snapshot yang dieksport.',
+  'artifactHelp.intro':
+    '<strong>Artifak</strong> ialah fail yang ditulis ejen dan blok kod besar yang dikongsikannya, ditarik keluar daripada perbualan supaya anda boleh mencari, membaca, menyalin atau memuat turunnya di satu tempat.',
+  'artifactHelp.viewing':
+    '<strong>Melihat.</strong> Pilih satu daripada senarai untuk melihat sumbernya. Fail HTML, SVG dan Markdown juga mempunyai togol <em>Pratonton</em> — HTML/SVG berjalan dalam kotak pasir selamat, Markdown dipaparkan sebagai teks berformat.',
+  'artifactHelp.annotating':
+    '<strong>Anotasi.</strong> Pilih teks dalam sumber artifak untuk meninggalkan nota. Nota anda terkumpul dalam tab <em>Anotasi</em>, di mana anda boleh kembali kepadanya atau menghantarnya kepada ejen.',
+  'artifactHelp.upToDate':
+    '<strong>Kekal terkini.</strong> Fail yang <em>ditulis</em> atau <em>disunting</em> ejen dikemas kini secara automatik, dan penamaan semula atau pemadaman mudah (<code>mv</code>, <code>git mv</code>, <code>rm</code>) turut dijejaki. Tetapi perubahan melalui perintah shell lain — seperti <code>sed</code> atau pengalihan output — tidak dapat diikuti daripada perbualan, jadi sekali-sekala artifak mungkin memaparkan versi lama. Jika ragu, periksa fail pada cakera.',
+  'artifactHelp.note':
+    'Artifak hanya sebahagian daripada paparan langsung dan tidak disertakan dalam snapshot yang dieksport.',
 
   'common.back': 'Kembali',
   'common.copied': 'Disalin',
@@ -291,7 +307,8 @@ export default {
   'artifact.preview': 'Pratonton',
   'artifact.runPreview': 'Jalankan pratonton',
   'artifact.showSource': 'Tunjukkan sumber',
-  'artifact.emptyHidden': '{count} {noun} disembunyikan oleh penapis anda — laraskan di <a href="/settings">Tetapan</a>.',
+  'artifact.emptyHidden':
+    '{count} {noun} disembunyikan oleh penapis anda — laraskan di <a href="/settings">Tetapan</a>.',
   'artifact.emptyNone': 'Belum ada artifak dalam sesi ini.',
   'artifact.nounOne': 'artifak',
   'artifact.nounMany': 'artifak',
@@ -312,7 +329,8 @@ export default {
   'version.couldNotCheck': 'Tidak dapat menyemak kemas kini.',
   'version.devBuild': 'Anda menjalankan build pembangunan tempatan.',
   'version.latestPublished': 'Terkini diterbitkan: {version}',
-  'version.devUpdateDisabled': 'Kemas kini dalam apl dilumpuhkan di sini supaya tidak menimpa perubahan tempatan.',
+  'version.devUpdateDisabled':
+    'Kemas kini dalam apl dilumpuhkan di sini supaya tidak menimpa perubahan tempatan.',
   'version.updateAvailable': 'Kemas kini tersedia:',
   'version.releaseNotes': 'nota keluaran',
   'version.updateRestart': 'Kemas kini & mula semula',

@@ -22,18 +22,36 @@
 {#if lang}
   {#if expandable}
     <div class="tool-output expandable" onclick={toggleExpanded} role="presentation">
-      <div class="output-preview"><pre><code class="hljs" data-highlight-pending data-lang={lang}>{split.preview.join('\n')}</code></pre>
-        <div class="expand-hint">... ({split.remaining} more lines)</div></div>
-      <div class="output-full"><pre><code class="hljs" data-highlight-pending data-lang={lang}>{split.lines.join('\n')}</code></pre></div>
+      <div class="output-preview">
+        <pre><code class="hljs" data-highlight-pending data-lang={lang}
+            >{split.preview.join('\n')}</code
+          ></pre>
+        <div class="expand-hint">... ({split.remaining} more lines)</div>
+      </div>
+      <div class="output-full">
+        <pre><code class="hljs" data-highlight-pending data-lang={lang}
+            >{split.lines.join('\n')}</code
+          ></pre>
+      </div>
     </div>
   {:else}
-    <div class="tool-output"><pre><code class="hljs" data-highlight-pending data-lang={lang}>{split.lines.join('\n')}</code></pre></div>
+    <div class="tool-output">
+      <pre><code class="hljs" data-highlight-pending data-lang={lang}>{split.lines.join('\n')}</code
+        ></pre>
+    </div>
   {/if}
 {:else if expandable}
   <div class="tool-output expandable" onclick={toggleExpanded} role="presentation">
-    <div class="output-preview">{#each split.preview as line}<div>{line}</div>{/each}<div class="expand-hint">... ({split.remaining} more lines)</div></div>
-    <div class="output-full">{#each split.lines as line}<div>{line}</div>{/each}</div>
+    <div class="output-preview">
+      {#each split.preview as line, lineIndex (lineIndex)}<div>{line}</div>{/each}
+      <div class="expand-hint">... ({split.remaining} more lines)</div>
+    </div>
+    <div class="output-full">
+      {#each split.lines as line, lineIndex (lineIndex)}<div>{line}</div>{/each}
+    </div>
   </div>
 {:else}
-  <div class="tool-output">{#each split.preview as line}<div>{line}</div>{/each}</div>
+  <div class="tool-output">
+    {#each split.preview as line, lineIndex (lineIndex)}<div>{line}</div>{/each}
+  </div>
 {/if}

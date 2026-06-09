@@ -136,7 +136,7 @@ func (s *Server) handleMetrics(w http.ResponseWriter, r *http.Request) {
 	resp := metricsResponse{
 		Process: processMetrics{
 			PID:            os.Getpid(),
-			UptimeS:        now.Sub(s.startedAt).Seconds(),
+			UptimeS:        now.Sub(s.metrics.startedAt).Seconds(),
 			Goroutines:     runtime.NumGoroutine(),
 			HeapAllocBytes: ms.HeapAlloc,
 			SSEClients:     sseClients,
@@ -150,7 +150,7 @@ func (s *Server) handleMetrics(w http.ResponseWriter, r *http.Request) {
 		snaps = snapr.Snapshot()
 	}
 
-	sampler := s.metricsSampler
+	sampler := s.metrics.sampler
 	if sampler == nil {
 		sampler = gopsutilSampler{}
 	}
@@ -186,13 +186,13 @@ func (s *Server) handleMetrics(w http.ResponseWriter, r *http.Request) {
 // over wall-clock time since the previous sample. The first sample for a PID
 // has no baseline and reports 0.
 func (s *Server) cpuPercent(pid int, cpuTimeS float64, now time.Time) float64 {
-	s.metricsCPUMu.Lock()
-	defer s.metricsCPUMu.Unlock()
-	if s.metricsCPULast == nil {
-		s.metricsCPULast = make(map[int]cpuMark)
+	s.metrics.cpuMu.Lock()
+	defer s.metrics.cpuMu.Unlock()
+	if s.metrics.cpuLast == nil {
+		s.metrics.cpuLast = make(map[int]cpuMark)
 	}
-	prev, ok := s.metricsCPULast[pid]
-	s.metricsCPULast[pid] = cpuMark{cpuTimeS: cpuTimeS, at: now}
+	prev, ok := s.metrics.cpuLast[pid]
+	s.metrics.cpuLast[pid] = cpuMark{cpuTimeS: cpuTimeS, at: now}
 	if !ok {
 		return 0
 	}
@@ -212,11 +212,11 @@ func (s *Server) cpuPercent(pid int, cpuTimeS float64, now time.Time) float64 {
 // pruneCPUMarks drops baselines for PIDs no longer present so the cache can't
 // grow without bound as workers come and go.
 func (s *Server) pruneCPUMarks(live map[int]bool) {
-	s.metricsCPUMu.Lock()
-	defer s.metricsCPUMu.Unlock()
-	for pid := range s.metricsCPULast {
+	s.metrics.cpuMu.Lock()
+	defer s.metrics.cpuMu.Unlock()
+	for pid := range s.metrics.cpuLast {
 		if !live[pid] {
-			delete(s.metricsCPULast, pid)
+			delete(s.metrics.cpuLast, pid)
 		}
 	}
 }

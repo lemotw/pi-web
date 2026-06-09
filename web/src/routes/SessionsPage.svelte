@@ -7,11 +7,17 @@
   import ProjectsModal from '../components/index/ProjectsModal.svelte';
   import SessionsList from '../components/index/SessionsList.svelte';
   import { createStatusEvents } from '../shared/status-events.js';
+  import { openSessionPalette, refreshSessionPalette } from '../shared/command-palette-runtime.js';
   import { setupKeyboardNav } from '../shared/keyboard-nav.js';
   import { toggleTheme, syncThemeIcons } from '../shared/theme.js';
-  import { configureSettingsSync, hydrateSettings, writeSetting } from '../shared/settings-store.js';
-  import { icon, Sun, Moon } from '../shared/icons.js';
+  import {
+    configureSettingsSync,
+    hydrateSettings,
+    writeSetting,
+  } from '../shared/settings-store.js';
+  import { navigate } from '../shared/navigation.js';
   import { t } from '../shared/i18n.js';
+  import { SvelteSet, SvelteMap } from 'svelte/reactivity';
   import {
     defaultCreateSession,
     defaultFetchProjects,
@@ -27,8 +33,8 @@
   let layoutReady = $state(false);
   let query = $state('');
   let layout = $state('timeline');
-  let runningSessionIds = $state(new Set());
-  let runningStatuses = $state(new Map());
+  const runningSessionIds = new SvelteSet();
+  const runningStatuses = new SvelteMap();
   let newSessionOpen = $state(false);
   let newSessionPath = $state('');
   let recentLocations = $state([]);
@@ -41,30 +47,31 @@
   let projectsBusy = $state(false);
   let projectsError = $state('');
   let refreshInflight = false;
-  let modalOpen = $derived(newSessionOpen || projectsOpen);
 
-  const totalSessionsLabel = $derived(sessions.length === 1 ? t('index.sessionCountOne') : t('index.sessionsCount', { count: sessions.length }));
+  const totalSessionsLabel = $derived(
+    sessions.length === 1
+      ? t('index.sessionCountOne')
+      : t('index.sessionsCount', { count: sessions.length }),
+  );
   const runningCount = $derived(runningSessionIds.size);
 
   function setRunningSessions(snapshot) {
     const ids = Array.isArray(snapshot) ? snapshot : snapshot?.ids;
     const statuses = snapshot && !Array.isArray(snapshot) ? snapshot.statuses : {};
-    runningSessionIds = new Set(Array.isArray(ids) ? ids : []);
-    runningStatuses = new Map(Object.entries(statuses || {}));
+    runningSessionIds.clear();
+    for (const id of Array.isArray(ids) ? ids : []) runningSessionIds.add(id);
+    runningStatuses.clear();
+    for (const [key, value] of Object.entries(statuses || {})) runningStatuses.set(key, value);
   }
 
   function setSessionRunning(id, running, status = {}) {
-    const ids = new Set(runningSessionIds);
-    const statuses = new Map(runningStatuses);
     if (running) {
-      ids.add(id);
-      statuses.set(id, status);
+      runningSessionIds.add(id);
+      runningStatuses.set(id, status);
     } else {
-      ids.delete(id);
-      statuses.delete(id);
+      runningSessionIds.delete(id);
+      runningStatuses.delete(id);
     }
-    runningSessionIds = ids;
-    runningStatuses = statuses;
   }
 
   async function refreshSessions() {
@@ -74,7 +81,7 @@
       const response = await defaultFetchSessions();
       sessions = (response.sessions || []).map(normalizeSession);
       await tick();
-      window.__piSessionPalette?.refresh?.();
+      refreshSessionPalette();
     } catch {
       // Keep existing list if a soft refresh fails.
     } finally {
@@ -84,6 +91,7 @@
     }
   }
 
+  const RELOAD_DEBOUNCE_MS = 500;
   let reloadTimer = null;
   function scheduleReload() {
     if (reloadTimer) clearTimeout(reloadTimer);
@@ -91,7 +99,7 @@
     reloadTimer = setTimeout(() => {
       reloadTimer = null;
       refreshSessions();
-    }, 500);
+    }, RELOAD_DEBOUNCE_MS);
   }
 
   async function setLayout(nextLayout) {
@@ -133,7 +141,7 @@
     try {
       const response = await defaultCreateSession(path);
       if (response.ok && response.id) {
-        window.location.href = '/session?id=' + encodeURIComponent(response.id);
+        navigate('/session?id=' + encodeURIComponent(response.id));
         return;
       }
       newSessionError = response.error || t('index.failedCreateSession');
@@ -144,8 +152,12 @@
     }
   }
 
-  function closeMenu() { menuOpen = false; }
-  function toggleMenu() { menuOpen = !menuOpen; }
+  function closeMenu() {
+    menuOpen = false;
+  }
+  function toggleMenu() {
+    menuOpen = !menuOpen;
+  }
 
   async function refreshProjectsList() {
     projectsError = '';
@@ -188,7 +200,9 @@
     }
   }
 
-  function openPalette() { window.__piOpenSessionPalette?.(); }
+  function openPalette() {
+    openSessionPalette();
+  }
 
   onMount(() => {
     const previousTitle = document.title;
@@ -196,12 +210,16 @@
     configureSettingsSync({ fetchImpl: window.fetch.bind(window) });
     setupKeyboardNav({ windowImpl: window, documentImpl: document });
 
-    try { layout = localStorage.getItem(layoutStorageKey) === 'projects' ? 'projects' : 'timeline'; } catch {}
-    hydrateSettings({ storage: localStorage }).then((settings) => {
-      if (!settings) return;
-      const serverLayout = settings[layoutStorageKey] === 'projects' ? 'projects' : 'timeline';
-      if (serverLayout !== layout) setLayout(serverLayout);
-    }).catch(() => {});
+    try {
+      layout = localStorage.getItem(layoutStorageKey) === 'projects' ? 'projects' : 'timeline';
+    } catch {}
+    hydrateSettings({ storage: localStorage })
+      .then((settings) => {
+        if (!settings) return;
+        const serverLayout = settings[layoutStorageKey] === 'projects' ? 'projects' : 'timeline';
+        if (serverLayout !== layout) setLayout(serverLayout);
+      })
+      .catch(() => {});
 
     const statusEvents = createStatusEvents({
       onSnapshot: (snapshot) => setRunningSessions(snapshot),
@@ -211,7 +229,9 @@
         if (message === 'reload') scheduleReload();
       },
     });
-    try { statusEvents.connect(); } catch {}
+    try {
+      statusEvents.connect();
+    } catch {}
 
     const keydown = (e) => {
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'l') {
@@ -266,13 +286,43 @@
   onManageProjects={openProjectsModal}
 />
 
-<button class="new-session-btn new-session-btn-mobile" id="newSessionBtn" type="button" data-new-session-btn aria-label={t('index.startNewSession')} title={t('index.newSession')} onclick={openNewSessionModal}>+</button>
+<button
+  class="new-session-btn new-session-btn-mobile"
+  id="newSessionBtn"
+  type="button"
+  data-new-session-btn
+  aria-label={t('index.startNewSession')}
+  title={t('index.newSession')}
+  onclick={openNewSessionModal}>+</button
+>
 
-<CommandPalette onQueryChange={(q) => { query = q; }} onNewSession={openNewSessionModal} />
+<CommandPalette
+  onQueryChange={(q) => {
+    query = q;
+  }}
+  onNewSession={openNewSessionModal}
+  navigate={(url) => navigate(url)}
+/>
 
-<SessionsList {sessions} {layout} {query} {runningSessionIds} {runningStatuses} {loading} {layoutReady} />
+<SessionsList
+  {sessions}
+  {layout}
+  {query}
+  {runningSessionIds}
+  {runningStatuses}
+  {loading}
+  {layoutReady}
+/>
 
-<NewSessionModal open={newSessionOpen} recent={recentLocations} bind:path={newSessionPath} creating={creating} error={newSessionError} onClose={closeNewSessionModal} onCreate={createSession} />
+<NewSessionModal
+  open={newSessionOpen}
+  recent={recentLocations}
+  bind:path={newSessionPath}
+  {creating}
+  error={newSessionError}
+  onClose={closeNewSessionModal}
+  onCreate={createSession}
+/>
 
 <ProjectsModal
   open={projectsOpen}
@@ -287,7 +337,3 @@
   onRegister={(path) => updateProject(path, 'register')}
   onRemove={(path) => updateProject(path, 'remove')}
 />
-
-{#if modalOpen}
-  <!-- class hook only; modals render their own overlays -->
-{/if}

@@ -75,7 +75,8 @@ func Main(version string) {
 			}
 		})
 	})
-	srv = server.New(server.Deps{
+	var srvErr error
+	srv, srvErr = server.New(server.Deps{
 		AgentDir:            agentDir,
 		SessionsDir:         sessionsDir,
 		Auth:                authMiddleware,
@@ -90,6 +91,10 @@ func Main(version string) {
 		RunInstall: runInstall,
 		RunRestart: runRestart,
 	})
+	if srvErr != nil {
+		fmt.Fprintf(os.Stderr, "failed to initialize server: %v\n", srvErr)
+		os.Exit(1)
+	}
 
 	ui.SetThemeProvider(srv.ThemeSetting)
 	ui.SetFontProvider(srv.FontStyles)

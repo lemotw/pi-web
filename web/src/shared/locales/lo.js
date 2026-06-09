@@ -118,7 +118,8 @@ export default {
   'composer.searchModels': 'ຄົ້ນຫາໂມເດວ…',
   'composer.switchModel': 'ສະຫຼັບໂມເດວ',
   'composer.switchEffort': 'ສະຫຼັບລະດັບຄວາມພະຍາຍາມ',
-  'composer.disabledNotice': 'ເຊດຊັນນີ້ສາມາດເບິ່ງໄດ້ ແຕ່ການສົນທະນາຖືກປິດ ເພາະໄດເຣັກທໍຣີເຮັດວຽກຂອງມັນບໍ່ມີອີກຕໍ່ໄປ.',
+  'composer.disabledNotice':
+    'ເຊດຊັນນີ້ສາມາດເບິ່ງໄດ້ ແຕ່ການສົນທະນາຖືກປິດ ເພາະໄດເຣັກທໍຣີເຮັດວຽກຂອງມັນບໍ່ມີອີກຕໍ່ໄປ.',
   'composer.copyPath': 'ຄລິກເພື່ອສຳເນົາ path',
   'composer.focusShortcut': 'Shift + i ເພື່ອໂຟກັສ',
   'composer.cancelRunning': 'ຍົກເລີກການຕອບສະໜອງທີ່ກຳລັງເຮັດວຽກ',
@@ -143,8 +144,10 @@ export default {
   'settings.contentFontSizeHint': 'ຂະໜາດຂໍ້ຄວາມທີ່ສະແດງ (px).',
   'settings.fontBuiltIn': 'ມີໃນຕົວ',
   'settings.fontInstalled': 'Installed',
-  'settings.fontDetectUnsupported': 'This browser cannot list installed fonts. Use Custom… to type a font name.',
-  'settings.fontDetectDenied': 'Could not read installed fonts (permission denied). Use Custom… to type a font name.',
+  'settings.fontDetectUnsupported':
+    'This browser cannot list installed fonts. Use Custom… to type a font name.',
+  'settings.fontDetectDenied':
+    'Could not read installed fonts (permission denied). Use Custom… to type a font name.',
   'settings.fontActions': 'ການກະທຳ',
   'settings.fontMono': 'Monospace',
   'settings.fontSystem': 'ລະບົບ',
@@ -157,7 +160,8 @@ export default {
   'settings.language': 'ພາສາ',
   'settings.languageHint': 'ພາສາສຳລັບອິນເຕີເຟດແອັບ. ການປ່ຽນຈະໂຫຼດໜ້າຄືນໃໝ່.',
   'settings.customLanguages': 'ພາສາກຳນົດເອງ',
-  'settings.customLanguagesHint': 'ເພີ່ມ ຫຼື ແທນທີ່ພາສາເປັນ JSON — array ຂອງ { "code", "label", "strings": { … } }. ກະແຈທີ່ຂາດຈະກັບໄປໃຊ້ພາສາອັງກິດ. ໃຊ້ "ສຳເນົາກະແຈພາສາອັງກິດ" ສຳລັບແມ່ແບບເລີ່ມຕົ້ນ ແລ້ວ "ບັນທຶກ ແລະ ນຳໃຊ້".',
+  'settings.customLanguagesHint':
+    'ເພີ່ມ ຫຼື ແທນທີ່ພາສາເປັນ JSON — array ຂອງ { "code", "label", "strings": { … } }. ກະແຈທີ່ຂາດຈະກັບໄປໃຊ້ພາສາອັງກິດ. ໃຊ້ "ສຳເນົາກະແຈພາສາອັງກິດ" ສຳລັບແມ່ແບບເລີ່ມຕົ້ນ ແລ້ວ "ບັນທຶກ ແລະ ນຳໃຊ້".',
   'settings.copyEnglishKeys': 'ສຳເນົາກະແຈພາສາອັງກິດ',
   'settings.saveApply': 'ບັນທຶກ ແລະ ນຳໃຊ້',
 
@@ -167,7 +171,8 @@ export default {
   'settings.defaultLayout': 'ໂຄງຮ່າງເລີ່ມຕົ້ນ',
   'settings.defaultLayoutHint': 'ວິທີຈັດກຸ່ມລາຍການເຊດຊັນເມື່ອໂຫຼດ.',
   'settings.showBtw': 'ສະແດງການສົນທະນາ btw ໃນລາຍການ',
-  'settings.showBtwHint': 'ລວມການສົນທະນາຮ່າງ btw ໃຊ້ຄັ້ງດຽວໄວ້ໃນລາຍການເຊດຊັນ. ເຊື່ອງໄວ້ໂດຍຄ່າເລີ່ມຕົ້ນ.',
+  'settings.showBtwHint':
+    'ລວມການສົນທະນາຮ່າງ btw ໃຊ້ຄັ້ງດຽວໄວ້ໃນລາຍການເຊດຊັນ. ເຊື່ອງໄວ້ໂດຍຄ່າເລີ່ມຕົ້ນ.',
 
   'settings.sessionTitles': 'ຫົວຂໍ້ເຊດຊັນ',
   'settings.autoTitle': 'ສ້າງຫົວຂໍ້ອັດຕະໂນມັດ',
@@ -177,14 +182,17 @@ export default {
   'settings.titleOnce': 'ຄັ້ງດຽວຕໍ່ເຊດຊັນ',
   'settings.titleEachTurn': 'ທຸກຂໍ້ຄວາມໃໝ່',
   'settings.titleModel': 'ໂມເດວຫົວຂໍ້',
-  'settings.titleModelHint': 'ມີໃນຕົວແມ່ນ heuristic ຄຳສັບຟຣີ ທັນທີ (ບໍ່ມີ AI). ເລືອກໂມເດວເພື່ອຫົວຂໍ້ທີ່ສະຫຼາດກວ່າ — ໂມເດວນ້ອຍ ແລະ ໄວແມ່ນເໝາະສົມ.',
+  'settings.titleModelHint':
+    'ມີໃນຕົວແມ່ນ heuristic ຄຳສັບຟຣີ ທັນທີ (ບໍ່ມີ AI). ເລືອກໂມເດວເພື່ອຫົວຂໍ້ທີ່ສະຫຼາດກວ່າ — ໂມເດວນ້ອຍ ແລະ ໄວແມ່ນເໝາະສົມ.',
   'settings.titleBuiltin': 'Heuristic ມີໃນຕົວ (ບໍ່ມີ AI)',
 
   'settings.artifacts': 'ອາທິແຟັກ',
   'settings.showArtifacts': 'ສະແດງແຜງອາທິແຟັກ',
-  'settings.showArtifactsHint': 'ສະແດງໄຟລ໌ທີ່ເອເຈັນຂຽນ ແລະ ບລັອກໂຄ້ດຂະໜາດໃຫຍ່ໃນແທັບແຖບຂ້າງຂວາ. ເມື່ອປິດ ແທັບຈະຖືກເຊື່ອງ.',
+  'settings.showArtifactsHint':
+    'ສະແດງໄຟລ໌ທີ່ເອເຈັນຂຽນ ແລະ ບລັອກໂຄ້ດຂະໜາດໃຫຍ່ໃນແທັບແຖບຂ້າງຂວາ. ເມື່ອປິດ ແທັບຈະຖືກເຊື່ອງ.',
   'settings.includeFilter': 'ຕົວກັ່ນຕອງລວມ',
-  'settings.includeFilterHint': 'glob ແຍກດ້ວຍຈຸດ (ເຊັ່ນ *.md, *.html, artifacts/**). ສະແດງສະເພາະໄຟລ໌ທີ່ກົງກັນ. ປ່ອຍຫວ່າງເພື່ອສະແດງທັງໝົດ; ຕົວກັ່ນຕອງໃດກໍຕາມຈະເຊື່ອງສ່ວນໂຄ້ດການສົນທະນາທີ່ກະຈັດກະຈາຍ.',
+  'settings.includeFilterHint':
+    'glob ແຍກດ້ວຍຈຸດ (ເຊັ່ນ *.md, *.html, artifacts/**). ສະແດງສະເພາະໄຟລ໌ທີ່ກົງກັນ. ປ່ອຍຫວ່າງເພື່ອສະແດງທັງໝົດ; ຕົວກັ່ນຕອງໃດກໍຕາມຈະເຊື່ອງສ່ວນໂຄ້ດການສົນທະນາທີ່ກະຈັດກະຈາຍ.',
 
   'settings.notifications': 'ການແຈ້ງເຕືອນ',
   'settings.notifyReady': 'ແຈ້ງເຕືອນເມື່ອການຕອບສະໜອງພ້ອມ',
@@ -262,11 +270,16 @@ export default {
   'btw.emptyHasSession': 'ຍັງບໍ່ມີຂໍ້ຄວາມ — ທັກທາຍກ່ອນ.',
   'btw.emptyNoSession': 'ພິມຂໍ້ຄວາມເພື່ອເລີ່ມການສົນທະນາ btw ຫຼື ກົດ "ໃໝ່".',
 
-  'artifactHelp.intro': '<strong>ອາທິແຟັກ</strong> ແມ່ນໄຟລ໌ທີ່ເອເຈັນຂຽນ ແລະ ບລັອກໂຄ້ດຂະໜາດໃຫຍ່ກວ່າທີ່ມັນແບ່ງປັນ ດຶງອອກຈາກການສົນທະນາ ເພື່ອໃຫ້ທ່ານສາມາດຄົ້ນຫາ ອ່ານ ສຳເນົາ ຫຼື ດາວໂຫຼດໄດ້ໃນບ່ອນດຽວ.',
-  'artifactHelp.viewing': '<strong>ການເບິ່ງ.</strong> ເລືອກໜຶ່ງຈາກລາຍການເພື່ອເບິ່ງ source ຂອງມັນ. ໄຟລ໌ HTML, SVG ແລະ Markdown ກໍມີປຸ່ມສະຫຼັບ <em>ສະແດງຕົວຢ່າງ</em> — HTML/SVG ເຮັດວຽກໃນ sandbox ທີ່ປອດໄພ, Markdown ສະແດງເປັນຂໍ້ຄວາມທີ່ຈັດຮູບແບບ.',
-  'artifactHelp.annotating': '<strong>ການໝາຍເຫດ.</strong> ເລືອກຂໍ້ຄວາມໃນ source ຂອງອາທິແຟັກເພື່ອປະໝາຍເຫດໄວ້. ໝາຍເຫດຂອງທ່ານຮວບຮວມຢູ່ໃນແທັບ <em>ຄຳອະທິບາຍ</em> ບ່ອນທີ່ທ່ານສາມາດກັບໄປຫາພວກມັນ ຫຼື ສົ່ງໃຫ້ເອເຈັນ.',
-  'artifactHelp.upToDate': '<strong>ການຮັກສາໃຫ້ທັນສະໄໝ.</strong> ໄຟລ໌ທີ່ເອເຈັນ <em>ຂຽນ</em> ຫຼື <em>ແກ້ໄຂ</em> ຈະອັບເດດອັດຕະໂນມັດ ແລະ ການປ່ຽນຊື່ ຫຼື ລຶບແບບງ່າຍໆ (<code>mv</code>, <code>git mv</code>, <code>rm</code>) ກໍຖືກຕິດຕາມເຊັ່ນກັນ. ແຕ່ການປ່ຽນແປງຜ່ານຄຳສັ່ງ shell ອື່ນໆ — ເຊັ່ນ <code>sed</code> ຫຼື output redirect — ບໍ່ສາມາດຕິດຕາມໄດ້ຈາກການສົນທະນາ ສະນັ້ນບາງຄັ້ງອາທິແຟັກອາດສະແດງເວີຊັນເກົ່າກວ່າ. ເມື່ອສົງໄສ ໃຫ້ກວດເບິ່ງໄຟລ໌ໃນດິສ.',
-  'artifactHelp.note': 'ອາທິແຟັກເປັນສ່ວນໜຶ່ງຂອງມຸມມອງສົດເທົ່ານັ້ນ ແລະ ບໍ່ລວມຢູ່ໃນ snapshot ທີ່ສົ່ງອອກ.',
+  'artifactHelp.intro':
+    '<strong>ອາທິແຟັກ</strong> ແມ່ນໄຟລ໌ທີ່ເອເຈັນຂຽນ ແລະ ບລັອກໂຄ້ດຂະໜາດໃຫຍ່ກວ່າທີ່ມັນແບ່ງປັນ ດຶງອອກຈາກການສົນທະນາ ເພື່ອໃຫ້ທ່ານສາມາດຄົ້ນຫາ ອ່ານ ສຳເນົາ ຫຼື ດາວໂຫຼດໄດ້ໃນບ່ອນດຽວ.',
+  'artifactHelp.viewing':
+    '<strong>ການເບິ່ງ.</strong> ເລືອກໜຶ່ງຈາກລາຍການເພື່ອເບິ່ງ source ຂອງມັນ. ໄຟລ໌ HTML, SVG ແລະ Markdown ກໍມີປຸ່ມສະຫຼັບ <em>ສະແດງຕົວຢ່າງ</em> — HTML/SVG ເຮັດວຽກໃນ sandbox ທີ່ປອດໄພ, Markdown ສະແດງເປັນຂໍ້ຄວາມທີ່ຈັດຮູບແບບ.',
+  'artifactHelp.annotating':
+    '<strong>ການໝາຍເຫດ.</strong> ເລືອກຂໍ້ຄວາມໃນ source ຂອງອາທິແຟັກເພື່ອປະໝາຍເຫດໄວ້. ໝາຍເຫດຂອງທ່ານຮວບຮວມຢູ່ໃນແທັບ <em>ຄຳອະທິບາຍ</em> ບ່ອນທີ່ທ່ານສາມາດກັບໄປຫາພວກມັນ ຫຼື ສົ່ງໃຫ້ເອເຈັນ.',
+  'artifactHelp.upToDate':
+    '<strong>ການຮັກສາໃຫ້ທັນສະໄໝ.</strong> ໄຟລ໌ທີ່ເອເຈັນ <em>ຂຽນ</em> ຫຼື <em>ແກ້ໄຂ</em> ຈະອັບເດດອັດຕະໂນມັດ ແລະ ການປ່ຽນຊື່ ຫຼື ລຶບແບບງ່າຍໆ (<code>mv</code>, <code>git mv</code>, <code>rm</code>) ກໍຖືກຕິດຕາມເຊັ່ນກັນ. ແຕ່ການປ່ຽນແປງຜ່ານຄຳສັ່ງ shell ອື່ນໆ — ເຊັ່ນ <code>sed</code> ຫຼື output redirect — ບໍ່ສາມາດຕິດຕາມໄດ້ຈາກການສົນທະນາ ສະນັ້ນບາງຄັ້ງອາທິແຟັກອາດສະແດງເວີຊັນເກົ່າກວ່າ. ເມື່ອສົງໄສ ໃຫ້ກວດເບິ່ງໄຟລ໌ໃນດິສ.',
+  'artifactHelp.note':
+    'ອາທິແຟັກເປັນສ່ວນໜຶ່ງຂອງມຸມມອງສົດເທົ່ານັ້ນ ແລະ ບໍ່ລວມຢູ່ໃນ snapshot ທີ່ສົ່ງອອກ.',
 
   'common.back': 'ກັບຄືນ',
   'common.copied': 'ສຳເນົາແລ້ວ',
@@ -291,7 +304,8 @@ export default {
   'artifact.preview': 'ສະແດງຕົວຢ່າງ',
   'artifact.runPreview': 'ແລ່ນຕົວຢ່າງ',
   'artifact.showSource': 'ສະແດງ source',
-  'artifact.emptyHidden': '{count} {noun} ຖືກເຊື່ອງໂດຍຕົວກອງຂອງທ່ານ — ປັບໃນ <a href="/settings">ການຕັ້ງຄ່າ</a>.',
+  'artifact.emptyHidden':
+    '{count} {noun} ຖືກເຊື່ອງໂດຍຕົວກອງຂອງທ່ານ — ປັບໃນ <a href="/settings">ການຕັ້ງຄ່າ</a>.',
   'artifact.emptyNone': 'ຍັງບໍ່ມີອາທິແຟັກໃນ session ນີ້.',
   'artifact.nounOne': 'ອາທິແຟັກ',
   'artifact.nounMany': 'ອາທິແຟັກ',

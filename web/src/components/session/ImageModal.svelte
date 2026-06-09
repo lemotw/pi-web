@@ -50,5 +50,5 @@
 </script>
 
 <div id="image-modal" class="image-modal" class:open bind:this={containerEl}>
-  <img id="modal-image" {src} {alt} bind:this={imgEl}>
+  <img id="modal-image" {src} {alt} bind:this={imgEl} />
 </div>

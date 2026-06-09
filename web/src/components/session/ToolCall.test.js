@@ -20,7 +20,10 @@ describe('ToolCall', () => {
   it('renders pre-rendered custom-tool HTML', () => {
     const call = { id: 'call-1', name: 'custom_tool', arguments: {} };
     const { container } = render(ToolCall, {
-      props: { call, model: model({ renderedTools: { 'call-1': { callHtml: '<span>custom rendered</span>' } } }) },
+      props: {
+        call,
+        model: model({ renderedTools: { 'call-1': { callHtml: '<span>custom rendered</span>' } } }),
+      },
     });
     expect(container.textContent).toContain('custom rendered');
   });
@@ -33,8 +36,11 @@ describe('ToolCall', () => {
 
   it('renders an ask_user_question card with clickable options', () => {
     const call = {
-      id: 'q', name: 'ask_user_question',
-      arguments: { questions: [{ question: 'Pick one', options: [{ label: 'A' }, { label: 'B' }] }] },
+      id: 'q',
+      name: 'ask_user_question',
+      arguments: {
+        questions: [{ question: 'Pick one', options: [{ label: 'A' }, { label: 'B' }] }],
+      },
     };
     const { container } = render(ToolCall, { props: { call, model: model() } });
     expect(container.querySelector('.ask-question-card')).not.toBeNull();
@@ -45,8 +51,11 @@ describe('ToolCall', () => {
 
   it('marks multi-select questions as needing submit', () => {
     const call = {
-      id: 'q', name: 'pi_web_ask_user_question',
-      arguments: { questions: [{ question: 'Pick many', multiSelect: true, options: [{ label: 'A' }] }] },
+      id: 'q',
+      name: 'pi_web_ask_user_question',
+      arguments: {
+        questions: [{ question: 'Pick many', multiSelect: true, options: [{ label: 'A' }] }],
+      },
     };
     const { container } = render(ToolCall, { props: { call, model: model() } });
     expect(container.querySelector('.ask-question-card')?.dataset.needsSubmit).toBe('true');

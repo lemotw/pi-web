@@ -3,10 +3,33 @@ import { SessionDataModel } from './session-data.svelte.js';
 
 // A small two-branch session: root → (old leaf) and root → mid → leaf.
 const entries = [
-  { id: 'root', timestamp: '2026-01-01T00:00:00Z', type: 'message', message: { role: 'user', content: 'start' } },
-  { id: 'old', parentId: 'root', timestamp: '2026-01-01T00:01:00Z', type: 'message', message: { role: 'assistant', content: 'old branch' } },
-  { id: 'mid', parentId: 'root', timestamp: '2026-01-01T00:02:00Z', type: 'message', message: { role: 'assistant', content: 'mid' } },
-  { id: 'leaf', parentId: 'mid', timestamp: '2026-01-01T00:03:00Z', type: 'message', message: { role: 'user', content: 'tell me about widgets' } },
+  {
+    id: 'root',
+    timestamp: '2026-01-01T00:00:00Z',
+    type: 'message',
+    message: { role: 'user', content: 'start' },
+  },
+  {
+    id: 'old',
+    parentId: 'root',
+    timestamp: '2026-01-01T00:01:00Z',
+    type: 'message',
+    message: { role: 'assistant', content: 'old branch' },
+  },
+  {
+    id: 'mid',
+    parentId: 'root',
+    timestamp: '2026-01-01T00:02:00Z',
+    type: 'message',
+    message: { role: 'assistant', content: 'mid' },
+  },
+  {
+    id: 'leaf',
+    parentId: 'mid',
+    timestamp: '2026-01-01T00:03:00Z',
+    type: 'message',
+    message: { role: 'user', content: 'tell me about widgets' },
+  },
 ];
 
 function model(extra = {}) {
@@ -56,7 +79,13 @@ describe('SessionDataModel', () => {
     m.applyLiveUpdate({
       entries: [
         ...entries,
-        { id: 'leaf2', parentId: 'leaf', timestamp: '2026-01-01T00:04:00Z', type: 'message', message: { role: 'assistant', content: 'widgets are great' } },
+        {
+          id: 'leaf2',
+          parentId: 'leaf',
+          timestamp: '2026-01-01T00:04:00Z',
+          type: 'message',
+          message: { role: 'assistant', content: 'widgets are great' },
+        },
       ],
       header: { cwd: '/x' },
       leafId: 'leaf2',
@@ -73,7 +102,13 @@ describe('SessionDataModel', () => {
     m.navigateTo('leaf');
     m.reconcile([
       ...entries,
-      { id: 'leaf2', parentId: 'leaf', timestamp: '2026-01-01T00:04:00Z', type: 'message', message: { role: 'assistant', content: 'more' } },
+      {
+        id: 'leaf2',
+        parentId: 'leaf',
+        timestamp: '2026-01-01T00:04:00Z',
+        type: 'message',
+        message: { role: 'assistant', content: 'more' },
+      },
     ]);
     expect(m.byId.has('leaf2')).toBe(true);
     // active leaf follows to the newest descendant of where we were.

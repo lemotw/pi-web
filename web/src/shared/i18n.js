@@ -107,7 +107,11 @@ export function t(key, params) {
 /** Locales available for the picker: built-ins plus any custom ones. */
 export function availableLocales() {
   ensureInit();
-  return Object.entries(registry).map(([code, v]) => ({ code, label: v.label, custom: !!v.custom }));
+  return Object.entries(registry).map(([code, v]) => ({
+    code,
+    label: v.label,
+    custom: !!v.custom,
+  }));
 }
 
 /** The full English key → string map, for the "Copy English keys" template. */

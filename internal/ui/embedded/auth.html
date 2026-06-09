@@ -8,37 +8,11 @@
         />
         <title>pi-web — Authentication Required</title>
         <link rel="icon" type="image/svg+xml" href="/icon.svg" />
-        <script>
-            (function () {
-                var theme = "dark";
-                try {
-                    theme = localStorage.getItem("pi-web-theme") || "dark";
-                } catch (e) {}
-                document.documentElement.dataset.theme = theme;
-            })();
-        </script>
+        <meta name="pi-web-theme" content="{{.ServerTheme}}" />
+        {{.ThemeCss}}
+        <link rel="stylesheet" href="/custom-themes.css" />
+        {{.ThemeBoot}}
         <style>
-            :root,
-            [data-theme="dark"] {
-                --body-bg: #111116;
-                --text: #e6e7eb;
-                --text-soft: #b7bbc4;
-                --muted: #858a96;
-                --dim: #292a33;
-                --surface-2: #191920;
-                --accent: #9cc7c0;
-                --danger: #ef767a;
-            }
-            [data-theme="light"] {
-                --body-bg: #f6f5f2;
-                --text: #1f2328;
-                --text-soft: #3f4650;
-                --muted: #747b85;
-                --dim: #d8d5cc;
-                --surface-2: #f1f0ec;
-                --accent: #496f69;
-                --danger: #b23b42;
-            }
             * {
                 margin: 0;
                 padding: 0;

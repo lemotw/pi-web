@@ -4,7 +4,7 @@
 // It just moves the active leaf/target (which the reactive model reads to
 // recompute the path) and scrolls to the requested entry once Svelte has
 // flushed. Copy/fork/label buttons are handled by a single delegated click
-// listener in session.js. See docs/dev/svelte-migration-plan.md (sub-step B).
+// listener in session-content-runtime.js.
 export function createSessionNavigator({
   documentImpl = document,
   renderTree = () => {},
