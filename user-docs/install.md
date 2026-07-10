@@ -32,11 +32,11 @@
 ### Pi package (recommended)
 
 ```bash
-pi install npm:@ygncode/pi-web@beta
+pi install git:github.com/lemotw/pi-web@lemotw/main
 ```
 
 This single command:
-- Installs the npm pi package under pi's package directory
+- Installs the pi package from your GitHub fork under pi's package directory
 - Runs the package `postinstall` script (`bash install.sh`)
 - Downloads the matching pi-web binary for your package version and platform from GitHub Releases
 - Installs it to `~/.pi/agent/bin/pi-web`
@@ -50,45 +50,45 @@ On Linux, auto-start is configured as a user systemd service at `~/.config/syste
 To install only for a specific project (shared with your team via `.pi/settings.json`):
 
 ```bash
-pi install -l npm:@ygncode/pi-web@beta
+pi install -l git:github.com/lemotw/pi-web@lemotw/main
 ```
 
 Then restart pi (or run `/reload`), and use `/web`, `/pi-web`, `/remote`, `/refresh`. Manage your access token with `/pi-web token` and `/pi-web set-token`.
 
-If npm aborts with `ENOTEMPTY` while renaming `@ygncode/pi-web`, remove npm's stale hidden backup directories and reinstall the beta channel:
+If npm aborts with `ENOTEMPTY` while renaming `@lemotw/pi-web`, remove npm's stale hidden backup directories and reinstall from the fork:
 
 ```bash
-rm -rf ~/.pi/agent/npm/node_modules/@ygncode/.pi-web-*
-pi install npm:@ygncode/pi-web@beta
+rm -rf ~/.pi/agent/npm/node_modules/@lemotw/.pi-web-*
+pi install git:github.com/lemotw/pi-web@lemotw/main
 ```
 
 ### Quick install (no build tools needed)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/ygncode/pi-web/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/lemotw/pi-web/refs/heads/lemotw/main/install.sh | bash
 ```
 
 This downloads the latest pi-web binary, installs it to `/usr/local/bin`, and sets up auto-start on login. No Go, Node, or pi required.
 
 ### Download binary
 
-Pre-built binaries are attached to each [GitHub Release](https://github.com/ygncode/pi-web/releases).
+Pre-built binaries are attached to each [GitHub Release](https://github.com/lemotw/pi-web/releases).
 
 ```bash
 # macOS (Apple Silicon)
-curl -L -o pi-web https://github.com/ygncode/pi-web/releases/latest/download/pi-web-darwin-arm64
+curl -L -o pi-web https://github.com/lemotw/pi-web/releases/latest/download/pi-web-darwin-arm64
 chmod +x pi-web
 
 # macOS (Intel)
-curl -L -o pi-web https://github.com/ygncode/pi-web/releases/latest/download/pi-web-darwin-amd64
+curl -L -o pi-web https://github.com/lemotw/pi-web/releases/latest/download/pi-web-darwin-amd64
 chmod +x pi-web
 
 # Linux (amd64)
-curl -L -o pi-web https://github.com/ygncode/pi-web/releases/latest/download/pi-web-linux-amd64
+curl -L -o pi-web https://github.com/lemotw/pi-web/releases/latest/download/pi-web-linux-amd64
 chmod +x pi-web
 
 # Linux (arm64)
-curl -L -o pi-web https://github.com/ygncode/pi-web/releases/latest/download/pi-web-linux-arm64
+curl -L -o pi-web https://github.com/lemotw/pi-web/releases/latest/download/pi-web-linux-arm64
 chmod +x pi-web
 ```
 
@@ -103,7 +103,7 @@ sudo cp pi-web /usr/local/bin/
 ### Build from source
 
 ```bash
-git clone https://github.com/ygncode/pi-web.git
+git clone https://github.com/lemotw/pi-web.git
 cd pi-web
 make build   # builds the Vite bundle, then embeds it into the Go binary
 
@@ -119,7 +119,7 @@ by hand, run `npm --prefix web install && npm --prefix web run build` before
 ## Uninstall
 
 ```bash
-pi remove npm:@ygncode/pi-web@beta
+pi remove git:github.com/lemotw/pi-web@lemotw/main
 ```
 
 This runs the package `preuninstall` script (`bash uninstall.sh`), which stops

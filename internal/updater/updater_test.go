@@ -83,17 +83,19 @@ func TestInfoDevNoUpdate(t *testing.T) {
 }
 
 func TestCheckHasUpdate(t *testing.T) {
-	npm := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(`{"dist-tags":{"beta":"0.0.1-beta.25","latest":"0.0.1-beta.20"}}`))
-	}))
-	defer npm.Close()
 	gh := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(`{"body":"## v0.0.1-beta.25\n- fix things","html_url":"https://example/release"}`))
+		switch r.URL.Path {
+		case "/releases":
+			w.Write([]byte(`[{"tag_name":"v0.0.1-beta.25"},{"tag_name":"v0.0.1-beta.20"}]`))
+		case "/releases/tags/v0.0.1-beta.25":
+			w.Write([]byte(`{"tag_name":"v0.0.1-beta.25","body":"## v0.0.1-beta.25\n- fix things","html_url":"https://example/release"}`))
+		default:
+			t.Fatalf("unexpected GitHub API path: %s", r.URL.Path)
+		}
 	}))
 	defer gh.Close()
 
 	c := New("0.0.1-beta.24")
-	c.npmURL = npm.URL
 	c.githubAPI = gh.URL
 
 	info, err := c.Check(context.Background())
@@ -103,8 +105,8 @@ func TestCheckHasUpdate(t *testing.T) {
 	if !info.HasUpdate {
 		t.Fatalf("expected HasUpdate true, got %+v", info)
 	}
-	if info.Latest != "0.0.1-beta.25" {
-		t.Errorf("Latest=%q want 0.0.1-beta.25", info.Latest)
+	if info.Latest != "v0.0.1-beta.25" {
+		t.Errorf("Latest=%q want v0.0.1-beta.25", info.Latest)
 	}
 	if info.Changelog == "" || info.ChangelogURL == "" {
 		t.Errorf("expected changelog populated, got %+v", info)
@@ -116,19 +118,17 @@ func TestCheckHasUpdate(t *testing.T) {
 }
 
 func TestCheckUpToDate(t *testing.T) {
-	npm := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(`{"dist-tags":{"beta":"0.0.1-beta.24"}}`))
-	}))
-	defer npm.Close()
-	// GitHub should not be needed when up to date; fail loudly if hit.
 	gh := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		t.Errorf("github should not be queried when up to date")
-		w.WriteHeader(http.StatusInternalServerError)
+		if r.URL.Path != "/releases" {
+			t.Errorf("github release details should not be queried when up to date; got %s", r.URL.Path)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		w.Write([]byte(`[{"tag_name":"v0.0.1-beta.24"}]`))
 	}))
 	defer gh.Close()
 
 	c := New("0.0.1-beta.24")
-	c.npmURL = npm.URL
 	c.githubAPI = gh.URL
 
 	info, err := c.Check(context.Background())

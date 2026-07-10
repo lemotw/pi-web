@@ -4,14 +4,15 @@ set -euo pipefail
 # pi-web installer — downloads the binary and sets up auto-start
 #
 # Standalone (no pi required):
-#   curl -fsSL https://raw.githubusercontent.com/ygncode/pi-web/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/lemotw/pi-web/refs/heads/lemotw/main/install.sh | bash
 #
 # Via pi package (also registers /remote, /refresh commands):
-#   pi install npm:@ygncode/pi-web@beta
+#   pi install git:github.com/lemotw/pi-web@lemotw/main
 #
 # Updates are handled by re-running the same command.
 
-REPO="ygncode/pi-web"
+REPO="lemotw/pi-web"
+REPO_REF="${PI_WEB_INSTALL_REF:-refs/heads/lemotw/main}"
 if [[ -n "${PI_WEB_INSTALL_DIR:-}" ]]; then
   INSTALL_DIR="$PI_WEB_INSTALL_DIR"
 elif [[ -n "${npm_package_name:-}" ]]; then
@@ -61,10 +62,9 @@ detect_platform() {
 # ── Choose release tag ──────────────────────────────────────────────
 package_tag() {
   # When install.sh runs as an npm lifecycle script, install the binary that
-  # matches the npm package version. This keeps pinned installs such as
-  # `pi install npm:@ygncode/pi-web@0.0.1-beta.25` pinned for both the extension
-  # package and the downloaded pi-web binary.
-  if [[ "${npm_package_name:-}" == "@ygncode/pi-web" && -n "${npm_package_version:-}" ]]; then
+  # matches the package version. This keeps git/npm package installs pinned for
+  # both the extension package and the downloaded pi-web binary.
+  if [[ "${npm_package_name:-}" == "@lemotw/pi-web" && -n "${npm_package_version:-}" ]]; then
     echo "v${npm_package_version#v}"
   fi
 }
@@ -220,7 +220,7 @@ install_binary() {
 fetch_config() {
   local file="$1"
   local dest="$2"
-  local url="https://raw.githubusercontent.com/${REPO}/main/${file}"
+  local url="https://raw.githubusercontent.com/${REPO}/${REPO_REF}/${file}"
 
   if command -v curl &>/dev/null; then
     curl -fsSL -o "$dest" "$url"

@@ -351,7 +351,7 @@ export function withToken(url: string): string {
 }
 
 export function cleanupPiWebNpmTemps(agentRoot = agentDir()): number {
-  const scopeDir = join(agentRoot, "npm", "node_modules", "@ygncode");
+  const scopeDir = join(agentRoot, "npm", "node_modules", "@lemotw");
   let removed = 0;
   try {
     for (const name of readdirSync(scopeDir)) {
@@ -724,7 +724,7 @@ export default function (pi: ExtensionAPI) {
   // registers a title tool or input handler.
 
   // Start pi-web opportunistically when the extension loads so /remote works on a
-  // fresh shell after `pi install npm:@ygncode/pi-web@beta`.
+  // fresh shell after `pi install git:github.com/lemotw/pi-web@lemotw/main`.
   void detectHostPort(pi)
     .then((detected) => {
       if (!detected) return;
@@ -896,7 +896,7 @@ export default function (pi: ExtensionAPI) {
               : "Updating pi-web package...",
             "info",
           );
-          await pi.exec("pi", ["install", "npm:@ygncode/pi-web@beta"]);
+          await pi.exec("pi", ["install", "git:github.com/lemotw/pi-web@lemotw/main"]);
           try {
             await restartPiWeb(pi);
           } catch {
@@ -910,7 +910,7 @@ export default function (pi: ExtensionAPI) {
           return;
         } catch (err) {
           ctx.ui.notify(
-            `Failed to update pi-web: ${err}\nTry: rm -rf ~/.pi/agent/npm/node_modules/@ygncode/.pi-web-* && pi install npm:@ygncode/pi-web@beta`,
+            `Failed to update pi-web: ${err}\nTry: pi install git:github.com/lemotw/pi-web@lemotw/main`,
             "error",
           );
         }

@@ -43,7 +43,7 @@ Drive your [pi](https://pi.dev) coding agent from any browser on your network �
 ## Install
 
 ```bash
-pi install npm:@ygncode/pi-web@beta
+pi install git:github.com/lemotw/pi-web@lemotw/main
 ```
 
 That's it — it downloads the matching binary, sets up auto‑start, and registers the `/web`, `/remote`, and `/refresh` commands.
@@ -54,7 +54,7 @@ For manual installs, binary downloads, or building from source, see [user-docs/i
 
 ## Pi Integration
 
-After `pi install npm:@ygncode/pi-web@beta`, you get:
+After `pi install git:github.com/lemotw/pi-web@lemotw/main`, you get:
 
 | Command | What it does |
 |---------|--------------|
@@ -72,7 +72,7 @@ The package also installs the pi-web binary to `~/.pi/agent/bin/pi-web` and sets
 
 ## Auto-Start on Login
 
-The `pi install npm:@ygncode/pi-web@beta` command sets this up automatically:
+The `pi install git:github.com/lemotw/pi-web@lemotw/main` command sets this up automatically:
 
 | OS | Mechanism |
 |----|-----------|

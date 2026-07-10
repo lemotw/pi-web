@@ -1,8 +1,8 @@
 // Package updater checks whether a newer pi-web release is available. It
-// compares the build-time version against the npm registry's published
-// version (the install channel) and fetches the matching changelog from the
-// GitHub Releases API. Results are cached in memory and refreshed by a
-// background poll; callers can also force an immediate check.
+// compares the build-time version against this fork's GitHub Releases and
+// fetches the matching changelog from the GitHub Releases API. Results are
+// cached in memory and refreshed by a background poll; callers can also force
+// an immediate check.
 package updater
 
 import (
@@ -20,10 +20,7 @@ import (
 )
 
 const (
-	defaultNPMURL    = "https://registry.npmjs.org/@ygncode/pi-web"
-	defaultGitHubAPI = "https://api.github.com/repos/ygncode/pi-web"
-	// npmChannel is the dist-tag pi-web installs from (see pi install command).
-	npmChannel = "beta"
+	defaultGitHubAPI = "https://api.github.com/repos/lemotw/pi-web"
 	// PollInterval is how often the background goroutine refreshes the cache.
 	PollInterval = 6 * time.Hour
 	httpTimeout  = 10 * time.Second
@@ -49,7 +46,6 @@ var devVersionRe = regexp.MustCompile(`-\d+-g[0-9a-f]{7,}|-dirty$`)
 // check. It is safe for concurrent use.
 type Checker struct {
 	current   string
-	npmURL    string
 	githubAPI string
 	client    *http.Client
 
@@ -68,7 +64,6 @@ func New(version string) *Checker {
 	}
 	return &Checker{
 		current:   version,
-		npmURL:    defaultNPMURL,
 		githubAPI: defaultGitHubAPI,
 		client:    &http.Client{Timeout: httpTimeout},
 	}
@@ -162,26 +157,32 @@ func (c *Checker) Start(ctx context.Context) {
 	}
 }
 
-// fetchLatestVersion reads the published version for the install channel from
-// the npm registry packument (dist-tags), falling back to "latest".
+// fetchLatestVersion reads the newest semver-like tag from this fork's GitHub
+// Releases. GitHub's /latest endpoint ignores prereleases, so we inspect the
+// release list and pick the highest semver tag ourselves.
 func (c *Checker) fetchLatestVersion(ctx context.Context) (string, error) {
-	body, err := c.get(ctx, c.npmURL, "")
+	body, err := c.get(ctx, c.githubAPI+"/releases?per_page=100", githubToken())
 	if err != nil {
 		return "", err
 	}
-	var doc struct {
-		DistTags map[string]string `json:"dist-tags"`
+	var releases []githubRelease
+	if err := json.Unmarshal(body, &releases); err != nil {
+		return "", fmt.Errorf("parse GitHub releases: %w", err)
 	}
-	if err := json.Unmarshal(body, &doc); err != nil {
-		return "", fmt.Errorf("parse npm packument: %w", err)
+	latest := ""
+	for _, rel := range releases {
+		tag := strings.TrimSpace(rel.TagName)
+		if tag == "" {
+			continue
+		}
+		if latest == "" || compareSemver(tag, latest) > 0 {
+			latest = tag
+		}
 	}
-	if v := doc.DistTags[npmChannel]; v != "" {
-		return v, nil
+	if latest != "" {
+		return latest, nil
 	}
-	if v := doc.DistTags["latest"]; v != "" {
-		return v, nil
-	}
-	return "", fmt.Errorf("no published version found for @ygncode/pi-web")
+	return "", fmt.Errorf("no GitHub releases found for lemotw/pi-web")
 }
 
 // fetchChangelog tries the version-specific GitHub release first, then the
@@ -199,6 +200,7 @@ func (c *Checker) fetchChangelog(ctx context.Context, version string) (body, url
 }
 
 type githubRelease struct {
+	TagName string `json:"tag_name"`
 	Body    string `json:"body"`
 	HTMLURL string `json:"html_url"`
 }

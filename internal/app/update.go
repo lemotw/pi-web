@@ -10,9 +10,10 @@ import (
 	"time"
 )
 
-// installChannel matches the dist-tag pi-web is published under and the
-// updater queries (see internal/updater).
-const installPackage = "npm:@ygncode/pi-web@beta"
+// installPackage points at this fork's distribution branch. The updater checks
+// GitHub Releases from lemotw/pi-web and this command reconciles the installed
+// pi package to the same fork.
+const installPackage = "git:github.com/lemotw/pi-web@lemotw/main"
 
 // inPlaceUpdateEnv signals install.sh (the package postinstall) that pi-web is
 // updating itself in place. install.sh then skips the service stop/restart:
@@ -41,7 +42,7 @@ func cleanupStaleNPMTemps() {
 		agentRoot = filepath.Join(home, ".pi", "agent")
 	}
 
-	pattern := filepath.Join(agentRoot, "npm", "node_modules", "@ygncode", ".pi-web-*")
+	pattern := filepath.Join(agentRoot, "npm", "node_modules", "@lemotw", ".pi-web-*")
 	matches, err := filepath.Glob(pattern)
 	if err != nil {
 		return

@@ -156,7 +156,7 @@ describe('normalizeCommandArgs', () => {
 describe('cleanupPiWebNpmTemps', () => {
   it('removes stale pi-web npm temp dirs only', () => {
     const root = `${process.cwd()}/.tmp-test-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    const scope = `${root}/npm/node_modules/@ygncode`;
+    const scope = `${root}/npm/node_modules/@lemotw`;
     const stale = `${scope}/.pi-web-F7YwHA7A`;
     const keep = `${scope}/pi-web`;
     mkdirSync(`${stale}/nested`, { recursive: true });

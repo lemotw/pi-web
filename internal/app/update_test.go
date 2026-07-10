@@ -32,7 +32,7 @@ func TestCleanupStaleNPMTemps(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	scopeDir := filepath.Join(home, ".pi", "agent", "npm", "node_modules", "@ygncode")
+	scopeDir := filepath.Join(home, ".pi", "agent", "npm", "node_modules", "@lemotw")
 	staleDir := filepath.Join(scopeDir, ".pi-web-F7YwHA7A")
 	keepDir := filepath.Join(scopeDir, "pi-web")
 	if err := os.MkdirAll(filepath.Join(staleDir, "nested"), 0o755); err != nil {
