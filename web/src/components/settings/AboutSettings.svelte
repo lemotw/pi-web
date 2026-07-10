@@ -18,6 +18,15 @@
   </div>
   <div class="settings-row">
     <div class="settings-row-label">
+      <span class="name">Build channel</span>
+      <span class="hint">Lemotw fork update-flow test</span>
+    </div>
+    <div class="settings-control">
+      <span class="settings-link">lemotw/main</span>
+    </div>
+  </div>
+  <div class="settings-row">
+    <div class="settings-row-label">
       <span class="name">{t('settings.docs')}</span>
       <span class="hint">{t('settings.docsHint')}</span>
     </div>
