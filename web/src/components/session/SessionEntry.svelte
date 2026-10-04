@@ -22,6 +22,9 @@
   const md = (text) => safeMarkedParse(text, { marked });
 
   const msg = $derived(entry?.type === 'message' ? entry.message : null);
+  const blocks = $derived(
+    typeof msg?.content === 'string' ? [{ type: 'text', text: msg.content }] : msg?.content || [],
+  );
   const userText = $derived.by(() => {
     if (!msg || msg.role !== 'user') return '';
     const c = msg.content;
@@ -70,7 +73,7 @@
 {:else if msg && msg.role === 'assistant'}
   <div class="assistant-message" id={`entry-${entry.id}`}>
     {@render actions(entry.id)}{@render timestamp()}
-    {#each msg.content as block, blockIndex (blockIndex)}
+    {#each blocks as block, blockIndex (blockIndex)}
       {#if block.type === 'text' && block.text.trim()}<div class="assistant-text markdown-content">
           {@html md(block.text)}
         </div>{:else if block.type === 'thinking' && block.thinking.trim()}<div
@@ -80,7 +83,7 @@
           <div class="thinking-collapsed">Thinking ...</div>
         </div>{/if}
     {/each}
-    {#each msg.content as block, toolBlockIndex (toolBlockIndex)}{#if block.type === 'toolCall'}<ToolCall
+    {#each blocks as block, toolBlockIndex (toolBlockIndex)}{#if block.type === 'toolCall'}<ToolCall
           call={block}
           {model}
         />{/if}{/each}
@@ -89,6 +92,19 @@
       </div>{:else if msg.stopReason === 'error'}<div class="error-text">
         Error: {msg.errorMessage || 'Unknown error'}
       </div>{/if}
+  </div>
+{:else if msg?.role === 'toolResult' && !model?.toolCallMap?.has(msg.toolCallId)}
+  <div class="tool-execution {msg.isError ? 'error' : 'success'}" id={`entry-${entry.id}`}>
+    {@render timestamp()}
+    <div class="tool-header"><span class="tool-name">{msg.toolName || 'tool'}</span></div>
+    <div class="tool-header">{t('session.windowOrphanResult')}</div>
+    {#each msg.content || [] as block, index (index)}
+      {#if block.type === 'text'}<ToolOutput text={block.text} maxLines={10} />
+      {:else if block.type === 'image'}<img
+          src={`data:${block.mimeType || 'image/png'};base64,${block.data}`}
+          alt=""
+        />{/if}
+    {/each}
   </div>
 {:else if msg && msg.role === 'bashExecution'}
   <div

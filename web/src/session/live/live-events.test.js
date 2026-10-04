@@ -147,6 +147,30 @@ describe('live events', () => {
     expect(scrollAfterLayout).not.toHaveBeenCalled();
   });
 
+  it('uses the bounded loader and ignores superseded reloads', async () => {
+    const fetchImpl = vi.fn();
+    const onReloaded = vi.fn();
+    const clearChatPreview = vi.fn();
+    const loadSession = vi
+      .fn()
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ entries: [{ id: 'a' }] });
+    const options = {
+      sessionId: 's',
+      fetchImpl,
+      loadSession,
+      onReloaded,
+      clearChatPreview,
+      entryState: { seen: new Set(), liveRendered: new Set() },
+    };
+    await handleSessionReload(options);
+    expect(onReloaded).not.toHaveBeenCalled();
+    expect(clearChatPreview).not.toHaveBeenCalled();
+    await handleSessionReload(options);
+    expect(fetchImpl).not.toHaveBeenCalled();
+    expect(onReloaded).toHaveBeenCalledWith({ entries: [{ id: 'a' }] });
+  });
+
   it('wires event source messages', () => {
     const eventSource = { addEventListener: vi.fn() };
     const onReload = vi.fn();

@@ -14,7 +14,6 @@ import (
 
 	"pi-web/internal/agentdir"
 	"pi-web/internal/sessions"
-	"pi-web/internal/ui"
 )
 
 func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
@@ -65,7 +64,7 @@ func (s *Server) handleSession(w http.ResponseWriter, r *http.Request) {
 	// the client then falls back to fetching (and shows a proper error).
 	bootstrap := ""
 	if id := r.URL.Query().Get("id"); id != "" {
-		bootstrap = s.sessionBootstrap(id)
+		bootstrap = s.sessionBootstrap(id, r)
 	}
 	s.handleAppShell(w, r, bootstrap)
 }
@@ -257,34 +256,16 @@ func (s *Server) handleApiSession(w http.ResponseWriter, r *http.Request) {
 			if f > total {
 				f = total
 			}
-			end := f + c
-			if end > total {
-				end = total
-			}
+			end := f + min(c, total-f)
 			entries = entries[f:end]
 			from = f
 		}
 	} else if q.Get("paginate") == "1" {
-		entries, total, from = paginatedEntries(resolved.Session.Entries)
+		writeJSON(w, 0, sessionWindowResponse(resolved.Session, r))
+		return
 	}
 
 	writeJSON(w, 0, sessionResponseMap(resolved.Session, entries, total, from))
-}
-
-// paginatedEntries returns the tail window embedded on the initial session load
-// for huge sessions (mirrors the ?paginate=1 API path). `total` is always the
-// full count; `from` is the index the returned window starts at.
-func paginatedEntries(entries []map[string]any) (out []map[string]any, total, from int) {
-	total = len(entries)
-	out = entries
-	if total > ui.LargeSessionThreshold {
-		from = total - ui.LargeSessionTailEntries
-		if from < 0 {
-			from = 0
-		}
-		out = entries[from:]
-	}
-	return out, total, from
 }
 
 // sessionResponseMap is the JSON shape the SPA consumes for a session, shared by
@@ -307,7 +288,7 @@ func sessionResponseMap(session sessions.Session, entries []map[string]any, tota
 // so the SPA can render its first paint without round-trips to /api/session and
 // /api/scratchpad. Returns "" when the id can't be resolved — the client then
 // falls back to fetching, which surfaces a proper 404/error state.
-func (s *Server) sessionBootstrap(id string) string {
+func (s *Server) sessionBootstrap(id string, r *http.Request) string {
 	if s.cache == nil {
 		return ""
 	}
@@ -315,8 +296,7 @@ func (s *Server) sessionBootstrap(id string) string {
 	if err != nil {
 		return ""
 	}
-	entries, total, from := paginatedEntries(resolved.Session.Entries)
-	data := sessionResponseMap(resolved.Session, entries, total, from)
+	data := sessionWindowResponse(resolved.Session, r)
 
 	scratchpad := ""
 	if cwd, _ := resolved.Session.Header["cwd"].(string); cwd != "" {

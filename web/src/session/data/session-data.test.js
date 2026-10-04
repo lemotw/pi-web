@@ -50,7 +50,7 @@ describe('session data helpers', () => {
 
   it('prefers deep linked leaf id over default leaf id', () => {
     const model = createSessionDataModel(
-      { leafId: 'default', entries: [] },
+      { leafId: 'default', entries: [{ id: 'linked' }] },
       new URLSearchParams('leafId=linked&targetId=t1'),
     );
     expect(model.defaultLeafId).toBe('default');

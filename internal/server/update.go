@@ -40,6 +40,10 @@ func (s *Server) handleUpdate(w http.ResponseWriter, r *http.Request) {
 		writeJSONError(w, http.StatusMethodNotAllowed, "method not allowed")
 		return
 	}
+	if s.disableBackgroundJobs {
+		writeJSONError(w, http.StatusServiceUnavailable, "service updates are disabled in development mode")
+		return
+	}
 	if s.runInstall == nil {
 		writeJSONError(w, http.StatusServiceUnavailable, "in-place update is not available")
 		return
@@ -63,6 +67,10 @@ func (s *Server) handleUpdate(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleRestart(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		writeJSONError(w, http.StatusMethodNotAllowed, "method not allowed")
+		return
+	}
+	if s.disableBackgroundJobs {
+		writeJSONError(w, http.StatusServiceUnavailable, "service restarts are disabled in development mode")
 		return
 	}
 	if s.runRestart == nil {

@@ -8,6 +8,7 @@
   import { getLanguageFromPath, str } from '../../session/render/entry-format.js';
   import ToolOutput, { toggleExpanded } from './ToolOutput.svelte';
   import AskQuestion from './AskQuestion.svelte';
+  import { t } from '../../shared/i18n.js';
 
   let { call, model } = $props();
 
@@ -23,7 +24,10 @@
     return null;
   });
   const result = $derived(resultEntry?.message || null);
-  const statusClass = $derived(result ? (result.isError ? 'error' : 'success') : 'pending');
+  const outsideWindow = $derived(!result && model?.from + model?.entries?.length < model?.total);
+  const statusClass = $derived(
+    result ? (result.isError ? 'error' : 'success') : outsideWindow ? 'unloaded' : 'pending',
+  );
   const args = $derived(call.arguments || {});
 
   const resultText = $derived(
@@ -142,7 +146,7 @@
     </div>
     {#if result && resultText.trim()}<ToolOutput text={resultText.trim()} maxLines={20} />{/if}
   {:else if call.name === 'ask_user_question' || call.name === 'pi_web_ask_user_question' || call.name === 'ask_question'}
-    <AskQuestion {args} {result} />
+    {#if !outsideWindow}<AskQuestion {args} {result} />{/if}
   {:else if rendered && (rendered.callHtml || rendered.resultHtmlCollapsed || rendered.resultHtmlExpanded)}
     {#if rendered.callHtml}<div class="tool-header ansi-rendered">
         {@html rendered.callHtml}
@@ -164,4 +168,5 @@
     <div class="tool-output"><pre>{JSON.stringify(args, null, 2)}</pre></div>
     {#if result && resultText}<ToolOutput text={resultText} maxLines={10} />{/if}
   {/if}
+  {#if outsideWindow}<div class="tool-header">{t('session.windowUnloadedResult')}</div>{/if}
 </div>

@@ -115,6 +115,8 @@ jobs:
 
   npm:
     name: Publish npm package
+    # Fork tags may produce binaries, but must not publish the upstream package.
+    if: github.repository == 'ygncode/pi-web'
     needs: release
     runs-on: ubuntu-latest
     permissions:

@@ -15,7 +15,6 @@
   import BtwPopup from './BtwPopup.svelte';
   import LabelModal from './LabelModal.svelte';
   import DiffModal from './DiffModal.svelte';
-  import LoadEarlier from './LoadEarlier.svelte';
   import SessionTree from './SessionTree.svelte';
   import ShareDialog from './ShareDialog.svelte';
   import ProjectsModal from '../index/ProjectsModal.svelte';
@@ -201,7 +200,15 @@
   });
 </script>
 
-<SessionHeader {title} {cwd} {sessionId} {sessionUUID} />
+<SessionHeader
+  {title}
+  {cwd}
+  {sessionId}
+  {sessionUUID}
+  model={sessionModel}
+  loadWindow={runtime.loadWindow}
+  navigateTo={runtime.navigateTo}
+/>
 
 <CommandMenu {sessionId} {runningSessionIds} />
 
@@ -215,7 +222,6 @@
   <div id="content-container" class="content-container">
     <main id="content">
       <div id="header-container"><SessionInfoHeader model={sessionModel} /></div>
-      <LoadEarlier model={sessionModel} {sessionId} navigateTo={runtime.navigateTo} />
       <div id="messages">
         <SessionContent model={sessionModel} afterRender={contentRuntime.afterRender} live />
       </div>

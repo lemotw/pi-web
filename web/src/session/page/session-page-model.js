@@ -1,6 +1,7 @@
 import { createSessionDataModel, decodeBase64JSON } from '../data/session-data.js';
 import { createSessionNavigator } from '../navigation/session-navigation.js';
 import { setSessionRuntime } from '../session-runtime-context.js';
+import { createSessionWindowLoader } from '../session-window.js';
 
 export function hydrateSessionModel({
   sessionModel,
@@ -20,6 +21,8 @@ export function hydrateSessionModel({
 export function createLiveSessionRuntime({
   sessionModel,
   contentRuntime,
+  sessionId,
+  fetchImpl = fetch,
   documentImpl = document,
 } = {}) {
   const navigator = createSessionNavigator({
@@ -35,6 +38,7 @@ export function createLiveSessionRuntime({
     navigator,
     navigateTo: navigator.navigateTo,
     reconcileEntries: (entries) => sessionModel.reconcile(entries),
+    loadWindow: createSessionWindowLoader({ model: sessionModel, sessionId, fetchImpl }),
     contentRuntime,
   });
 }

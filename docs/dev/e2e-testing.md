@@ -8,6 +8,10 @@ and chat — across desktop, mobile, and iPad viewports.
 It is intentionally **not** part of `make test` / `make check`: it needs browser
 binaries and a running server, so it runs as its own target and CI job.
 
+`tests/session-tool-filter.spec.ts` covers main-pane tool removal (not merely
+CSS hiding), retained assistant text, saved display preferences, per-tool
+selection, and filtering of new entries delivered through SSE.
+
 ## Quick start
 
 ```bash
@@ -166,3 +170,12 @@ The `e2e` job in `.github/workflows/ci.yml`: `npm ci` →
    `e2e/lib/sessions.ts`; never mutate the committed fixtures.
 
 Keep this doc in sync when specs, fixtures, or the project matrix change.
+
+`tests/session-record-window.spec.ts` creates a long synthetic session and checks
+50/100-record limits, previous/latest navigation, cookie persistence on refresh,
+and bounded SSE reload while a historical page remains selected. Window/filter
+tests open the fixed-header **Reading settings** dialog before using its controls.
+`tests/reading-settings.spec.ts` also checks the desktop panel/mobile bottom-sheet
+geometry, keyboard focus containment, Escape/backdrop/Close dismissal, focus
+restoration, and persistence after closing the panel and refreshing. It saves
+synthetic-session screenshots in the Playwright test output directory.

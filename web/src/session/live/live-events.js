@@ -9,6 +9,7 @@ export function createSessionEventSource(sessionId, { EventSourceImpl = EventSou
 export async function handleSessionReload({
   sessionId,
   fetchImpl = fetch,
+  loadSession = null,
   entryState,
   clearChatPreview = () => {},
   appendEntry,
@@ -24,8 +25,15 @@ export async function handleSessionReload({
   onReloaded = () => {},
   onNewEntries = null,
 } = {}) {
-  const response = await fetchImpl('/api/session?id=' + encodeURIComponent(sessionId));
-  const data = await response.json();
+  let data;
+  if (loadSession) {
+    data = await loadSession();
+    if (!data) return { entries: [], newCount: 0 };
+  } else {
+    const response = await fetchImpl('/api/session?id=' + encodeURIComponent(sessionId));
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    data = await response.json();
+  }
   const entries = data.entries || [];
   onReloaded({ ...data, entries });
   if (typeof data.name === 'string' && data.name.trim()) {

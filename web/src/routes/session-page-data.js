@@ -1,6 +1,11 @@
 import { decodeBase64JSON } from '../session/data/session-data.js';
 import { t } from '../shared/i18n.js';
 import { consumeSessionPrefetch } from './session-prefetch.js';
+import {
+  readSessionWindowSize,
+  sessionWindowSize,
+  sessionWindowUrl,
+} from '../session/session-window.js';
 
 // The session route's HTML shell embeds the session payload (and scratchpad) in
 // a <script id="pi-session-bootstrap"> so the first paint needs no round-trip to
@@ -110,6 +115,8 @@ export function buildSessionPageState({
         total,
         from,
         truncated: entries.length < total,
+        windowSize: data?.windowSize ?? 100,
+        windowEnd: data?.windowEnd ?? null,
       },
       { btoaImpl, TextEncoderImpl },
     ),
@@ -129,9 +136,12 @@ export async function loadSessionPageState({
   const sessionId = params.get('id') || '';
   if (!sessionId) throw new Error(t('session.missingId'));
 
-  // Prefer the payload embedded in the page shell — no fetch on first paint.
+  const limit = sessionWindowSize(params.get('limit') ?? readSessionWindowSize(documentImpl));
+  const targetId = params.get('targetId');
+  const leafId = params.get('leafId');
+  // Prefer the bounded payload embedded in the page shell.
   const boot = readSessionBootstrap({ documentImpl, atobImpl, TextDecoderImpl });
-  if (boot && boot.id === sessionId && boot.data) {
+  if (boot && boot.id === sessionId && boot.data && (boot.data.windowSize ?? 100) === limit) {
     return buildSessionPageState({
       sessionId,
       data: boot.data,
@@ -149,12 +159,13 @@ export async function loadSessionPageState({
   if (prefetched) {
     try {
       data = await prefetched;
+      if (targetId || leafId || (data?.windowSize ?? 100) !== limit) data = null;
     } catch {
       data = null;
     }
   }
   if (!data) {
-    const resp = await fetchImpl(`/api/session?id=${encodeURIComponent(sessionId)}&paginate=1`, {
+    const resp = await fetchImpl(sessionWindowUrl(sessionId, { limit, targetId, leafId }), {
       headers: { Accept: 'application/json' },
     });
     if (!resp.ok)

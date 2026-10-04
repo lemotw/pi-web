@@ -86,7 +86,7 @@ describe('session-page-data', () => {
 
     expect(state.title).toBe('Loaded');
     expect(state.scratchpad).toBe('');
-    expect(seen).toEqual(['/api/session?id=s.jsonl&paginate=1']);
+    expect(seen).toEqual(['/api/session?id=s.jsonl&paginate=1&limit=100']);
   });
 
   it('uses the embedded bootstrap payload without fetching', async () => {
@@ -146,7 +146,7 @@ describe('session-page-data', () => {
 
     expect(state.title).toBe('Prefetched');
     // Only one /api/session call total, the one started by prefetchSession.
-    expect(calls).toEqual(['/api/session?id=s.jsonl&paginate=1']);
+    expect(calls).toEqual(['/api/session?id=s.jsonl&paginate=1&limit=100']);
   });
 
   it('falls back to a fresh fetch when the prefetch rejects', async () => {
@@ -169,6 +169,18 @@ describe('session-page-data', () => {
 
     expect(state.title).toBe('Recovered');
     expect(attempt).toBe(2);
+  });
+
+  it('bypasses a tail prefetch for a deep link and requests only its window', async () => {
+    const calls = [];
+    const fetchImpl = async (url) => {
+      calls.push(url);
+      return { ok: true, json: async () => ({ entries: [], windowSize: 50 }) };
+    };
+    prefetchSession('s', { fetchImpl });
+    await loadSessionPageState({ locationSearch: '?id=s&limit=50&targetId=old', fetchImpl });
+    expect(calls.at(-1)).toBe('/api/session?id=s&paginate=1&limit=50&targetId=old');
+    expect(calls).toHaveLength(2);
   });
 
   it('falls back to fetch when the bootstrap is for a different session', async () => {

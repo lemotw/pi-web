@@ -18,12 +18,14 @@
   import { resetSessionRuntime } from '../session/session-runtime.js';
   import { resetSessionRuntimeContext } from '../session/session-runtime-context.js';
   import { t } from '../shared/i18n.js';
+  import { readContentFilter } from '../session/content-filter-preferences.js';
 
   // The reactive session model (docs/dev/svelte-migration-plan.md): created once
   // and provided via context so descendant components read from it. Hydrated
   // from the session payload below; the live runtime (startSessionPageRuntime in
   // onMount) mutates it on reload.
   const sessionModel = setSessionModel(new SessionDataModel());
+  sessionModel.contentFilter = readContentFilter();
 
   // Post-render hook for the message pane: <SessionContent> renders
   // model.activePath as <SessionEntry> components and runs afterRender after each
@@ -85,7 +87,12 @@
           locationSearch: window.location.search,
           windowImpl: window,
         });
-        createLiveSessionRuntime({ sessionModel, contentRuntime, documentImpl: document });
+        createLiveSessionRuntime({
+          sessionModel,
+          contentRuntime,
+          sessionId,
+          documentImpl: document,
+        });
         loading = false;
         clearTimeout(loadingTimer);
         await tick();

@@ -54,6 +54,10 @@ export class SessionDataModel {
   total = $state(0);
   from = $state(0);
   truncated = $state(false);
+  windowSize = $state(100);
+  windowEnd = $state(null);
+  windowBusy = $state(false);
+  windowError = $state('');
 
   // Stable, in-place-mutated reactive lookup Maps (see header comment).
   // SvelteMap makes .set/.clear reactive while keeping a stable object identity.
@@ -66,6 +70,7 @@ export class SessionDataModel {
   currentTargetId = $state('');
   filterMode = $state('default');
   searchQuery = $state('');
+  contentFilter = $state({ mode: 'all', hiddenTools: [], showThinking: true });
 
   // ── derived tree (recompute on entries / labelMap / view changes) ────────
   tree = $derived(buildTree(this.entries, this.labelMap));
@@ -109,6 +114,8 @@ export class SessionDataModel {
       total: payload?.total,
       from: payload?.from,
       truncated: payload?.truncated,
+      windowSize: payload?.windowSize,
+      windowEnd: payload?.windowEnd,
     });
   }
 
@@ -133,6 +140,8 @@ export class SessionDataModel {
     this.total = Number.isInteger(data.total) ? data.total : this.entries.length;
     this.from = Number.isInteger(data.from) ? data.from : 0;
     this.truncated = Boolean(data.truncated) || this.from > 0 || this.entries.length < this.total;
+    this.windowSize = data.windowSize ?? 100;
+    this.windowEnd = data.windowEnd ?? null;
     this.urlLeafId = data.urlLeafId ?? null;
     this.urlTargetId = data.urlTargetId ?? null;
 
@@ -151,6 +160,16 @@ export class SessionDataModel {
     } else if (this.currentLeafId && !this.byId.has(this.currentLeafId)) {
       this.currentLeafId = this.leafId || this.currentLeafId;
     }
+  }
+
+  reconcileWindow(data) {
+    this.reconcile(data.entries);
+    this.total = data.total;
+    this.from = data.from;
+    this.truncated = this.entries.length < this.total;
+    this.windowSize = data.windowSize;
+    this.windowEnd = data.windowEnd ?? null;
+    if (!this.byId.has(this.currentTargetId)) this.currentTargetId = this.currentLeafId;
   }
 
   // Move the active leaf/target (target defaults to the leaf).

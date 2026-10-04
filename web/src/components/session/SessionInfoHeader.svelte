@@ -11,6 +11,7 @@
   } from '../../session/render/session-stats.js';
   import { icon, Download } from '../../shared/icons.js';
   import { SvelteSet } from 'svelte/reactivity';
+  import { t } from '../../shared/i18n.js';
 
   let { model = getSessionModel() } = $props();
 
@@ -98,6 +99,7 @@
       >
     </div>
   </div>
+  {#if model.truncated}<p class="help-hint">{t('session.windowStatsHint')}</p>{/if}
   <div class="header-info">
     <div class="info-item">
       <span class="info-label">Date:</span><span class="info-value">{dateText}</span>

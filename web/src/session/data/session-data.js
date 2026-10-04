@@ -83,7 +83,7 @@ export function createSessionDataModel(payload, params = new URLSearchParams()) 
     header,
     entries,
     defaultLeafId,
-    leafId: urlLeafId || defaultLeafId,
+    leafId: entries.some((entry) => entry.id === urlLeafId) ? urlLeafId : defaultLeafId,
     urlLeafId,
     urlTargetId,
     systemPrompt: payload?.systemPrompt ?? null,
@@ -92,6 +92,8 @@ export function createSessionDataModel(payload, params = new URLSearchParams()) 
     total,
     from,
     truncated,
+    windowSize: payload?.windowSize ?? 100,
+    windowEnd: payload?.windowEnd ?? null,
     ...buildSessionLookups(entries),
   };
 }
