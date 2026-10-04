@@ -150,8 +150,10 @@ runtime lock and state file. Regular installed and manually launched instances
 are unchanged and retain the original single-instance behavior.
 
 To prevent duplicate autonomous work, development mode does not run the
-schedule loop, chat-queue drainer, auto-titling, or push notifications. Direct
-requests made through the development UI still work. Do not drive the same
+schedule loop, chat-queue drainer, auto-titling, or push notifications. The
+in-app service update and restart endpoints are disabled too, so the test UI
+cannot replace or restart the installed service. Other direct requests made
+through the development UI still work. Do not drive the same
 chat session from both instances at once; each process has its own RPC worker
 manager.
 

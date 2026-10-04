@@ -92,6 +92,35 @@ func TestHandleUpdateUnavailableWhenNoInstaller(t *testing.T) {
 	}
 }
 
+func TestDevelopmentModeCannotUpdateOrRestartInstalledService(t *testing.T) {
+	calls := make(chan string, 2)
+	s := &Server{
+		disableBackgroundJobs: true,
+		runInstall:            func(context.Context) error { calls <- "install"; return nil },
+		runRestart:            func() error { calls <- "restart"; return nil },
+	}
+	for _, tt := range []struct {
+		path    string
+		handler http.HandlerFunc
+	}{
+		{"/api/update", s.handleUpdate},
+		{"/api/restart", s.handleRestart},
+	} {
+		t.Run(tt.path, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			tt.handler(w, httptest.NewRequest(http.MethodPost, tt.path, nil))
+			if w.Code != http.StatusServiceUnavailable {
+				t.Fatalf("status=%d body=%s", w.Code, w.Body.String())
+			}
+		})
+	}
+	select {
+	case action := <-calls:
+		t.Fatalf("development server invoked %s", action)
+	case <-time.After(400 * time.Millisecond):
+	}
+}
+
 func TestHandleRestartInvokesRunRestart(t *testing.T) {
 	done := make(chan struct{})
 	s := &Server{
