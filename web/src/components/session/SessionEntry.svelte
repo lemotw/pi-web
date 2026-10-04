@@ -22,6 +22,9 @@
   const md = (text) => safeMarkedParse(text, { marked });
 
   const msg = $derived(entry?.type === 'message' ? entry.message : null);
+  const blocks = $derived(
+    typeof msg?.content === 'string' ? [{ type: 'text', text: msg.content }] : msg?.content || [],
+  );
   const userText = $derived.by(() => {
     if (!msg || msg.role !== 'user') return '';
     const c = msg.content;
@@ -70,7 +73,7 @@
 {:else if msg && msg.role === 'assistant'}
   <div class="assistant-message" id={`entry-${entry.id}`}>
     {@render actions(entry.id)}{@render timestamp()}
-    {#each msg.content as block, blockIndex (blockIndex)}
+    {#each blocks as block, blockIndex (blockIndex)}
       {#if block.type === 'text' && block.text.trim()}<div class="assistant-text markdown-content">
           {@html md(block.text)}
         </div>{:else if block.type === 'thinking' && block.thinking.trim()}<div
@@ -80,7 +83,7 @@
           <div class="thinking-collapsed">Thinking ...</div>
         </div>{/if}
     {/each}
-    {#each msg.content as block, toolBlockIndex (toolBlockIndex)}{#if block.type === 'toolCall'}<ToolCall
+    {#each blocks as block, toolBlockIndex (toolBlockIndex)}{#if block.type === 'toolCall'}<ToolCall
           call={block}
           {model}
         />{/if}{/each}

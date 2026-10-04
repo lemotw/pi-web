@@ -114,6 +114,34 @@ The session route listens to `/events?id=<sessionId>` via `web/src/session/live/
 
 The index route listens to `/events?id=__all__` for `new-session`, `status-snapshot`, and `status-delta`.
 
+## Message Display Filters
+
+The live message pane has an independent **Message display** control:
+All content, Conversation only, or Custom tools. Conversation only removes tool
+calls/results and initially excludes thinking; the Include thinking checkbox
+can be changed independently. Custom tools discovers names from loaded records
+and lets the user exclude specific tools, including direct bash executions.
+New tool names remain visible unless explicitly excluded. Preferences persist
+in browser localStorage (`pi-web:session-content-filter`) across sessions.
+
+`session/content-filter.js` indexes tool calls/results and returns view-only
+entry copies before `SessionEntry` mounts. Hidden tool components and output
+markup are not constructed; canonical entries, branch navigation, statistics,
+agent execution/context, and static export are unchanged. Assistant messages
+with both text and tool calls retain their text; empty filtered wrappers are
+omitted. Assistant error/abort states and interactive question cards remain
+visible, including tools that already returned `awaitingChatReply`. The legacy
+Tools toggle also leaves interactive question buttons accessible. Selecting a
+visible-tool filter restores collapsed tools; Include thinking restores expanded
+thinking when explicitly enabled. Stream previews contain text only and remain
+visible; subsequent canonical entries use the same active filter.
+
+The controls and preference storage are live-only (`MessageFilters.svelte` and
+`content-filter-preferences.js`). The shared message renderer uses pure filtering
+helpers only and applies them only when `live` is true. The outline's existing
+filters remain separate. Filtering reduces rendering work, not API payload size;
+record windowing is a separate feature.
+
 ## Shared Frontend Modules
 
 - `web/src/shared/api.js` — JSON fetch helpers

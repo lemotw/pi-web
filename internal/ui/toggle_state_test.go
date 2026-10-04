@@ -57,7 +57,8 @@ func TestToolsVisibilityAndOutputExpansionAreSeparateStates(t *testing.T) {
 	src := readSrc(t, "web/src/session/ui/toggle-state.js")
 	checks := []string{
 		"node.querySelectorAll('.tool-execution, .compaction').forEach((el) => {",
-		"el.style.display = state.toolsVisible ? '' : 'none';",
+		"const needsAnswer = !!el.querySelector('.ask-question-option-action');",
+		"el.style.display = state.toolsVisible || needsAnswer ? '' : 'none';",
 		"node.querySelectorAll('.tool-output.expandable').forEach((el) => {",
 		"el.classList.toggle('expanded', state.toolOutputsExpanded);",
 		"toggleToolsVisibility: () => toggle('toolsVisible'),",
@@ -128,7 +129,7 @@ func TestLiveReloadRendererUsesToggleableThinkingAndToolMarkup(t *testing.T) {
 	entrySrc := readSrc(t, "web/src/components/session/SessionEntry.svelte")
 	outputSrc := readSrc(t, "web/src/components/session/ToolOutput.svelte")
 	srcChecks := map[string][]string{
-		entrySrc: {`thinking-block`, `Thinking ...`},
+		entrySrc:  {`thinking-block`, `Thinking ...`},
 		outputSrc: {`tool-output expandable`, `output-preview`, `output-full`},
 	}
 	for src, checks := range srcChecks {
