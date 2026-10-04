@@ -47,7 +47,7 @@ describe('message display filters', () => {
   it('removes tool DOM and thinking, preserves text, and remembers the preference', async () => {
     const { container, model } = setup();
     expect(container.querySelectorAll('.tool-execution')).toHaveLength(2);
-    await fireEvent.change(screen.getByLabelText('Message display'), { target: { value: 'text' } });
+    await fireEvent.click(screen.getByRole('button', { name: 'Compact', exact: true }));
     await waitFor(() => expect(container.querySelectorAll('.tool-execution')).toHaveLength(0));
     expect(container.querySelector('.thinking-block')).toBeNull();
     expect(container).not.toHaveTextContent('LARGE_OUTPUT_MARKER');
@@ -60,9 +60,7 @@ describe('message display filters', () => {
 
   it('hides selected tool calls and their outputs and applies to later live entries', async () => {
     const { container, model } = setup();
-    await fireEvent.change(screen.getByLabelText('Message display'), {
-      target: { value: 'custom' },
-    });
+    await fireEvent.click(screen.getByRole('button', { name: 'Custom', exact: true }));
     await fireEvent.click(screen.getByRole('checkbox', { name: 'read' }));
     expect(container.querySelectorAll('.tool-execution')).toHaveLength(1);
     expect(container).not.toHaveTextContent('LARGE_OUTPUT_MARKER');
@@ -105,14 +103,14 @@ describe('message display filters', () => {
       },
     };
     model.reconcile([...model.entries, question, pending]);
-    await fireEvent.change(screen.getByLabelText('Message display'), { target: { value: 'text' } });
+    await fireEvent.click(screen.getByRole('button', { name: 'Compact', exact: true }));
     expect(container.querySelector('.ask-question-option-action')).not.toBeNull();
     expect(screen.getByRole('button', { name: 'Yes' })).toBeInTheDocument();
   });
 
   it('does not apply live display preferences to static exports', async () => {
     const { container } = setup(false);
-    await fireEvent.change(screen.getByLabelText('Message display'), { target: { value: 'text' } });
+    await fireEvent.click(screen.getByRole('button', { name: 'Compact', exact: true }));
     expect(container.querySelectorAll('.tool-execution')).toHaveLength(2);
     expect(container.querySelector('.thinking-block')).not.toBeNull();
   });

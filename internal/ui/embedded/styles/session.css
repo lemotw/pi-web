@@ -6763,3 +6763,431 @@
       font-size: 12px;
       color: var(--text-soft, var(--muted));
     }
+
+
+    /* Header reading settings: desktop popover and mobile bottom sheet. */
+
+  .reading-settings-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 32px;
+    padding: 0 9px;
+    margin-right: 4px;
+    border: 1px solid var(--dim);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-soft);
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .reading-settings-trigger:hover,
+  .reading-settings-trigger[aria-expanded='true'] {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  }
+  .reading-settings-trigger.has-error {
+    border-color: var(--danger);
+  }
+  .reading-settings-trigger .reading-summary {
+    font-variant-numeric: tabular-nums;
+  }
+  .reading-settings-dialog {
+    --reading-top: 60px;
+    --reading-right: 12px;
+    --reading-padding: 18px;
+    --reading-gap: 16px;
+    --reading-radius: 12px;
+    position: fixed;
+    inset: var(--reading-top) var(--reading-right) auto auto;
+    margin: 0;
+    padding: 0;
+    width: min(360px, calc(100vw - 24px));
+    max-width: none;
+    max-height: calc(100dvh - var(--reading-top) - 12px);
+    border: 1px solid var(--dim);
+    border-radius: var(--reading-radius);
+    color: var(--text);
+    background: var(--surface);
+    font: inherit;
+    font-size: 12px;
+    box-shadow: 0 18px 60px color-mix(in srgb, var(--body-bg) 65%, transparent);
+    overflow: hidden;
+    -webkit-app-region: no-drag;
+    app-region: no-drag;
+  }
+  .reading-settings-dialog[open] {
+    display: flex;
+    flex-direction: column;
+  }
+  .reading-settings-dialog::backdrop {
+    background: color-mix(in srgb, var(--body-bg) 14%, transparent);
+  }
+  .reading-settings-dialog .reading-heading {
+    flex-shrink: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--reading-gap);
+    padding: var(--reading-padding);
+    border-bottom: 1px solid var(--dim);
+  }
+  .reading-settings-dialog h2,
+  .reading-settings-dialog h3,
+  .reading-settings-dialog p {
+    margin: 0;
+  }
+  .reading-settings-dialog h2 {
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .reading-settings-dialog .reading-heading p {
+    margin-top: 5px;
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+  .reading-settings-dialog h3 {
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 10px;
+  }
+  .reading-settings-dialog .close-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    flex-shrink: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .reading-settings-dialog .close-button:hover {
+    color: var(--text);
+    background: var(--surface-2);
+  }
+  .reading-settings-dialog .reading-body {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    min-height: 0;
+  }
+  .reading-settings-dialog .window-size,
+  .reading-settings-dialog .window-navigation {
+    padding: var(--reading-padding);
+  }
+  .reading-settings-dialog .size-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    padding: 4px;
+    border: 1px solid var(--dim);
+    border-radius: 8px;
+    background: var(--body-bg);
+  }
+  .reading-settings-dialog .size-options button {
+    min-height: 32px;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    color: var(--text-soft);
+    background: transparent;
+    font: inherit;
+    cursor: pointer;
+  }
+  .reading-settings-dialog .size-options button[aria-pressed='true'] {
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 30%, var(--dim));
+    background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+    font-weight: 600;
+  }
+  .reading-settings-dialog .section-hint {
+    margin-top: 8px;
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+  .reading-settings-dialog .window-navigation {
+    border-top: 1px solid var(--dim);
+  }
+  .reading-settings-dialog .range {
+    display: block;
+    margin-bottom: 10px;
+    color: var(--muted);
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+  }
+  .reading-settings-dialog .page-actions {
+    display: flex;
+    gap: 6px;
+  }
+  .reading-settings-dialog .page-actions button,
+  .reading-settings-dialog .window-error button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 7px 10px;
+    border: 1px solid var(--dim);
+    border-radius: 6px;
+    font: inherit;
+    background: var(--surface-2);
+    color: var(--text-soft);
+    cursor: pointer;
+  }
+  .reading-settings-dialog .page-actions .latest {
+    margin-left: auto;
+  }
+  .reading-settings-dialog button:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+  .reading-settings-trigger:focus-visible,
+  .reading-settings-dialog button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .reading-settings-dialog .window-error {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    color: var(--danger);
+    font-size: 11px;
+  }
+  .reading-settings-dialog footer {
+    flex-shrink: 0;
+    padding: 12px var(--reading-padding);
+    border-top: 1px solid var(--dim);
+    font-size: 10px;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+  .reading-settings-dialog .sheet-handle {
+    display: none;
+  }
+  body.reading-settings-open #content {
+    overflow: hidden;
+  }
+  @media (max-width: 1100px) {
+    .reading-settings-trigger .summary-mode {
+      display: none;
+    }
+  }
+  @media (max-width: 600px) {
+    .reading-settings-trigger .reading-summary { display: none; }
+  }
+  @media (max-width: 360px) {
+    /* Keep all header actions reachable on small phones; retain the back arrow. */
+    .session-header-back { font-size: 0; gap: 0; }
+  }
+  @media (max-width: 900px) {
+    .reading-settings-trigger {
+      padding: 0 7px;
+      height: 34px;
+      gap: 5px;
+    }
+    .reading-settings-dialog {
+      inset: auto 0 0;
+      width: 100%;
+      max-height: min(85dvh, calc(100dvh - env(safe-area-inset-top) - 12px));
+      border-radius: 18px 18px 0 0;
+      border-bottom: 0;
+    }
+    .reading-settings-dialog::backdrop {
+      background: color-mix(in srgb, var(--body-bg) 55%, transparent);
+    }
+    .reading-settings-dialog .sheet-handle {
+      display: block;
+      flex-shrink: 0;
+      width: 32px;
+      height: 4px;
+      margin: 9px auto 0;
+      border-radius: 4px;
+      background: var(--dim);
+    }
+    .reading-settings-dialog .reading-heading {
+      padding-top: 10px;
+    }
+    .reading-settings-dialog .close-button {
+      width: 36px;
+      height: 36px;
+    }
+    .reading-settings-dialog .size-options button,
+    .reading-settings-dialog .page-actions button {
+      min-height: 40px;
+    }
+    .reading-settings-dialog footer {
+      padding-bottom: calc(12px + env(safe-area-inset-bottom));
+    }
+  }
+
+  .reading-settings-dialog .message-filters {
+    padding: 18px;
+    border-top: 1px solid var(--dim);
+    color: var(--text-soft);
+    font-size: 12px;
+  }
+  .reading-settings-dialog h3 {
+    margin: 0 0 10px;
+    font-size: inherit;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .reading-settings-dialog .mode-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    padding: 4px;
+    background: var(--body-bg);
+    border: 1px solid var(--dim);
+    border-radius: 8px;
+  }
+  .reading-settings-dialog .mode-options button {
+    min-height: 32px;
+    padding: 4px;
+    color: var(--text-soft);
+    font: inherit;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    background: transparent;
+    cursor: pointer;
+  }
+  .reading-settings-dialog .mode-options button[aria-pressed='true'] {
+    color: var(--accent);
+    border-color: color-mix(in srgb, var(--accent) 30%, var(--dim));
+    background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+    font-weight: 600;
+  }
+  .reading-settings-dialog .mode-options button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .reading-settings-dialog .tools {
+    margin: 14px 0 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+  }
+  .reading-settings-dialog legend {
+    padding: 0;
+    margin-bottom: 8px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .reading-settings-dialog .tool-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    max-height: 160px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 2px;
+  }
+  .reading-settings-dialog .tool-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    max-width: 100%;
+    padding: 6px 8px;
+    border: 1px solid var(--dim);
+    border-radius: 6px;
+    background: var(--surface-2);
+    cursor: pointer;
+  }
+  .reading-settings-dialog .tool-option span {
+    overflow-wrap: anywhere;
+  }
+  .reading-settings-dialog .tool-option.excluded {
+    color: var(--muted);
+    background: transparent;
+  }
+  .reading-settings-dialog .tool-option input {
+    accent-color: var(--accent);
+    margin: 0;
+    flex-shrink: 0;
+  }
+  .reading-settings-dialog .thinking-option {
+    display: flex;
+    align-items: center;
+    position: relative;
+    gap: 12px;
+    margin-top: 14px;
+    min-height: 32px;
+    cursor: pointer;
+  }
+  .reading-settings-dialog .thinking-option > span:first-child {
+    margin-right: auto;
+  }
+  .reading-settings-dialog .thinking-option input {
+    position: absolute;
+    right: 0;
+    width: 34px;
+    height: 24px;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .reading-settings-dialog .switch-track {
+    width: 32px;
+    height: 18px;
+    border-radius: 18px;
+    border: 1px solid var(--dim);
+    background: var(--dim);
+    pointer-events: none;
+    flex-shrink: 0;
+    transition: background 0.12s;
+  }
+  .reading-settings-dialog .switch-track::after {
+    content: '';
+    display: block;
+    width: 12px;
+    height: 12px;
+    margin: 2px;
+    border-radius: 50%;
+    background: var(--text-soft);
+    transition: transform 0.12s;
+  }
+  .reading-settings-dialog .thinking-option input:checked + .switch-track {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .reading-settings-dialog .thinking-option input:checked + .switch-track::after {
+    transform: translateX(14px);
+    background: var(--body-bg);
+  }
+  .reading-settings-dialog .thinking-option input:focus-visible + .switch-track {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+  .reading-settings-dialog .filter-hint,
+  .reading-settings-dialog .empty-tools {
+    margin: 8px 0 0;
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.5;
+  }
+  @media (max-width: 900px) {
+    .reading-settings-dialog .mode-options button {
+      min-height: 40px;
+    }
+    .reading-settings-dialog .thinking-option {
+      min-height: 40px;
+    }
+    .reading-settings-dialog .tool-option {
+      min-height: 36px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .reading-settings-dialog .switch-track,
+    .reading-settings-dialog .switch-track::after {
+      transition: none;
+    }
+  }

@@ -24,90 +24,56 @@
   }
 </script>
 
-<div class="message-filters" role="group" aria-label={t('session.contentFilterGroup')}>
-  <label>
-    {t('session.contentFilterLabel')}
-    <select
-      aria-label={t('session.contentFilterLabel')}
-      value={model.contentFilter.mode}
-      onchange={(event) => {
-        const mode = event.currentTarget.value;
-        update({
-          mode,
-          showThinking:
-            mode === 'text' ? false : mode === 'all' ? true : model.contentFilter.showThinking,
-        });
-      }}
-    >
-      <option value="all">{t('session.contentFilterAll')}</option>
-      <option value="text">{t('session.contentFilterText')}</option>
-      <option value="custom">{t('session.contentFilterCustom')}</option>
-    </select>
-  </label>
-  <label>
-    <input
-      type="checkbox"
-      checked={model.contentFilter.showThinking}
-      onchange={(event) => update({ showThinking: event.currentTarget.checked })}
-    />
-    {t('session.contentFilterThinking')}
-  </label>
+<section class="message-filters" aria-label={t('session.contentFilterGroup')}>
+  <h3>{t('session.contentFilterLabel')}</h3>
+  <div class="mode-options" role="group" aria-label={t('session.contentFilterLabel')}>
+    {#each ['all', 'text', 'custom'] as mode (mode)}
+      <button
+        type="button"
+        aria-pressed={model.contentFilter.mode === mode}
+        onclick={() =>
+          update({
+            mode,
+            showThinking:
+              mode === 'text' ? false : mode === 'all' ? true : model.contentFilter.showThinking,
+          })}
+      >
+        {t(`session.readingMode.${mode}`)}
+      </button>
+    {/each}
+  </div>
   {#if model.contentFilter.mode === 'custom'}
-    <details open>
-      <summary>{t('session.contentFilterTools')}</summary>
-      <div class="tools">
+    <fieldset class="tools">
+      <legend>{t('session.contentFilterTools')}</legend>
+      <div class="tool-options">
         {#each tools as name (name)}
           <label
-            ><input
+            class="tool-option"
+            class:excluded={model.contentFilter.hiddenTools.includes(name)}
+          >
+            <input
               type="checkbox"
               checked={!model.contentFilter.hiddenTools.includes(name)}
               onchange={(event) => toggleTool(name, event.currentTarget.checked)}
-            />{name}</label
-          >
+            />
+            <span>{name}</span>
+          </label>
         {/each}
-        {#if !tools.length}<span>{t('session.contentFilterNoTools')}</span>{/if}
+        {#if !tools.length}<span class="empty-tools">{t('session.contentFilterNoTools')}</span>{/if}
       </div>
-    </details>
+    </fieldset>
   {/if}
-  {#if model.contentFilter.mode !== 'all'}<small>{t('session.contentFilterHint')}</small>{/if}
-</div>
-
-<style>
-  .message-filters {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.5rem 0;
-    color: var(--text-soft);
-    font-size: 0.8rem;
-  }
-  label {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-  }
-  select {
-    font: inherit;
-    color: var(--text);
-    background: var(--surface-2);
-    border: 1px solid var(--dim);
-    border-radius: 6px;
-    padding: 0.35rem;
-    max-width: 100%;
-  }
-  details,
-  small {
-    flex-basis: 100%;
-  }
-  summary {
-    cursor: pointer;
-  }
-  .tools {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem 1rem;
-    padding: 0.5rem 0;
-    overflow-wrap: anywhere;
-  }
-</style>
+  <label class="thinking-option">
+    <span>{t('session.contentFilterThinking')}</span>
+    <input
+      type="checkbox"
+      role="switch"
+      checked={model.contentFilter.showThinking}
+      onchange={(event) => update({ showThinking: event.currentTarget.checked })}
+    />
+    <span class="switch-track" aria-hidden="true"></span>
+  </label>
+  {#if model.contentFilter.mode !== 'all'}<p class="filter-hint">
+      {t('session.contentFilterHint')}
+    </p>{/if}
+</section>

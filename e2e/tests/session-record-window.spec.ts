@@ -33,24 +33,41 @@ test("record windows stay bounded through paging, refresh, and live reload", asy
   await expect(messages.locator(".assistant-message")).toHaveCount(50);
   await expect(messages).toContainText("WINDOW_RECORD_259");
   await expect(messages).not.toContainText("WINDOW_RECORD_100");
+  await page
+    .getByRole("button", { name: "Reading settings", exact: true })
+    .click();
   await page.getByRole("button", { name: "Earlier", exact: true }).click();
   await expect(messages).toContainText("WINDOW_RECORD_209");
   await expect(messages).not.toContainText("WINDOW_RECORD_259");
 
   const next = assistantTextEntry(lastId, "NEW_WINDOW_RECORD");
   appendEntry(sessionsDir, name, next.entry);
-  await expect(page.locator(".session-window .range")).toContainText("of 266", {
-    timeout: 15000,
-  });
+  await expect(page.locator(".reading-settings-dialog .range")).toContainText(
+    "of 266",
+    {
+      timeout: 15000,
+    },
+  );
   await expect(messages).not.toContainText("NEW_WINDOW_RECORD");
   await page.getByRole("button", { name: "Latest", exact: true }).click();
   await expect(messages).toContainText("NEW_WINDOW_RECORD");
   await expect(messages.locator(".assistant-message")).toHaveCount(50);
 
-  await page.getByLabel("Records per page").selectOption("100");
+  await page
+    .getByRole("group", { name: "Records per page" })
+    .getByRole("button", { name: "100", exact: true })
+    .click();
   await expect(messages.locator(".assistant-message")).toHaveCount(100);
+  await page.getByRole("button", { name: "Close", exact: true }).click();
   await page.reload();
-  await expect(page.getByLabel("Records per page")).toHaveValue("100");
+  await page
+    .getByRole("button", { name: "Reading settings", exact: true })
+    .click();
+  await expect(
+    page
+      .getByRole("group", { name: "Records per page" })
+      .getByRole("button", { name: "100", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
   await expect(messages.locator(".assistant-message")).toHaveCount(100);
   expect(recordResponses.length).toBeGreaterThan(0);
   expect(recordResponses.every((count) => count <= 100)).toBeTruthy();

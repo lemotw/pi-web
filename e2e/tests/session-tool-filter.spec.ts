@@ -55,20 +55,22 @@ test("filters tool DOM without hiding replies and preserves the setting on reloa
   const messages = page.locator("#messages-list");
   await expect(messages.locator(".tool-execution")).toHaveCount(2);
   await page
-    .getByRole("combobox", { name: "Message display" })
-    .selectOption("text");
+    .getByRole("button", { name: "Reading settings", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Compact", exact: true }).click();
   await expect(messages.locator(".tool-execution")).toHaveCount(0);
   await expect(messages.locator(".thinking-block")).toHaveCount(0);
   await expect(messages).toContainText("FILTER_VISIBLE_REPLY");
   await page.reload();
+  await page
+    .getByRole("button", { name: "Reading settings", exact: true })
+    .click();
   await expect(
-    page.getByRole("combobox", { name: "Message display" }),
-  ).toHaveValue("text");
+    page.getByRole("button", { name: "Compact", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
   await expect(messages.locator(".tool-execution")).toHaveCount(0);
 
-  await page
-    .getByRole("combobox", { name: "Message display" })
-    .selectOption("custom");
+  await page.getByRole("button", { name: "Custom", exact: true }).click();
   await page.getByRole("checkbox", { name: "read", exact: true }).uncheck();
   await expect(messages.locator(".tool-execution")).toHaveCount(1);
   await expect(messages).not.toContainText("FILTER_TOOL_OUTPUT");

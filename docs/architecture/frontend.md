@@ -49,7 +49,7 @@ Data comes from existing APIs such as `/api/sessions`, `/api/new-session`, `/api
 
 `SessionPage.svelte` owns the route, fetches session JSON from `/api/session?id=…`, and **orchestrates the whole viewer as Svelte components**. It creates the reactive `SessionDataModel` once, provides it via context, and installs the live session runtime context (`model`, navigator, `navigateTo`, `reconcileEntries`, content runtime) before child components mount. Live components read that explicit runtime context instead of `window.__pi*` aliases. `SessionPage`'s `onMount` runs `startSessionPageRuntime()` (bootstrap, `setupSessionUi`, content-runtime wiring, header handlers, initial nav) and `setupSessionGlobals()` (page-global glue). Annotation wiring is declarative: `SessionShell` passes the annotation config to `<AnnotationLayer>` as props (via `<RightSidebar>`) rather than an imperative `init()` up-call. There is **no `session.js` orchestrator** — see `docs/dev/templates-vs-web.md` § Current Migration State.
 
-The message pane is rendered by Svelte components (no string-building renderer): `SessionContent` → `SessionEntry` → `ToolCall` → `ToolOutput`/`AskQuestion`, with `{@html}` used only for markdown + pre-rendered ANSI tool output. Other session UI components: `SessionTree`/`SessionSidebarProjects`/`SessionSidebarSessions`/`SessionTreeNodes`/`TreeNode`, `SessionInfoHeader`, `SessionHeader`, `RightSidebar` (+ `ArtifactPanel`, `AnnotationLayer`), `ChatComposer` (+ `ChatToolbar`/`QueuePanel`/`GitFooter`), `LiveReload`, `LoadEarlier`, `CommandMenu`, `ImageModal`, the modals (`ShortcutsModal`/`ModelUsageModal`/`ForkModal`/`LabelModal`/`DiffModal`/`ShareDialog`), `BtwPopup`, `CatGatekeeper`. The left sidebar tabs between projects, sessions in one selected project, and the active session's message outline. The Projects tab requests 20-project pages from `/api/projects?limit=20&offset=…`, pins the current project into the first page, and appends another page as the main list is scrolled. An interrupted incremental request is retried once automatically, then leaves a compact retry control at the list boundary if the connection remains unavailable. That first response also bundles the current project's first five sessions so the expanded folder does not require a second archive scan. Other folders and later session pages independently request five-session pages from `/api/sessions?project=…&limit=5&offset=…` as their nested lists are scrolled. Project rows show the shared animated running indicator when any child session is active; the initial project response supplies existing running IDs and later SSE status deltas carry the cached project path. The Sessions project card opens a searchable project switcher; selecting a project reloads only that tab's session list and leaves the viewed session unchanged. The Sessions tab requests 20-item pages through `/api/sessions?project=…&limit=…&offset=…`, and its debounced search uses the API's `q` parameter so unloaded sessions remain searchable. All three tabs end with a matching count footer; the Sessions footer also owns the previous/next page controls. The old runners/renderers have been replaced by Svelte components plus focused helpers: `web/src/session/` holds the reactive model, pure helpers, live-only helpers, and a few shared utilities:
+The message pane is rendered by Svelte components (no string-building renderer): `SessionContent` → `SessionEntry` → `ToolCall` → `ToolOutput`/`AskQuestion`, with `{@html}` used only for markdown + pre-rendered ANSI tool output. Other session UI components: `SessionTree`/`SessionSidebarProjects`/`SessionSidebarSessions`/`SessionTreeNodes`/`TreeNode`, `SessionInfoHeader`, `SessionHeader`, `RightSidebar` (+ `ArtifactPanel`, `AnnotationLayer`), `ChatComposer` (+ `ChatToolbar`/`QueuePanel`/`GitFooter`), `LiveReload`, `ReadingSettings` (+ `MessageFilters`), `CommandMenu`, `ImageModal`, the modals (`ShortcutsModal`/`ModelUsageModal`/`ForkModal`/`LabelModal`/`DiffModal`/`ShareDialog`), `BtwPopup`, `CatGatekeeper`. The left sidebar tabs between projects, sessions in one selected project, and the active session's message outline. The Projects tab requests 20-project pages from `/api/projects?limit=20&offset=…`, pins the current project into the first page, and appends another page as the main list is scrolled. An interrupted incremental request is retried once automatically, then leaves a compact retry control at the list boundary if the connection remains unavailable. That first response also bundles the current project's first five sessions so the expanded folder does not require a second archive scan. Other folders and later session pages independently request five-session pages from `/api/sessions?project=…&limit=5&offset=…` as their nested lists are scrolled. Project rows show the shared animated running indicator when any child session is active; the initial project response supplies existing running IDs and later SSE status deltas carry the cached project path. The Sessions project card opens a searchable project switcher; selecting a project reloads only that tab's session list and leaves the viewed session unchanged. The Sessions tab requests 20-item pages through `/api/sessions?project=…&limit=…&offset=…`, and its debounced search uses the API's `q` parameter so unloaded sessions remain searchable. All three tabs end with a matching count footer; the Sessions footer also owns the previous/next page controls. The old runners/renderers have been replaced by Svelte components plus focused helpers: `web/src/session/` holds the reactive model, pure helpers, live-only helpers, and a few shared utilities:
 
 - `data/` — payload decoding + the reactive `SessionDataModel` (`session-data.svelte.js`, the single source of truth: entries/lookups/tree/active-path/view-state, `reconcile()`)
 - `tree/`, `render/`, `navigation/` — **pure** tree/format/markdown/navigation helpers consumed by the Svelte components (and the export). The message renderer is now `<SessionEntry>`/`<ToolCall>`; `render/` keeps `session-format`, `markdown`, `entry-format`, `session-entry-actions` (download/share/copy)
@@ -67,8 +67,17 @@ The index + settings Phase 4 migration is complete: those routes are Svelte-orch
 The live viewer defaults to the latest **100 records**, selectable as 50/100/200.
 A record is one JSONL entry, including tools, session headers, and metadata; the
 count is not the number of visible conversation bubbles or active-branch nodes.
-`LoadEarlier.svelte` now provides Earlier/Newer/Latest navigation. Pages replace
-one another instead of accumulating an ever-growing DOM. The chosen size is
+`ReadingSettings.svelte`, mounted in the fixed top-right `SessionHeader`, owns
+50/100/200 selection and Earlier/Newer/Latest navigation. Its trigger summarizes
+the page size and display mode (size only on narrower screens, icon only on
+phones). Controls live in
+a compact desktop panel / mobile bottom sheet, not inside the scrolling message
+pane. The native modal dialog contains focus, makes the background inert, closes
+on Escape/backdrop/Close, and restores focus to the trigger. It does not insert
+synthetic history entries, so page-size URL updates survive closing the panel.
+Changes apply immediately; there is no Save step. Styles use the shell's embedded
+`session.css`, not Svelte CSS output (the shell does not link Vite CSS assets).
+Pages replace one another instead of accumulating an ever-growing DOM. The chosen size is
 stored in the `pi_session_window` SameSite cookie so server-rendered bootstrap,
 SPA navigation, hover prefetch, and SSE reload all use the same bound.
 
@@ -116,10 +125,10 @@ The index route listens to `/events?id=__all__` for `new-session`, `status-snaps
 
 ## Message Display Filters
 
-The live message pane has an independent **Message display** control:
-All content, Conversation only, or Custom tools. Conversation only removes tool
-calls/results and initially excludes thinking; the Include thinking checkbox
-can be changed independently. Custom tools discovers names from loaded records
+The header's **Reading settings** panel includes **Message display** controls:
+Full (all content), Compact (conversation only), or Custom. Compact removes tool
+calls/results and initially excludes thinking; the Include thinking switch
+can be changed independently. Custom discovers names from loaded records
 and lets the user exclude specific tools, including direct bash executions.
 New tool names remain visible unless explicitly excluded. Preferences persist
 in browser localStorage (`pi-web:session-content-filter`) across sessions.

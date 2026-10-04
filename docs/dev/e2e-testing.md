@@ -173,4 +173,9 @@ Keep this doc in sync when specs, fixtures, or the project matrix change.
 
 `tests/session-record-window.spec.ts` creates a long synthetic session and checks
 50/100-record limits, previous/latest navigation, cookie persistence on refresh,
-and bounded SSE reload while a historical page remains selected.
+and bounded SSE reload while a historical page remains selected. Window/filter
+tests open the fixed-header **Reading settings** dialog before using its controls.
+`tests/reading-settings.spec.ts` also checks the desktop panel/mobile bottom-sheet
+geometry, keyboard focus containment, Escape/backdrop/Close dismissal, focus
+restoration, and persistence after closing the panel and refreshing. It saves
+synthetic-session screenshots in the Playwright test output directory.

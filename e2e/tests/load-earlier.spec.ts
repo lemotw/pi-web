@@ -56,7 +56,10 @@ test.describe("earlier record windows", () => {
       buildLargeSession(),
     );
     await page.goto(`/session?id=${encodeURIComponent(id)}&limit=50`);
-    const controls = page.locator(".session-window");
+    await page
+      .getByRole("button", { name: "Reading settings", exact: true })
+      .click();
+    const controls = page.getByRole("dialog", { name: "Reading settings" });
     const messages = page.locator("#messages-list");
     await expect(controls).toContainText("Records 102–151 of 151");
     await expect(messages).not.toContainText(EARLY_MARKER);
@@ -88,9 +91,12 @@ test.describe("earlier record windows", () => {
       `/session?id=${encodeURIComponent(id)}&limit=50&targetId=m000005`,
     );
     await expect(page.locator("#messages-list")).toContainText(EARLY_MARKER);
-    await expect(page.locator(".session-window")).toContainText(
-      "Records 1–7 of 151",
-    );
+    await page
+      .getByRole("button", { name: "Reading settings", exact: true })
+      .click();
+    await expect(
+      page.getByRole("dialog", { name: "Reading settings" }),
+    ).toContainText("Records 1–7 of 151");
     await expect(page.locator("#messages-list")).not.toContainText(
       "message body 149",
     );
