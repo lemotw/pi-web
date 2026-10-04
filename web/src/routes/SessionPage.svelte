@@ -85,7 +85,12 @@
           locationSearch: window.location.search,
           windowImpl: window,
         });
-        createLiveSessionRuntime({ sessionModel, contentRuntime, documentImpl: document });
+        createLiveSessionRuntime({
+          sessionModel,
+          contentRuntime,
+          sessionId,
+          documentImpl: document,
+        });
         loading = false;
         clearTimeout(loadingTimer);
         await tick();

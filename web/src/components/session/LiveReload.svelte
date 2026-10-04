@@ -33,7 +33,6 @@
     const windowImpl = window;
     const runtime = getSessionRuntime();
     const model = runtime.model;
-    const reconcileEntries = runtime.reconcileEntries || (() => {});
     globalThis.__PI_TEST_LIVE_RELOAD_HOOK__?.();
 
     const fetchImpl = windowImpl.fetch.bind(windowImpl);
@@ -78,6 +77,11 @@
       liveRendered: new Set(),
     };
 
+    on(windowImpl, 'pi-session-window-changed', () => {
+      LIVE_ENTRY_STATE.seen = new Set(model.entries.map((entry) => entry.id).filter(Boolean));
+      if (model.windowEnd !== null) clearChatPreviewState(CHAT_PREVIEW_STATE);
+    });
+
     // ── Follow mode (auto-scroll + follow-button decisions) ────────────────────
     // The controller registers its own scroll/wheel/touch/keydown listeners and
     // performs the initial scroll-to-bottom; we just dispose it on unmount.
@@ -98,7 +102,14 @@
       isAtBottom,
     } = followScroll;
 
-    on(windowImpl, 'pi-chat-message-sent', (event) => {
+    on(windowImpl, 'pi-chat-message-sent', async (event) => {
+      if (model.windowEnd !== null) {
+        try {
+          await runtime.loadWindow({ before: null });
+        } catch {
+          return;
+        }
+      }
       followScroll.extendPreviewFollow(30000);
       if (event && event.detail && event.detail.message) {
         renderPendingChat(event.detail.message);
@@ -125,13 +136,14 @@
       const hasDoneClass =
         CHAT_PREVIEW_STATE.chatPreviewEl &&
         CHAT_PREVIEW_STATE.chatPreviewEl.classList.contains('done');
-      const keepAssistant = !!(isChatRunning && !hasDoneClass);
+      const keepAssistant = model.windowEnd === null && !!(isChatRunning && !hasDoneClass);
       return clearChatPreviewState(CHAT_PREVIEW_STATE, { keepAssistant });
     }
     function finishChatPreview() {
       finishChatPreviewState(CHAT_PREVIEW_STATE);
     }
     function renderChatPreview(payload) {
+      if (model.windowEnd !== null) return false;
       return renderChatPreviewState(payload, CHAT_PREVIEW_STATE, {
         documentImpl,
         windowImpl,
@@ -153,27 +165,43 @@
     }
 
     // ── Reload (fetch /api/session → reconcile the model) ──────────────────────
+    let pendingReload = null;
+    let reloadQueued = false;
+    let mounted = true;
+    cleanups.push(() => {
+      mounted = false;
+    });
     function triggerReload() {
-      return handleSessionReload({
-        sessionId: sessId,
-        fetchImpl,
-        entryState: LIVE_ENTRY_STATE,
-        clearChatPreview,
-        // Reactive mode: the Svelte model owns #messages, so no DOM patchers.
-        updateStats,
-        updateTitle,
-        isFollowing,
-        isAtBottom,
-        scrollAfterLayout,
-        incrementPending,
-        showFollowButton,
-        onReloaded: (data) => {
-          reconcileEntries(data.entries);
-        },
-        onNewEntries: highlightNewEntries,
-      }).catch((err) => {
-        console.error('Live update failed:', err);
-      });
+      reloadQueued = true;
+      if (pendingReload) return pendingReload;
+      pendingReload = (async () => {
+        do {
+          reloadQueued = false;
+          await handleSessionReload({
+            sessionId: sessId,
+            fetchImpl,
+            loadSession: runtime.loadWindow,
+            entryState: LIVE_ENTRY_STATE,
+            clearChatPreview,
+            // Reactive mode: the Svelte model owns #messages, so no DOM patchers.
+            updateStats,
+            updateTitle,
+            isFollowing,
+            isAtBottom,
+            scrollAfterLayout,
+            incrementPending,
+            showFollowButton,
+            onNewEntries: highlightNewEntries,
+          });
+        } while (reloadQueued && mounted);
+      })()
+        .catch((err) => {
+          console.error('Live update failed:', err);
+        })
+        .finally(() => {
+          pendingReload = null;
+        });
+      return pendingReload;
     }
 
     on(windowImpl, 'pi-worker-done', () => {

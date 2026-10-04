@@ -1,75 +1,113 @@
 <script>
+  import { tick } from 'svelte';
   import { t } from '../../shared/i18n.js';
+  import { SESSION_WINDOW_SIZES, saveSessionWindowSize } from '../../session/session-window.js';
 
-  let { model, sessionId = '', fetchImpl = null, navigateTo = null, windowSize = 500 } = $props();
+  let { model, loadWindow, navigateTo = null } = $props();
 
-  let loading = $state(false);
-  let error = $state('');
+  const end = $derived(model.from + model.entries.length);
 
-  const shown = $derived(model?.entries?.length || 0);
-  const total = $derived(model?.total || shown);
-  const remaining = $derived(Math.max(0, model?.from || 0));
-  const nextCount = $derived(Math.min(windowSize, remaining));
-  const visible = $derived(!!model && !!model.truncated && remaining > 0);
-  const effectiveFetch = $derived(
-    fetchImpl || (typeof window !== 'undefined' ? window.fetch.bind(window) : null),
-  );
-
-  async function loadEarlier() {
-    if (loading || !visible || !effectiveFetch) return;
-    const requestFrom = Math.max(0, model.from - windowSize);
-    const requestCount = model.from - requestFrom;
-    const anchorId = model.entries[0]?.id || null;
-    loading = true;
-    error = '';
+  async function selectWindow(options) {
     try {
-      const url = `/api/session?id=${encodeURIComponent(sessionId)}&from=${requestFrom}&count=${requestCount}`;
-      const res = await effectiveFetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const payload = await res.json();
-      const earlier = Array.isArray(payload?.entries) ? payload.entries : [];
-      if (earlier.length === 0) {
-        model.from = 0;
-        model.truncated = false;
-        return;
-      }
-      model.reconcile?.([...earlier, ...model.entries]);
-      navigateTo?.(model.leafId, anchorId ? 'target' : 'bottom', anchorId || null);
-      model.from = requestFrom;
-      model.truncated = requestFrom > 0;
-    } catch (err) {
-      error = err?.message || String(err);
-    } finally {
-      loading = false;
+      const data = await loadWindow(options);
+      if (!data) return;
+      saveSessionWindowSize(model.windowSize);
+      const url = new URL(window.location.href);
+      url.searchParams.set('limit', String(model.windowSize));
+      url.searchParams.delete('targetId');
+      url.searchParams.delete('leafId');
+      window.history.replaceState(window.history.state, '', url);
+      window.dispatchEvent(new CustomEvent('pi-session-window-changed'));
+      await tick();
+      navigateTo?.(model.leafId, 'bottom');
+    } catch {
+      // The shared loader preserves the current page and exposes a retryable error.
     }
   }
 </script>
 
-{#if visible}
-  <div
-    id="load-earlier-banner"
-    class="load-earlier-banner"
-    role="region"
-    aria-label={t('session.earlierMessages')}
+<div class="session-window" aria-busy={model.windowBusy}>
+  <label>
+    {t('session.windowSize')}
+    <select
+      aria-label={t('session.windowSize')}
+      value={model.windowSize}
+      disabled={model.windowBusy}
+      onchange={(event) => selectWindow({ limit: Number(event.currentTarget.value), before: null })}
+    >
+      {#each SESSION_WINDOW_SIZES as size (size)}<option value={size}>{size}</option>{/each}
+    </select>
+  </label>
+  <span class="range" aria-live="polite"
+    >{t('session.windowRange', {
+      from: model.entries.length ? model.from + 1 : 0,
+      to: end,
+      total: model.total,
+    })}</span
   >
-    <span class="load-earlier-label"
-      >{t('session.showingLatestMessages', {
-        shown: shown.toLocaleString(),
-        total: total.toLocaleString(),
-      })}</span
+  <button
+    disabled={model.windowBusy || model.from === 0}
+    onclick={() => selectWindow({ before: model.from })}
+  >
+    {t('session.windowEarlier')}
+  </button>
+  <button
+    disabled={model.windowBusy || end >= model.total}
+    onclick={() =>
+      selectWindow({
+        before: end + model.windowSize >= model.total ? null : end + model.windowSize,
+      })}>{t('session.windowNewer')}</button
+  >
+  <button
+    disabled={model.windowBusy || model.windowEnd === null}
+    onclick={() => selectWindow({ before: null })}
+  >
+    {t('session.windowLatest')}
+  </button>
+  <small>{t('session.windowHint')}</small>
+  {#if model.windowError}
+    <span role="alert">{t('session.loadEarlierFailed', { error: model.windowError })}</span>
+    <button disabled={model.windowBusy} onclick={() => selectWindow({})}
+      >{t('session.windowRetry')}</button
     >
-    <button
-      type="button"
-      class="load-earlier-button"
-      disabled={loading || remaining <= 0}
-      onclick={loadEarlier}
-    >
-      {#if loading}{t('session.loadingEarlier')}{:else}{t('session.loadEarlierCount', {
-          count: nextCount.toLocaleString(),
-        })}{/if}
-    </button>
-    <span class="load-earlier-status"
-      >{#if error}{t('session.loadEarlierFailed', { error })}{/if}</span
-    >
-  </div>
-{/if}
+  {/if}
+</div>
+
+<style>
+  .session-window {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    color: var(--text-soft);
+    font-size: 0.8rem;
+  }
+  label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  select,
+  button {
+    font: inherit;
+    color: var(--text);
+    background: var(--surface-2);
+    border: 1px solid var(--dim);
+    border-radius: 6px;
+    padding: 0.35rem 0.5rem;
+  }
+  button:not(:disabled),
+  select {
+    cursor: pointer;
+  }
+  button:disabled {
+    opacity: 0.5;
+  }
+  .range {
+    margin-right: auto;
+  }
+  small {
+    flex-basis: 100%;
+  }
+</style>

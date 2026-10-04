@@ -62,6 +62,37 @@ The message pane is rendered by Svelte components (no string-building renderer):
 
 The index + settings Phase 4 migration is complete: those routes are Svelte-orchestrated too, with only pure/API helpers left outside components.
 
+## Bounded Session Record Windows
+
+The live viewer defaults to the latest **100 records**, selectable as 50/100/200.
+A record is one JSONL entry, including tools, session headers, and metadata; the
+count is not the number of visible conversation bubbles or active-branch nodes.
+`LoadEarlier.svelte` now provides Earlier/Newer/Latest navigation. Pages replace
+one another instead of accumulating an ever-growing DOM. The chosen size is
+stored in the `pi_session_window` SameSite cookie so server-rendered bootstrap,
+SPA navigation, hover prefetch, and SSE reload all use the same bound.
+
+`/api/session?paginate=1&limit=50` returns a tail window. Optional `before=N`
+selects a window ending at that exclusive record index. A historical page stays
+fixed when new records arrive; Latest resumes the moving tail. `targetId` (or
+`leafId`) requests a bounded page ending at the deep-linked record. Unsupported
+sizes default to 100, and end indices are clamped to the current record count.
+Responses include `windowSize` and `windowEnd` (null for the moving tail), in
+addition to `entries`, `total`, and `from`.
+
+`session/session-window.js` coalesces identical requests and discards superseded
+responses. Errors keep the last successful page visible and expose Retry.
+Live reload replaces bounded data and updates pagination metadata rather than
+fetching the unpaginated endpoint. Tool results whose calls are outside the page
+render as standalone results; missing results on historical pages are marked
+as potentially unloaded, rather than pending. Search/tree navigation and
+entry-derived statistics reflect loaded records, not the whole archive.
+
+This changes only the viewer: session files, agent context, unpaginated API
+consumers, and static export retain their existing behavior. The server still
+parses/caches the full JSONL file; this bounds transfer/rendering work, not
+server-side file parsing or the byte size of a single very large tool result.
+
 ## Static / Share Export
 
 Export/share remains separate and self-contained. `web/src/export/export-entry.js` builds `internal/ui/embedded/export/export.js`, which is inlined by `internal/ui/export.go` with vendored `marked` and `highlight.js` assets.

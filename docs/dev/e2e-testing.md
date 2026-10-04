@@ -166,3 +166,7 @@ The `e2e` job in `.github/workflows/ci.yml`: `npm ci` →
    `e2e/lib/sessions.ts`; never mutate the committed fixtures.
 
 Keep this doc in sync when specs, fixtures, or the project matrix change.
+
+`tests/session-record-window.spec.ts` creates a long synthetic session and checks
+50/100-record limits, previous/latest navigation, cookie persistence on refresh,
+and bounded SSE reload while a historical page remains selected.

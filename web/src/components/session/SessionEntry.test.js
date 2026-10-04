@@ -1,11 +1,12 @@
 import { describe, expect, it, afterEach } from 'vitest';
 import { render, cleanup } from '@testing-library/svelte';
 import SessionEntry from './SessionEntry.svelte';
+import { buildSessionLookups } from '../../session/data/session-data.js';
 
 afterEach(cleanup);
 
 function model(entries = []) {
-  return { entries, renderedTools: null };
+  return { entries, renderedTools: null, ...buildSessionLookups(entries) };
 }
 
 describe('SessionEntry', () => {
@@ -30,13 +31,33 @@ describe('SessionEntry', () => {
     expect(node.textContent).toContain('hi');
   });
 
-  it('renders nothing for tool-result entries', () => {
+  it('renders a tool result whose call is outside the window', () => {
     const entry = {
       id: 'r',
       type: 'message',
       message: { role: 'toolResult', toolCallId: 'c', content: [] },
     };
     const { container } = render(SessionEntry, { props: { entry, model: model([entry]) } });
+    expect(container.querySelector('#entry-r')).toHaveTextContent(
+      'Tool call is outside this page.',
+    );
+  });
+
+  it('does not duplicate a tool result when its call is loaded', () => {
+    const call = {
+      id: 'a',
+      type: 'message',
+      message: {
+        role: 'assistant',
+        content: [{ type: 'toolCall', id: 'c', name: 'read', arguments: {} }],
+      },
+    };
+    const entry = {
+      id: 'r',
+      type: 'message',
+      message: { role: 'toolResult', toolCallId: 'c', content: [] },
+    };
+    const { container } = render(SessionEntry, { entry, model: model([call, entry]) });
     expect(container.querySelector('#entry-r')).toBeNull();
   });
 

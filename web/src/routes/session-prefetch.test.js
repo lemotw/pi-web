@@ -18,7 +18,7 @@ describe('session-prefetch', () => {
     prefetchSession('s.jsonl', { fetchImpl });
     const data = await consumeSessionPrefetch('s.jsonl');
 
-    expect(calls).toEqual(['/api/session?id=s.jsonl&paginate=1']);
+    expect(calls).toEqual(['/api/session?id=s.jsonl&paginate=1&limit=100']);
     expect(data).toEqual({ name: 'Prefetched' });
   });
 

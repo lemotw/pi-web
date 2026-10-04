@@ -215,7 +215,11 @@
   <div id="content-container" class="content-container">
     <main id="content">
       <div id="header-container"><SessionInfoHeader model={sessionModel} /></div>
-      <LoadEarlier model={sessionModel} {sessionId} navigateTo={runtime.navigateTo} />
+      <LoadEarlier
+        model={sessionModel}
+        loadWindow={runtime.loadWindow}
+        navigateTo={runtime.navigateTo}
+      />
       <div id="messages">
         <SessionContent model={sessionModel} afterRender={contentRuntime.afterRender} live />
       </div>

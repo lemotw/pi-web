@@ -90,6 +90,19 @@
         Error: {msg.errorMessage || 'Unknown error'}
       </div>{/if}
   </div>
+{:else if msg?.role === 'toolResult' && !model?.toolCallMap?.has(msg.toolCallId)}
+  <div class="tool-execution {msg.isError ? 'error' : 'success'}" id={`entry-${entry.id}`}>
+    {@render timestamp()}
+    <div class="tool-header"><span class="tool-name">{msg.toolName || 'tool'}</span></div>
+    <div class="tool-header">{t('session.windowOrphanResult')}</div>
+    {#each msg.content || [] as block, index (index)}
+      {#if block.type === 'text'}<ToolOutput text={block.text} maxLines={10} />
+      {:else if block.type === 'image'}<img
+          src={`data:${block.mimeType || 'image/png'};base64,${block.data}`}
+          alt=""
+        />{/if}
+    {/each}
+  </div>
 {:else if msg && msg.role === 'bashExecution'}
   <div
     class="tool-execution {msg.cancelled || (msg.exitCode !== 0 && msg.exitCode !== null)
