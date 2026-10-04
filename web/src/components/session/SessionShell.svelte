@@ -6,6 +6,7 @@
   import SessionHeader from './SessionHeader.svelte';
   import SessionInfoHeader from './SessionInfoHeader.svelte';
   import SessionContent from './SessionContent.svelte';
+  import MessageFilters from './MessageFilters.svelte';
   import ImageModal from './ImageModal.svelte';
   import ShortcutsModal from './ShortcutsModal.svelte';
   import ModelUsageModal from './ModelUsageModal.svelte';
@@ -217,6 +218,7 @@
       <div id="header-container"><SessionInfoHeader model={sessionModel} /></div>
       <LoadEarlier model={sessionModel} {sessionId} navigateTo={runtime.navigateTo} />
       <div id="messages">
+        <MessageFilters model={sessionModel} />
         <SessionContent model={sessionModel} afterRender={contentRuntime.afterRender} live />
       </div>
     </main>

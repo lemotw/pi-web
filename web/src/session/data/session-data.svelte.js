@@ -66,6 +66,7 @@ export class SessionDataModel {
   currentTargetId = $state('');
   filterMode = $state('default');
   searchQuery = $state('');
+  contentFilter = $state({ mode: 'all', hiddenTools: [], showThinking: true });
 
   // ── derived tree (recompute on entries / labelMap / view changes) ────────
   tree = $derived(buildTree(this.entries, this.labelMap));

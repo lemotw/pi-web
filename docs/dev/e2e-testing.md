@@ -8,6 +8,10 @@ and chat — across desktop, mobile, and iPad viewports.
 It is intentionally **not** part of `make test` / `make check`: it needs browser
 binaries and a running server, so it runs as its own target and CI job.
 
+`tests/session-tool-filter.spec.ts` covers main-pane tool removal (not merely
+CSS hiding), retained assistant text, saved display preferences, per-tool
+selection, and filtering of new entries delivered through SSE.
+
 ## Quick start
 
 ```bash

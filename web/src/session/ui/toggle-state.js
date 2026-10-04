@@ -91,7 +91,8 @@ export function applyToggleStateToNode(node, state) {
     el.style.display = state.thinkingExpanded ? 'none' : 'block';
   });
   node.querySelectorAll('.tool-execution, .compaction').forEach((el) => {
-    el.style.display = state.toolsVisible ? '' : 'none';
+    const needsAnswer = !!el.querySelector('.ask-question-option-action');
+    el.style.display = state.toolsVisible || needsAnswer ? '' : 'none';
   });
   // Mirrors the .thinking-text / .thinking-collapsed pair: show a "Tool: <name>
   // ..." placeholder so a hidden tool call still has a visible marker (and an
