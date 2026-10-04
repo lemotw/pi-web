@@ -134,6 +134,14 @@ The frontend bundle is embedded by `web/assets_embed.go`, so `go build` needs
 by hand, run `npm --prefix web install && npm --prefix web run build` before
 `go build ./cmd/pi-web`.
 
+### Fork releases
+
+Forks can use a distinct tag such as `v0.0.1-beta.38-lemotw.1` for custom builds.
+`make build` embeds the version from `git describe`; the release workflow also
+uses the tag for its binaries. Tagged builds may create a GitHub Release, but
+the npm publishing job runs only in `ygncode/pi-web`, not in forks. A fork-only
+binary tag does not require changing the upstream npm package version.
+
 ### Develop alongside an installed instance
 
 Leave the installed instance running on port `31415`, then start the source
