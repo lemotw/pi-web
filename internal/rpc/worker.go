@@ -20,7 +20,7 @@ import (
 
 type piRPCWorker struct {
 	mu                   sync.Mutex
-	writeMu              sync.Mutex
+	writeGate            chan struct{}
 	sessionPath          string
 	startedAt            time.Time
 	cmd                  *exec.Cmd
@@ -31,25 +31,28 @@ type piRPCWorker struct {
 	currentModel         string
 	currentProvider      string
 	currentThinkingLevel string
-	stderrBuf            *strings.Builder
+	stderrBuf            *workerStderr
 	commands             []workers.SlashCommand
 	commandsCached       bool
-	lastActive           atomic.Int64 // unix nanos; only user-initiated actions update this
-	lastStreamActivity   atomic.Int64 // unix nanos; stream/turn events keep worker visually running
+	generation           uint64
+	mutations            int
+	idleSince            time.Time
+	closing              bool
+	stateQuery           *workerStateQuery
+	verifyCh             chan struct{}
+	done                 chan struct{}
+	stopOnce             sync.Once
 	streamSink           StreamEventSink
 	streamPreview        *streamPreviewAccumulator
 }
 
-func (w *piRPCWorker) touch() {
-	w.lastActive.Store(time.Now().UnixNano())
-}
-
 func (w *piRPCWorker) IdleSince(now time.Time) time.Duration {
-	last := w.lastActive.Load()
-	if last == 0 {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	if w.status.State != workers.WorkerStateIdle || w.idleSince.IsZero() {
 		return 0
 	}
-	return now.Sub(time.Unix(0, last))
+	return now.Sub(w.idleSince)
 }
 
 // PID returns the operating-system process ID of the underlying pi worker, or
@@ -121,15 +124,17 @@ func NewPiWorkerWithStream(sessionPath string, streamSink StreamEventSink) (work
 	if err != nil {
 		return nil, err
 	}
-	var stderrBuf strings.Builder
+	var stderrBuf workerStderr
 	cmd.Stderr = &stderrBuf
 	worker := &piRPCWorker{
 		sessionPath:   sessionPath,
 		startedAt:     time.Now(),
 		cmd:           cmd,
 		stdin:         stdin,
-		status:        workers.WorkerStatus{State: workers.WorkerStateIdle},
+		status:        workers.WorkerStatus{State: workers.WorkerStateUnknown},
 		pending:       make(map[string]chan response),
+		verifyCh:      make(chan struct{}, 1),
+		done:          make(chan struct{}),
 		stderrBuf:     &stderrBuf,
 		streamSink:    streamSink,
 		streamPreview: &streamPreviewAccumulator{},
@@ -150,28 +155,35 @@ func NewPiWorkerWithStream(sessionPath string, streamSink StreamEventSink) (work
 	stateCtx, stateCancel := context.WithTimeout(context.Background(), 5*time.Second)
 	_, _ = worker.GetState(stateCtx)
 	stateCancel()
-	worker.touch()
+	go worker.verifyStateLoop()
+	if worker.Status().State != workers.WorkerStateIdle {
+		worker.requestStateCheck()
+	}
 	return worker, nil
 }
 
 func (w *piRPCWorker) Prompt(ctx context.Context, chat chat.Request) error {
-	w.touch()
 	w.mu.Lock()
-	streaming := w.status.State == workers.WorkerStateRunning
-	w.status = workers.WorkerStatus{State: workers.WorkerStateRunning}
-	w.mu.Unlock()
-	id := w.nextID()
-	if err := w.sendAndAwait(ctx, BuildPromptCommand(id, chat, streaming)); err != nil {
-		w.mu.Lock()
-		w.status = workers.WorkerStatus{State: workers.WorkerStateError, Error: err.Error()}
+	if w.closing {
 		w.mu.Unlock()
-		return err
+		return errors.New("worker is closing or exited")
 	}
-	return nil
+	// Decide steering and reserve the command atomically; two simultaneous
+	// prompts must not both observe the old idle snapshot.
+	streaming := w.status.State != workers.WorkerStateIdle
+	w.generation++
+	w.mutations++
+	w.setStateLocked(workers.WorkerStateRunning, "prompt_started")
+	w.mu.Unlock()
+	defer w.endMutation()
+	return w.sendAndAwait(ctx, BuildPromptCommand(w.nextID(), chat, streaming))
 }
 
 func (w *piRPCWorker) SetModel(ctx context.Context, provider, modelID string) error {
-	w.touch()
+	if err := w.beginMutation(false); err != nil {
+		return err
+	}
+	defer w.endMutation()
 	id := w.nextID()
 	ch := make(chan response, 1)
 	w.mu.Lock()
@@ -184,9 +196,7 @@ func (w *piRPCWorker) SetModel(ctx context.Context, provider, modelID string) er
 		"provider": provider,
 		"modelId":  modelID,
 	}
-	w.writeMu.Lock()
-	err := WriteCommand(w.stdin, cmd)
-	w.writeMu.Unlock()
+	err := w.writeCommand(ctx, cmd)
 	if err != nil {
 		w.removePending(id)
 		return err
@@ -219,7 +229,9 @@ func (w *piRPCWorker) SetModel(ctx context.Context, provider, modelID string) er
 		w.mu.Lock()
 		w.currentModel = m.ID
 		w.currentProvider = m.Provider
-		w.status = workers.WorkerStatus{State: workers.WorkerStateIdle, Model: m.ID, ModelName: m.Name, ModelProvider: m.Provider}
+		w.status.Model = m.ID
+		w.status.ModelName = m.Name
+		w.status.ModelProvider = m.Provider
 		w.mu.Unlock()
 		// Refresh thinking level after model switch
 		go w.refreshThinkingLevel()
@@ -231,67 +243,19 @@ func (w *piRPCWorker) SetModel(ctx context.Context, provider, modelID string) er
 }
 
 func (w *piRPCWorker) SetThinkingLevel(ctx context.Context, level string) error {
-	w.touch()
+	if err := w.beginMutation(false); err != nil {
+		return err
+	}
+	defer w.endMutation()
 	return w.sendAndAwait(ctx, BuildSetThinkingLevelCommand(w.nextID(), level))
 }
 
 func (w *piRPCWorker) Abort(ctx context.Context) error {
-	w.touch()
-	if err := w.sendAndAwait(ctx, BuildAbortCommand(w.nextID())); err != nil {
+	if err := w.beginMutation(false); err != nil {
 		return err
 	}
-	w.mu.Lock()
-	w.status.State = workers.WorkerStateIdle
-	w.status.Error = ""
-	w.mu.Unlock()
-	return nil
-}
-
-func (w *piRPCWorker) GetState(ctx context.Context) (workers.WorkerStatus, error) {
-	id := w.nextID()
-	ch := make(chan response, 1)
-	w.mu.Lock()
-	w.pending[id] = ch
-	w.mu.Unlock()
-
-	w.writeMu.Lock()
-	err := WriteCommand(w.stdin, BuildGetStateCommand(id))
-	w.writeMu.Unlock()
-	if err != nil {
-		w.removePending(id)
-		return workers.WorkerStatus{}, err
-	}
-
-	select {
-	case res := <-ch:
-		if !res.Success {
-			if res.Error != "" {
-				return workers.WorkerStatus{}, errors.New(res.Error)
-			}
-			return workers.WorkerStatus{}, fmt.Errorf("rpc get_state rejected")
-		}
-		var state struct {
-			ThinkingLevel string `json:"thinkingLevel"`
-			Model         model  `json:"model"`
-		}
-		_ = json.Unmarshal(res.Data, &state)
-		w.mu.Lock()
-		w.currentThinkingLevel = state.ThinkingLevel
-		if state.Model.ID != "" {
-			w.currentModel = state.Model.ID
-			w.currentProvider = state.Model.Provider
-			w.status.Model = state.Model.ID
-			w.status.ModelName = state.Model.Name
-			w.status.ModelProvider = state.Model.Provider
-		}
-		s := w.status
-		s.ThinkingLevel = state.ThinkingLevel
-		w.mu.Unlock()
-		return s, nil
-	case <-ctx.Done():
-		w.removePending(id)
-		return workers.WorkerStatus{}, ctx.Err()
-	}
+	defer w.endMutation()
+	return w.sendAndAwait(ctx, BuildAbortCommand(w.nextID()))
 }
 
 // GetCommands returns the slash commands pi loaded for this session (skills,
@@ -314,9 +278,7 @@ func (w *piRPCWorker) GetCommands(ctx context.Context) ([]workers.SlashCommand, 
 	w.pending[id] = ch
 	w.mu.Unlock()
 
-	w.writeMu.Lock()
-	err := WriteCommand(w.stdin, BuildGetCommandsCommand(id))
-	w.writeMu.Unlock()
+	err := w.writeCommand(ctx, BuildGetCommandsCommand(id))
 	if err != nil {
 		w.removePending(id)
 		return nil, err
@@ -353,8 +315,6 @@ func (w *piRPCWorker) refreshThinkingLevel() {
 	_, _ = w.GetState(ctx)
 }
 
-const streamActivityWindow = 2 * time.Second
-
 func (w *piRPCWorker) Status() workers.WorkerStatus {
 	w.mu.Lock()
 	defer w.mu.Unlock()
@@ -362,13 +322,11 @@ func (w *piRPCWorker) Status() workers.WorkerStatus {
 	s.Model = w.currentModel
 	s.ModelProvider = w.currentProvider
 	s.ThinkingLevel = w.currentThinkingLevel
-	if s.State == workers.WorkerStateIdle && w.hasRecentStreamActivityLocked(time.Now()) {
-		s.State = workers.WorkerStateRunning
-	}
 	return s
 }
 
 func (w *piRPCWorker) Close() error {
+	w.setError(errors.New("worker closed"))
 	if w.stdin != nil {
 		_ = w.stdin.Close()
 	}
@@ -396,9 +354,7 @@ func (w *piRPCWorker) sendAndAwait(ctx context.Context, cmd map[string]any) erro
 	w.pending[id] = ch
 	w.mu.Unlock()
 
-	w.writeMu.Lock()
-	err := WriteCommand(w.stdin, cmd)
-	w.writeMu.Unlock()
+	err := w.writeCommand(ctx, cmd)
 	if err != nil {
 		w.removePending(id)
 		return err
@@ -463,6 +419,9 @@ func (w *piRPCWorker) handleRPCLine(line string) {
 		if ch != nil {
 			ch <- res
 		}
+	case "agent_start", "turn_start", "message_start", "tool_execution_start",
+		"auto_retry_start", "compaction_start", "summarization_retry_scheduled", "summarization_retry_attempt_start":
+		w.noteBusy(true)
 	case "message_update":
 		var msg struct {
 			AssistantMessageEvent assistantMessageEvent `json:"assistantMessageEvent"`
@@ -470,16 +429,18 @@ func (w *piRPCWorker) handleRPCLine(line string) {
 		if err := json.Unmarshal([]byte(line), &msg); err == nil {
 			w.emitStreamPreview(msg.AssistantMessageEvent)
 		}
-		w.noteStreamActivity()
+		w.noteBusy(false)
 	case "message_end", "turn_end":
-		w.noteStreamActivity()
+		w.noteBusy(false)
 		w.completeStreamPreview()
-	case "agent_end":
-		w.completeStreamPreview()
+	case "agent_end", "agent_settled", "auto_retry_end", "compaction_end", "summarization_retry_finished":
+		if meta.Type == "agent_settled" {
+			w.completeStreamPreview()
+		}
 		w.mu.Lock()
-		w.status = workers.WorkerStatus{State: workers.WorkerStateIdle}
+		w.generation++
 		w.mu.Unlock()
-		w.lastStreamActivity.Store(0)
+		w.requestStateCheck()
 	case "thinking_level_changed":
 		if meta.Level != "" {
 			w.mu.Lock()
@@ -487,10 +448,6 @@ func (w *piRPCWorker) handleRPCLine(line string) {
 			w.mu.Unlock()
 		}
 	}
-}
-
-func (w *piRPCWorker) noteStreamActivity() {
-	w.lastStreamActivity.Store(time.Now().UnixNano())
 }
 
 func (w *piRPCWorker) emitStreamPreview(event assistantMessageEvent) {
@@ -511,14 +468,6 @@ func (w *piRPCWorker) completeStreamPreview() {
 	}
 }
 
-func (w *piRPCWorker) hasRecentStreamActivityLocked(now time.Time) bool {
-	last := w.lastStreamActivity.Load()
-	if last == 0 {
-		return false
-	}
-	return now.Sub(time.Unix(0, last)) <= streamActivityWindow
-}
-
 func (w *piRPCWorker) wait() {
 	if err := w.cmd.Wait(); err != nil {
 		w.setError(err)
@@ -530,8 +479,16 @@ func (w *piRPCWorker) setError(err error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
 	if w.status.State != workers.WorkerStateError {
-		w.status = workers.WorkerStatus{State: workers.WorkerStateError, Error: err.Error()}
+		w.generation++
+		w.closing = true
+		w.setStateLocked(workers.WorkerStateError, "process_exit")
+		w.status.Error = err.Error()
 	}
+	w.stopOnce.Do(func() {
+		if w.done != nil {
+			close(w.done)
+		}
+	})
 	for id, ch := range w.pending {
 		delete(w.pending, id)
 		ch <- response{ID: id, Type: "response", Success: false, Error: err.Error()}

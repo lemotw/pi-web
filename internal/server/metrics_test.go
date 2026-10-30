@@ -5,10 +5,13 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
 	"pi-web/internal/auth"
+	"pi-web/internal/sessions"
 	"pi-web/internal/workers"
 )
 
@@ -97,6 +100,31 @@ func TestMetricsReportsProcessAndWorkers(t *testing.T) {
 	}
 	if !wm.Sampled || wm.RSSBytes != 200<<20 || wm.CPUTimeS != 5 {
 		t.Errorf("worker sampling wrong: %#v", wm)
+	}
+}
+
+func TestMetricsIncludesPiWebSessionName(t *testing.T) {
+	root := t.TempDir()
+	dir := filepath.Join(root, "project")
+	if err := os.Mkdir(dir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	id := "session.jsonl"
+	path := filepath.Join(dir, id)
+	if err := os.WriteFile(path, []byte("{\"type\":\"session\",\"name\":\"Original\"}\n{\"type\":\"session_info\",\"name\":\"pi-web Title\"}\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	sender := &snapshotSender{snaps: []workers.WorkerSnapshot{
+		{SessionID: id, PID: 1, State: workers.WorkerStateIdle},
+		{SessionID: "missing.jsonl", PID: 2, State: workers.WorkerStateIdle},
+	}}
+	s := newMetricsServer(sender, stubSampler{byPID: map[int]processSample{1: {}, 2: {}}})
+	s.sessionsDir = root
+	s.cache = sessions.NewCache()
+
+	resp := decodeMetrics(t, s)
+	if resp.Workers[0].SessionName != "pi-web Title" || resp.Workers[1].SessionName != "" {
+		t.Fatalf("worker names = %q, %q", resp.Workers[0].SessionName, resp.Workers[1].SessionName)
 	}
 }
 

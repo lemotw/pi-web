@@ -1,3 +1,5 @@
+import { t } from '../../../shared/i18n.js';
+
 export function setupWorkerStatusPolling({
   windowImpl = window,
   chatApi,
@@ -12,14 +14,18 @@ export function setupWorkerStatusPolling({
   setKnownThinkingLevel = () => {},
   getWorkerModelUpdate = () => null,
   setIntervalImpl = windowImpl.setInterval?.bind(windowImpl),
+  clearIntervalImpl = windowImpl.clearInterval?.bind(windowImpl),
   CustomEventImpl = windowImpl.CustomEvent,
   intervalMs = 1500,
 } = {}) {
   let inflight = false;
   let pending = false;
   let lastWorkerState = null;
+  let generation = 0;
+  let disposed = false;
 
   async function refresh() {
+    if (disposed) return;
     if (inflight) {
       // Queue exactly one follow-up so an in-flight response cannot swallow a
       // newer state change, such as the assistant finishing while we poll stale
@@ -28,10 +34,16 @@ export function setupWorkerStatusPolling({
       return;
     }
     inflight = true;
+    const requestGeneration = generation;
     try {
       const response = await chatApi?.getWorkerStatus?.(sessionId);
-      if (!response?.ok) return;
+      if (!response?.ok) throw new Error('Worker status request failed');
       const data = await response.json();
+      if (disposed) return;
+      if (requestGeneration !== generation) {
+        pending = true;
+        return;
+      }
       const apiModelLabel = data.model
         ? data.model + (data.modelProvider ? ' @ ' + data.modelProvider : '')
         : '';
@@ -39,6 +51,8 @@ export function setupWorkerStatusPolling({
       if (data.thinkingLevel) setKnownThinkingLevel(data.thinkingLevel);
       if (data.state === 'running') setStatus('running', 'running');
       if (data.state === 'idle') setStatus('idle', '');
+      if (data.state === 'unknown') setStatus(t('composer.statusUnknown'), 'running');
+      if (data.state === 'absent') setStatus(t('composer.workerAbsent'), '');
       if (data.state === 'error') setStatus(data.error || 'worker error', 'error');
       if (lastWorkerState === 'running' && data.state === 'idle') {
         try {
@@ -47,7 +61,7 @@ export function setupWorkerStatusPolling({
           // Some tests/environments may not support constructing events.
         }
       }
-      if (data.state) lastWorkerState = data.state;
+      if (data.state && data.state !== 'unknown') lastWorkerState = data.state;
       setModelLabel(getKnownModelLabel());
       setThinkingLabel(getKnownThinkingLevel());
       updateContextUsage();
@@ -56,7 +70,9 @@ export function setupWorkerStatusPolling({
         onWorkerModelUpdate(data.modelProvider, data.model);
       }
     } catch {
-      setStatus('status unavailable', 'error');
+      if (!disposed && requestGeneration === generation) {
+        setStatus(t('composer.statusUnknown'), 'running');
+      }
     } finally {
       inflight = false;
       if (pending) {
@@ -66,7 +82,7 @@ export function setupWorkerStatusPolling({
     }
   }
 
-  if (setIntervalImpl) setIntervalImpl(refresh, intervalMs);
+  const interval = setIntervalImpl?.(refresh, intervalMs);
   void refresh();
   updateContextUsage();
 
@@ -74,11 +90,18 @@ export function setupWorkerStatusPolling({
     void refresh();
     updateContextUsage();
   };
+  const onMessageSent = () => {
+    generation += 1;
+  };
+  windowImpl.addEventListener?.('pi-chat-message-sent', onMessageSent);
   windowImpl.addEventListener?.('pi-session-reload', onSessionReload);
 
   return {
     refresh,
     dispose: () => {
+      disposed = true;
+      if (interval != null) clearIntervalImpl?.(interval);
+      windowImpl.removeEventListener?.('pi-chat-message-sent', onMessageSent);
       windowImpl.removeEventListener?.('pi-session-reload', onSessionReload);
     },
   };

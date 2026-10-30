@@ -128,7 +128,9 @@ func (d *queueDrainer) drainSession(sessionID string) {
 	// If a previous Send for this session is still streaming, skip — we'll
 	// come back on the next idle transition (or tick).
 	status := d.server.chatSender.Status(sessionID)
-	if status.State == workers.WorkerStateRunning {
+	// Unknown is not idle. Keep the item queued until confirmation succeeds.
+	// Absent workers may be created; terminal errors retain crash recovery.
+	if status.State != workers.WorkerStateIdle && status.State != workers.WorkerStateAbsent && status.State != workers.WorkerStateError {
 		return
 	}
 	// Resolve the on-disk path so chatSender can spawn the worker if needed.

@@ -117,11 +117,11 @@ func TestManagerGetCommandsReturnsWorkerCommands(t *testing.T) {
 	}
 }
 
-func TestManagerReportsMissingWorkerIdle(t *testing.T) {
+func TestManagerReportsMissingWorkerAbsent(t *testing.T) {
 	manager := NewManager(func(sessionID, sessionPath string) (ChatWorker, error) { return &fakeChatWorker{}, nil })
 	status := manager.Status("missing.jsonl")
-	if status.State != WorkerStateIdle {
-		t.Fatalf("status = %q, want idle", status.State)
+	if status.State != WorkerStateAbsent {
+		t.Fatalf("status = %q, want absent", status.State)
 	}
 }
 
@@ -155,15 +155,15 @@ func TestManagerStatusReportsRunningWhileSendSpawnsWorker(t *testing.T) {
 	}
 }
 
-func TestManagerStatusIdleAfterFailedSend(t *testing.T) {
+func TestManagerStatusAbsentAfterFailedSpawn(t *testing.T) {
 	manager := NewManager(func(string, string) (ChatWorker, error) {
 		return nil, errors.New("spawn failed")
 	})
 	if err := manager.Send(context.Background(), "a.jsonl", "/tmp/a.jsonl", chat.Request{Message: "hi"}); err == nil {
 		t.Fatal("Send should surface the spawn error")
 	}
-	if status := manager.Status("a.jsonl"); status.State != WorkerStateIdle {
-		t.Fatalf("status after failed send = %q, want idle", status.State)
+	if status := manager.Status("a.jsonl"); status.State != WorkerStateAbsent {
+		t.Fatalf("status after failed send = %q, want absent", status.State)
 	}
 }
 

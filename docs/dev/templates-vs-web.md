@@ -30,7 +30,7 @@ internal/ui/embedded/app.html
 
 The Go shell intentionally preserves the current PWA-first boot path:
 
-- no-zoom iPhone viewport metadata
+- zoom-enabled mobile viewport metadata, retaining `interactive-widget=resizes-content` for keyboard resizing (auth and static exports also allow zoom)
 - theme boot before first paint
 - Window Controls Overlay boot
 - manifest/icons/mobile-web-app metadata

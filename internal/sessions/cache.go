@@ -202,6 +202,45 @@ func (c *Cache) ProjectForID(name string) (string, bool) {
 	return "", false
 }
 
+// SummaryForID returns the same display name as the session list without
+// parsing and retaining the full conversation. Unchanged files use the summary
+// cache, so frequent dashboard polls only stat live workers' session files.
+func (c *Cache) SummaryForID(sessionsDir, id string) (SessionSummary, error) {
+	if id == "" || filepath.Base(id) != id || filepath.Ext(id) != ".jsonl" {
+		return SessionSummary{}, ErrInvalidSessionID
+	}
+
+	path, ok := c.FindPath(id)
+	if !ok {
+		var err error
+		path, err = findPathByFilename(sessionsDir, id)
+		if err != nil {
+			return SessionSummary{}, err
+		}
+	}
+	info, err := os.Stat(path)
+	if err != nil {
+		return SessionSummary{}, err
+	}
+
+	c.mu.Lock()
+	entry, cached := c.entries[path]
+	c.mu.Unlock()
+	if cached && entry.modTime.Equal(info.ModTime()) {
+		return entry.summary, nil
+	}
+
+	summary, err := ParseSummary(path, filepath.Base(filepath.Dir(path)), id)
+	if err != nil {
+		return SessionSummary{}, err
+	}
+	c.mu.Lock()
+	c.entries[path] = cacheEntry{modTime: info.ModTime(), dirName: filepath.Base(filepath.Dir(path)), summary: summary}
+	c.pathIndex[id] = path
+	c.mu.Unlock()
+	return summary, nil
+}
+
 // Resolve resolves a session by filename ID. It tries the in-memory path index
 // first (O(1)) and falls back to a directory scan if the index is cold.
 // Parsed sessions are cached by modtime so repeated reads of unchanged files

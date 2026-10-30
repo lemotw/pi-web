@@ -552,7 +552,7 @@ func TestHandleWorkerStatusReturnsModelAndThinkingLevel(t *testing.T) {
 	root := t.TempDir()
 	writeSessionFile(t, root, "test-project", "session.jsonl")
 	sender := &fakeSender{
-		state: workers.WorkerStatus{
+		status: workers.WorkerStatus{
 			State:         workers.WorkerStateIdle,
 			Model:         "kimi-k2.6",
 			ModelName:     "Kimi K2.6",

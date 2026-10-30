@@ -137,24 +137,9 @@ func (s *Server) handleCancelChat(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleWorkerStatus(w http.ResponseWriter, r *http.Request) {
 	sessionID := r.URL.Query().Get("id")
 
-	status := workers.WorkerStatus{State: workers.WorkerStateIdle}
-	if s.computeRunningStatus(sessionID) {
-		status.State = workers.WorkerStateRunning
-	} else if s.chatSender != nil {
-		// Do not create/prewarm workers from status polling. A browser can poll
-		// many visible sessions at once; if one pi RPC switch_session hangs, eager
-		// prewarming accumulates stuck `pi --mode rpc` processes and starves real
-		// chat requests. Only report state for an already-created worker here.
-		stateCtx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
-		defer cancel()
-		if state, err := s.chatSender.GetState(stateCtx, sessionID); err == nil {
-			status.Model = state.Model
-			status.ModelName = state.ModelName
-			status.ModelProvider = state.ModelProvider
-			status.ThinkingLevel = state.ThinkingLevel
-		}
-	}
-	writeJSON(w, 0, status)
+	// Confirmation belongs to the worker, not each polling browser. Reading
+	// cached status neither creates a worker nor resets its idle countdown.
+	writeJSON(w, 0, s.computeWorkerStatus(sessionID))
 }
 
 // handleCommands serves the slash-command palette for a session's composer.

@@ -31,14 +31,16 @@ auth cookie.
 
 **Per-worker block** (resource hogs + leak/zombie detection):
 
-- `session_id`, `pid`, `state` (idle / running / error), `model`
-- `uptime_s`, `idle_for_s`
+- `session_id`, `session_name` (the pi-web session list title, omitted if the file is unavailable), `pid`, `state` (idle / running / unknown / error), `model`
+- `uptime_s`, `idle_for_s` — idle duration starts at RPC-confirmed idle, not the last prompt; zero while busy or unknown
+- `checked_at` — Unix milliseconds of the last applicable RPC confirmation (omitted after invalidation)
+- `error` — latest state-check or process error, when available
 - `rss_bytes`, `cpu_time_s` (cumulative), `cpu_percent`
 - `sampled` — false if the OS sample failed for that PID (e.g. the process exited
   mid-request); the worker still appears, just without CPU/RSS
 - `zombie` — true when an **idle** worker has been idle longer than
   `workers.DefaultIdleTTL` (10 min) yet is still alive. Running workers are never
-  flagged.
+  flagged. A candidate is checked again before retirement; failed checks never authorize a kill. Timestamped `worker_state` and `worker_retire` stderr records include session, PID and reason. See [worker idle confirmation](worker-idle-confirmation.md).
 
 ## How CPU% is computed
 
@@ -57,9 +59,11 @@ negative delta (PID reuse) is clamped to `0`.
 
 ## Resource cost
 
-Negligible. Per-PID `MemoryInfo()` / `Times()` are cheap syscalls; sampling a
-handful of workers every couple of seconds is nothing, and the endpoint never
-blocks. `gopsutil` adds only small, pure-Go (no cgo) deps on macOS/Linux.
+Per-PID `MemoryInfo()` / `Times()` are cheap syscalls, and names of unchanged
+sessions are served from the summary cache after a stat. When a live session
+file changes, resolving its updated name requires re-parsing that file once;
+large, rapidly changing sessions can make polls more expensive. `gopsutil`
+adds only small, pure-Go (no cgo) deps on macOS/Linux.
 
 ## Going deeper with pprof
 
@@ -92,4 +96,5 @@ segment stripped (`http.StripPrefix`). The special endpoints (`cmdline`,
   `WorkerSnapshot` per live worker. PID/uptime/idle come from an optional
   `inspector` interface implemented by the real rpc worker
   (`internal/rpc/worker.go`); test fakes that don't implement it report zeros.
+- Session names use `sessions.Cache.SummaryForID` so each poll stats only live workers' files and re-parses a summary only when its modtime changes. The dashboard displays the name beside the session ID, or `—` if unavailable.
 - The sampler is swappable for tests via `Server.SetMetricsSampler`.

@@ -23,8 +23,8 @@ export function setupChatSubmission({
         const response = await chatApi.cancelChat(sessionId);
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.error || 'cancel failed');
-        setStatus('idle', '');
-        refreshWorkerStatus();
+        // An abort acknowledgement is not a confirmed idle snapshot.
+        await refreshWorkerStatus();
       } catch (error) {
         setStatus(error.message || String(error), 'error');
       } finally {

@@ -139,6 +139,47 @@ func TestSessionCacheIgnoresNonJsonl(t *testing.T) {
 	}
 }
 
+func TestSummaryForIDTracksSessionNamesWithoutReloadingAll(t *testing.T) {
+	root := t.TempDir()
+	path := writeSessionFile(t, root, "--tmp--project--", "session.jsonl")
+	c := NewCache()
+
+	first, err := c.SummaryForID(root, "session.jsonl")
+	if err != nil || first.Name == "" {
+		t.Fatalf("first summary = %#v, err = %v", first, err)
+	}
+	if len(c.entries) != 1 {
+		t.Fatalf("summary cache size = %d, want 1", len(c.entries))
+	}
+	second, err := c.SummaryForID(root, "session.jsonl")
+	if err != nil || second.Name != first.Name {
+		t.Fatalf("cached summary = %#v, err = %v", second, err)
+	}
+
+	f, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := f.WriteString("{\"type\":\"session_info\",\"name\":\"Renamed Session\"}\n"); err != nil {
+		f.Close()
+		t.Fatal(err)
+	}
+	if err := f.Close(); err != nil {
+		t.Fatal(err)
+	}
+	future := time.Now().Add(2 * time.Second)
+	if err := os.Chtimes(path, future, future); err != nil {
+		t.Fatal(err)
+	}
+	updated, err := c.SummaryForID(root, "session.jsonl")
+	if err != nil || updated.Name != "Renamed Session" {
+		t.Fatalf("updated name = %q, err = %v", updated.Name, err)
+	}
+	if _, err := c.SummaryForID(root, "../session.jsonl"); err != ErrInvalidSessionID {
+		t.Fatalf("traversal error = %v, want ErrInvalidSessionID", err)
+	}
+}
+
 func TestSessionCacheReturnsCachedProjectForID(t *testing.T) {
 	root := t.TempDir()
 	writeSessionFile(t, root, "--tmp--project--", "session.jsonl")

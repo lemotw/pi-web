@@ -26,6 +26,15 @@ describe('ChatToolbar', () => {
     expect(document.getElementById('pi-chat-queue').style.display).toBe('');
     expect(document.getElementById('pi-chat-queue').textContent).toBe('Queue');
     expect(document.getElementById('pi-chat-send').textContent).toBe('Steer');
+
+    const settingsRow = document.querySelector('.pi-chat-toolbar-left');
+    const actionsRow = document.querySelector('.pi-chat-toolbar-right');
+    for (const id of ['attach', 'thinking-label', 'model-label', 'context-usage']) {
+      expect(settingsRow.contains(document.getElementById('pi-chat-' + id))).toBe(true);
+    }
+    for (const id of ['status', 'cancel', 'queue', 'send']) {
+      expect(actionsRow.contains(document.getElementById('pi-chat-' + id))).toBe(true);
+    }
   });
 
   it('falls back to defaults and hides controls when unavailable', () => {

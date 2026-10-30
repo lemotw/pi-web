@@ -316,6 +316,8 @@ export default {
     'Queued messages are saved on the server and will be sent automatically when the worker is idle — even if you close the browser',
   'composer.cancel': 'Cancel',
   'composer.idle': 'idle',
+  'composer.statusUnknown': 'checking worker status…',
+  'composer.workerAbsent': 'worker not running',
   'composer.unavailable': 'unavailable',
   'composer.attachPhotos': 'Attach photos',
   'composer.attachmentText': 'Selected text',

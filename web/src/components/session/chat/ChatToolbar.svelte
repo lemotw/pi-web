@@ -13,7 +13,7 @@
 
 <!-- eslint-disable svelte/no-at-html-tags -- trusted: Lucide icon SVG and rendered session markdown -->
 
-<div class="pi-chat-toolbar">
+<div class="pi-chat-toolbar pi-chat-toolbar-controls">
   <div class="pi-chat-toolbar-left">
     <button
       type="button"
@@ -23,7 +23,6 @@
       aria-label={t('composer.attachPhotos')}
       disabled={!chatAvailable}>{@html icon(Paperclip, { size: 15 })}</button
     >
-    <span id="pi-chat-status" class="pi-chat-status {toolbar.statusClass}">{statusText}</span>
     <button
       type="button"
       id="pi-chat-thinking-label"
@@ -45,27 +44,30 @@
     >
     <ContextUsage />
   </div>
-  <div class="actions">
-    <button
-      type="button"
-      id="pi-chat-cancel"
-      class="pi-chat-cancel"
-      style:display={toolbar.isRunning ? '' : 'none'}
-      title={t('composer.cancelRunning')}
-      aria-label={t('composer.cancelRunning')}
-      disabled={toolbar.statusText === 'cancelling' || !chatAvailable}
-      >{t('composer.cancel')}</button
-    >
-    <button
-      type="button"
-      id="pi-chat-queue"
-      class="pi-chat-queue"
-      style:display={toolbar.isRunning ? '' : 'none'}
-      title={t('composer.queueHint')}
-      disabled>{t('composer.queue')}</button
-    >
-    <button type="submit" id="pi-chat-send" class="pi-chat-send" disabled
-      >{toolbar.isRunning ? t('composer.steer') : t('composer.send')}</button
-    >
+  <div class="pi-chat-toolbar-right">
+    <span id="pi-chat-status" class="pi-chat-status {toolbar.statusClass}">{statusText}</span>
+    <div class="actions">
+      <button
+        type="button"
+        id="pi-chat-cancel"
+        class="pi-chat-cancel"
+        style:display={toolbar.isRunning ? '' : 'none'}
+        title={t('composer.cancelRunning')}
+        aria-label={t('composer.cancelRunning')}
+        disabled={toolbar.statusText === 'cancelling' || !chatAvailable}
+        >{t('composer.cancel')}</button
+      >
+      <button
+        type="button"
+        id="pi-chat-queue"
+        class="pi-chat-queue"
+        style:display={toolbar.isRunning ? '' : 'none'}
+        title={t('composer.queueHint')}
+        disabled>{t('composer.queue')}</button
+      >
+      <button type="submit" id="pi-chat-send" class="pi-chat-send" disabled
+        >{toolbar.isRunning ? t('composer.steer') : t('composer.send')}</button
+      >
+    </div>
   </div>
 </div>

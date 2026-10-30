@@ -170,7 +170,8 @@
         if (data.state === 'running') setRunning(true);
         else if (data.state === 'idle') {
           if (Date.now() - lastSentAt > IDLE_GRACE_MS) setRunning(false);
-        } else if (data.state === 'error') setRunning(false);
+        } else if (data.state === 'error' || data.state === 'absent') setRunning(false);
+        // Unknown retains the last known activity; it is not completion.
       })
       .catch(() => {});
   }
@@ -188,7 +189,7 @@
   function cancel() {
     if (!sessionId) return;
     doFetch('/api/chat/cancel?id=' + encodeURIComponent(sessionId), { method: 'POST' })
-      .then(() => setRunning(false))
+      .then(() => refreshStatus())
       .catch(() => {});
   }
 

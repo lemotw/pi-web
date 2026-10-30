@@ -74,6 +74,15 @@ Layout follows a **900px breakpoint**, not device type. Seven projects:
 | iPad (gen 7) | WebKit | 810 portrait | mobile |
 | iPad landscape | WebKit | ~1080 | desktop |
 
+`tests/chat.spec.ts` checks that the prompt font stays at least 16px on narrow
+or coarse-pointer devices (including landscape tablets), respects larger UI
+font sizes, and stays consistent when focused or expanded. It also guards
+against disabling viewport zoom. Actual iOS keyboard auto-zoom still needs a
+real-device check; emulation verifies the computed font size, not that behavior.
+`tests/chat-toolbar.spec.ts` supplies a running worker, a long model name, and
+context usage, then verifies control bounds and non-overlap. Mobile checks also
+cover 320px/430px widths, separate metadata/action rows, and 44px touch targets.
+
 These are Playwright **device emulation** (real viewport/touch/UA/DPR, desktop
 engine binary), not real devices. `webkit` is the Safari *engine*, not literal
 Safari.app — good enough for layout/touch regressions and runs on Linux CI.
@@ -140,10 +149,13 @@ Chat uses a `pi --mode rpc` worker (`internal/rpc`). CI has no real pi and no AP
 keys, so `e2e/lib/stub-pi/pi` answers the line-delimited JSON protocol:
 
 - `switch_session` → remembers the session file path.
-- `get_state` / `set_model` / `set_thinking_level` / `abort` → acknowledge.
+- `get_state` → model/thinking metadata plus actual stub `isStreaming` / `isCompacting` flags.
+- `set_model` / `set_thinking_level` / `abort` → acknowledge; abort cancels the stub timer.
 - `prompt` → acks, then appends a user turn + a deterministic
   `Stub reply: <prompt>` assistant turn to the session JSONL (like real pi owns
-  the file) and emits `message_update` / `message_end` / `turn_end` / `agent_end`.
+  the file) and emits `message_update` / `message_end` / `turn_end` / `agent_end` / `agent_settled`.
+
+`tests/worker-status.spec.ts` uses `[[retry]] [[slow:8000]]` to reproduce a retry followed by more than two seconds of stream silence. It checks that HTTP/metrics stay running with the same PID after the browser leaves, then become idle only with a confirmed snapshot and a fresh idle timer.
 
 The browser surfaces the reply through the same fsnotify → SSE reload path as a
 real session. To extend chat coverage, add command handling in the stub mirroring

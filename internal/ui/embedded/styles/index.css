@@ -132,7 +132,7 @@ a { color: inherit; }
     color: color-mix(in srgb, var(--muted) 88%, var(--text));
 }
 .nav-search-btn kbd {
-    color: color-mix(in srgb, var(--muted) 78%, transparent);
+    color: var(--muted);
     font-size: 11px;
     font-family: inherit;
 }
@@ -843,6 +843,9 @@ body.modal-sheet-open { overflow: hidden; }
         bottom: calc(18px + env(safe-area-inset-bottom));
     }
     .nav-search-btn { min-width: auto; }
+    .nav-search-btn, .nav-menu-btn, .layout-toggle button, .schedules-nav-btn { min-height: 44px; }
+    .nav-menu-btn { min-width: 44px; }
+    .workspace-summary, .workspace-views { flex-wrap: wrap; }
     .nav-search-btn kbd { display: none; }
     .workspace-summary {
         align-items: flex-start;

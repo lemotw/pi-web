@@ -250,8 +250,13 @@ type piRPCWorker struct {
     stderrBuf            *strings.Builder
     commands             []workers.SlashCommand // cached get_commands result
     commandsCached       bool
-    lastActive           atomic.Int64 // unix nanos; user-initiated actions
-    lastStreamActivity   atomic.Int64 // unix nanos; stream events keep worker visually running
+    generation           uint64 // invalidates checks across new commands/events
+    mutations            int    // in-flight mutating RPC commands
+    idleSince            time.Time // first confirmed idle; polling never resets it
+    closing              bool   // retirement fence
+    stateQuery           *workerStateQuery // one shared get_state request
+    verifyCh             chan struct{} // coalesced confirmation requests
+    done                 chan struct{} // process exit / Close
     streamSink           StreamEventSink
     streamPreview        *streamPreviewAccumulator
 }
@@ -402,4 +407,6 @@ Three signals are OR'd together to determine if a session is "running":
 2. **In-process chat worker**: `chatSender.Status(id).State == running`
 3. **Recent file activity**: JSONL file modtime within 800 ms
 
-Status changes are broadcast as SSE `status-delta` events to `__all__` subscribers. A 1-second sweeper periodically revalidates all known running sessions to clean up stale states.
+Managed workers now own their state confirmation (see [worker idle confirmation](../dev/worker-idle-confirmation.md)). Busy flags from `get_state`, not stream silence, establish idle. HTTP polling reads the same cached status used by metrics, SSE and the queue drainer; it never spawns or probes workers. `unknown` and process `error` are preserved rather than reported as idle. `absent` means no managed worker exists.
+
+Status changes are broadcast as SSE `status-delta` events to `__all__` subscribers. A 1-second sweeper revalidates known running sessions. Unknown preserves the previous index activity indicator without emitting completion or dispatching queued work. Only an idle transition emits the completion notification; error/absence do not. Terminal status-file/mtime observations remain fallbacks for externally owned sessions, not permission to reap a managed worker.

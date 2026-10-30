@@ -4519,6 +4519,14 @@
       transition: min-height 0.2s ease, max-height 0.2s ease;
     }
 
+    /* iOS zooms focused text controls below 16px. Cover touch devices even
+       in landscape, without disabling pinch zoom or shrinking larger UI text. */
+    @media (max-width: 900px), (pointer: coarse) {
+      #pi-chat-message {
+        font-size: max(16px, var(--font-size-ui, 12px));
+      }
+    }
+
     .pi-chat-shell.expanded #pi-chat-message {
       min-height: min(56vh, 520px);
       max-height: min(70vh, 720px);
@@ -4600,12 +4608,67 @@
     }
     .pi-chat-cwd { color: var(--muted); opacity: 0.85; }
 
+    .pi-chat-toolbar-controls {
+      flex-wrap: wrap;
+      overflow: visible;
+    }
     .pi-chat-toolbar-left {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       gap: 8px;
-      flex: 1;
+      flex: 1 1 280px;
       min-width: 0;
+    }
+    .pi-chat-toolbar-controls .pi-chat-model-label {
+      min-width: 6ch;
+    }
+    .pi-chat-toolbar-right {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      flex: 0 1 auto;
+      min-width: 0;
+      max-width: 100%;
+      margin-left: auto;
+    }
+    .pi-chat-toolbar-right .pi-chat-status {
+      flex: 1 1 6ch;
+    }
+    .pi-chat-toolbar-right .pi-chat-status.error {
+      flex-basis: 100%;
+      white-space: normal;
+      overflow-wrap: anywhere;
+    }
+    .pi-chat-toolbar-right .actions {
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      max-width: 100%;
+    }
+
+    @media (max-width: 900px) {
+      .pi-chat-toolbar-controls {
+        row-gap: 4px;
+      }
+      .pi-chat-toolbar-left,
+      .pi-chat-toolbar-right {
+        flex-basis: 100%;
+      }
+      .pi-chat-toolbar-controls .pi-chat-thinking-label,
+      .pi-chat-toolbar-controls .pi-chat-model-label,
+      .pi-chat-toolbar-controls .pi-chat-context-usage {
+        min-width: 44px;
+        min-height: 44px;
+      }
+      .pi-chat-toolbar-controls .pi-chat-model-label {
+        min-width: max(44px, 6ch);
+      }
+      .pi-chat-toolbar-controls .actions > button {
+        max-width: 100%;
+        height: auto;
+        overflow-wrap: anywhere;
+      }
     }
 
     .actions {
@@ -7175,6 +7238,11 @@
     line-height: 1.5;
   }
   @media (max-width: 900px) {
+    .session-header-actions,
+    .pi-chat-icon-button, .pi-chat-send, .pi-chat-cancel, .pi-chat-queue {
+      min-width: 44px;
+      min-height: 44px;
+    }
     .reading-settings-dialog .mode-options button {
       min-height: 40px;
     }

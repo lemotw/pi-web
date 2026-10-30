@@ -55,7 +55,7 @@ This flow covers a user typing a message (with optional image attachment) in the
      │             │              │                  │                  │               │
      │             │              │                  │                  ├─── worker.Prompt(ctx, chatReq)
      │             │              │                  │                  │               │
-     │             │              │                  │                  │               ├─── touch() (update idle tracking)
+     │             │              │                  │                  │               ├─── reserve command; invalidate idle
      │             │              │                  │                  │               │
      │             │              │                  │                  │               ├─── BuildPromptCommand(id, chat, streaming)
      │             │              │                  │                  │               │
@@ -70,7 +70,7 @@ This flow covers a user typing a message (with optional image attachment) in the
      │             │              │                  │                  │               │    matches response by id
      │             │              │                  │                  │               │
      │             │              │                  │                  │               │─── Response arrives
-     │             │              │                  │                  │               │─── status → idle
+     │             │              │                  │                  │               │─── prompt accepted; still active
      │             │              │                  │                  │               │
      │             │              │                  │                  │◀────────────── nil
      │             │              │                  │                  │               │
@@ -180,7 +180,7 @@ The `consume()` goroutine reads JSONL lines from `pi`'s stdout:
 {"type":"response","id":"req-1","success":true}
 ```
 
-It matches by `id` and delivers to the waiting `pending` channel. The worker then updates its status to `idle`.
+It matches by `id` and delivers to the waiting `pending` channel. A prompt acknowledgement means acceptance, not completion: the worker remains active until a separate `get_state` confirmation establishes idle.
 
 ### 6. Streaming Events
 
@@ -194,7 +194,7 @@ While the AI is generating, `pi` may emit stream events:
 {"type":"agent_end"}
 ```
 
-These update `lastStreamActivity` so `Status()` continues to report `running` until the stream completes.
+Activity events keep the worker running regardless of gaps between deltas. `agent_end` can precede retries, compaction, or queued continuations; it does **not** establish idle. Both it and `agent_settled` request asynchronous state confirmation. Only an unchanged worker generation, no pending mutation, and valid `get_state` flags `isStreaming=false` and `isCompacting=false` establish idle. Failed or malformed checks report `unknown`; the worker retries independently of browser connections. See [worker idle confirmation](../dev/worker-idle-confirmation.md).
 
 ### 7. Error Handling
 
@@ -209,7 +209,7 @@ These update `lastStreamActivity` so `Status()` continues to report `running` un
 
 ### 8. Worker Lifecycle
 
-After 10 minutes of idle time (no user-initiated actions), the reaper goroutine closes idle workers to free resources.
+After 10 minutes of **confirmed idle**, the reaper queries the existing worker again before retirement. It rejects failed checks, changed worker instances/generations, or new operations. A retirement fence prevents new prompts from entering the old worker, and replacement waits for its Close to finish. Polling does not reset the idle countdown. Unknown workers are not reaped; missing workers are reported separately as `absent`.
 
 ### 9. Cancelling a Chat
 
@@ -217,7 +217,7 @@ After 10 minutes of idle time (no user-initiated actions), the reaper goroutine 
 
 ### 10. Model Switch Side Effect
 
-`handleSetModel` updates the worker model via RPC. On success, the worker automatically refreshes its thinking level (`refreshThinkingLevel`) so the UI stays consistent.
+`handleSetModel` updates the worker model via RPC. On success, the worker automatically refreshes its thinking level (`refreshThinkingLevel`) so the UI stays consistent. Model changes never force an active worker to idle.
 
 ### 11. Steering and Queuing
 

@@ -67,17 +67,20 @@ type processMetrics struct {
 }
 
 type workerMetrics struct {
-	SessionID  string  `json:"session_id"`
-	PID        int     `json:"pid"`
-	State      string  `json:"state"`
-	Model      string  `json:"model,omitempty"`
-	UptimeS    float64 `json:"uptime_s"`
-	IdleForS   float64 `json:"idle_for_s"`
-	RSSBytes   uint64  `json:"rss_bytes"`
-	CPUTimeS   float64 `json:"cpu_time_s"`
-	CPUPercent float64 `json:"cpu_percent"`
-	Sampled    bool    `json:"sampled"`
-	Zombie     bool    `json:"zombie"`
+	SessionID   string  `json:"session_id"`
+	SessionName string  `json:"session_name,omitempty"`
+	PID         int     `json:"pid"`
+	State       string  `json:"state"`
+	Model       string  `json:"model,omitempty"`
+	UptimeS     float64 `json:"uptime_s"`
+	IdleForS    float64 `json:"idle_for_s"`
+	RSSBytes    uint64  `json:"rss_bytes"`
+	CPUTimeS    float64 `json:"cpu_time_s"`
+	CPUPercent  float64 `json:"cpu_percent"`
+	Sampled     bool    `json:"sampled"`
+	Zombie      bool    `json:"zombie"`
+	Error       string  `json:"error,omitempty"`
+	CheckedAt   int64   `json:"checked_at,omitempty"`
 }
 
 // cpuMark records the last CPU reading for a PID so %CPU can be computed as a
@@ -164,7 +167,14 @@ func (s *Server) handleMetrics(w http.ResponseWriter, r *http.Request) {
 			Model:     sn.Model,
 			UptimeS:   sn.UptimeS,
 			IdleForS:  sn.IdleForS,
+			Error:     sn.Error,
+			CheckedAt: sn.CheckedAt,
 			Zombie:    sn.State == workers.WorkerStateIdle && sn.IdleForS > workers.DefaultIdleTTL.Seconds(),
+		}
+		if s.cache != nil && s.sessionsDir != "" {
+			if summary, err := s.cache.SummaryForID(s.sessionsDir, sn.SessionID); err == nil {
+				wm.SessionName = summary.Name
+			}
 		}
 		if sn.PID > 0 {
 			if smp, err := sampler.Sample(sn.PID); err == nil {

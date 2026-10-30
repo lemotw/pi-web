@@ -164,7 +164,7 @@ describe('chat submit', () => {
 
     expect(cancelChat).toHaveBeenCalledWith('s1');
     expect(setStatus).toHaveBeenCalledWith('cancelling', 'running');
-    expect(setStatus).toHaveBeenCalledWith('idle', '');
+    expect(setStatus).not.toHaveBeenCalledWith('idle', '');
     expect(refresh).toHaveBeenCalled();
     expect(cancelButton.disabled).toBe(false);
   });

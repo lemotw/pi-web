@@ -33,6 +33,7 @@
           class="nav-menu-btn"
           id="web-menu-btn"
           type="button"
+          aria-label={t('palette.actions')}
           aria-haspopup="menu"
           aria-expanded={String(false)}
           aria-controls="web-menu"

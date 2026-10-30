@@ -66,7 +66,7 @@ func TestStatusReportsRunningDuringRecentStreamActivity(t *testing.T) {
 	}
 }
 
-func TestStatusReturnsIdleAfterAgentEnd(t *testing.T) {
+func TestStatusRequiresConfirmationAfterAgentEnd(t *testing.T) {
 	w := &piRPCWorker{
 		status:  workers.WorkerStatus{State: workers.WorkerStateRunning},
 		pending: make(map[string]chan response),
@@ -75,12 +75,12 @@ func TestStatusReturnsIdleAfterAgentEnd(t *testing.T) {
 	w.handleRPCLine(`{"type":"message_update","assistantMessageEvent":{"type":"text_delta","delta":"hello"}}`)
 	w.handleRPCLine(`{"type":"agent_end"}`)
 
-	if got := w.Status(); got.State != workers.WorkerStateIdle {
-		t.Fatalf("status = %q, want idle", got.State)
+	if got := w.Status(); got.State != workers.WorkerStateRunning {
+		t.Fatalf("status = %q, want running until confirmed", got.State)
 	}
 }
 
-func TestStatusDoesNotStayRunningAfterStreamActivityExpires(t *testing.T) {
+func TestStatusDoesNotInferIdleFromStreamSilence(t *testing.T) {
 	w := &piRPCWorker{
 		status:  workers.WorkerStatus{State: workers.WorkerStateIdle},
 		pending: make(map[string]chan response),
@@ -89,8 +89,8 @@ func TestStatusDoesNotStayRunningAfterStreamActivityExpires(t *testing.T) {
 	w.handleRPCLine(`{"type":"message_update","assistantMessageEvent":{"type":"text_delta","delta":"hello"}}`)
 	time.Sleep(2200 * time.Millisecond)
 
-	if got := w.Status(); got.State != workers.WorkerStateIdle {
-		t.Fatalf("status = %q, want idle after stream activity expires", got.State)
+	if got := w.Status(); got.State != workers.WorkerStateRunning {
+		t.Fatalf("status = %q, want running despite stream silence", got.State)
 	}
 }
 
@@ -130,7 +130,7 @@ func TestHandleRPCLineEmitsStreamPreviewCallbacks(t *testing.T) {
 	}
 }
 
-func TestHandleRPCLineEmitsDonePreviewOnAgentEnd(t *testing.T) {
+func TestHandleRPCLineEmitsDonePreviewOnAgentSettled(t *testing.T) {
 	var previews []StreamPreview
 	w := &piRPCWorker{
 		status:        workers.WorkerStatus{State: workers.WorkerStateIdle},
@@ -140,7 +140,7 @@ func TestHandleRPCLineEmitsDonePreviewOnAgentEnd(t *testing.T) {
 	}
 
 	w.handleRPCLine(`{"type":"message_update","assistantMessageEvent":{"type":"text_delta","delta":"hello"}}`)
-	w.handleRPCLine(`{"type":"agent_end"}`)
+	w.handleRPCLine(`{"type":"agent_settled"}`)
 
 	if len(previews) != 2 {
 		t.Fatalf("previews = %d, want 2", len(previews))

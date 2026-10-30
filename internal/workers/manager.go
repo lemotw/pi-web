@@ -3,6 +3,8 @@ package workers
 import (
 	"context"
 	"errors"
+	"fmt"
+	"os"
 	"sync"
 	"time"
 
@@ -15,6 +17,8 @@ const (
 	WorkerStateIdle    State = "idle"
 	WorkerStateRunning State = "running"
 	WorkerStateError   State = "error"
+	WorkerStateUnknown State = "unknown"
+	WorkerStateAbsent  State = "absent"
 )
 
 type WorkerStatus struct {
@@ -24,6 +28,7 @@ type WorkerStatus struct {
 	ModelName     string `json:"modelName,omitempty"`
 	ModelProvider string `json:"modelProvider,omitempty"`
 	ThinkingLevel string `json:"thinkingLevel,omitempty"`
+	CheckedAt     int64  `json:"checkedAt,omitempty"`
 }
 
 // SlashCommand is a slash-invokable command exposed by a pi worker via the
@@ -45,6 +50,8 @@ type WorkerSnapshot struct {
 	Model     string  `json:"model,omitempty"`
 	UptimeS   float64 `json:"uptime_s"`
 	IdleForS  float64 `json:"idle_for_s"`
+	Error     string  `json:"error,omitempty"`
+	CheckedAt int64   `json:"checked_at,omitempty"`
 }
 
 // inspector is the optional interface a worker implements to expose
@@ -81,6 +88,9 @@ type Manager struct {
 	// queue drainer dispatch queued items into a run that is still starting and
 	// making status polls fire a spurious idle transition.
 	pendingSends map[string]int
+	operations   map[string]int
+	epochs       map[string]uint64
+	retiring     map[string]chan struct{}
 
 	idleTTL    time.Duration
 	reaperStop chan struct{}
@@ -109,6 +119,9 @@ func NewManagerWithTTL(factory Factory, ttl time.Duration) *Manager {
 		creating:     make(map[string]*createCall),
 		factory:      factory,
 		pendingSends: make(map[string]int),
+		operations:   make(map[string]int),
+		epochs:       make(map[string]uint64),
+		retiring:     make(map[string]chan struct{}),
 		idleTTL:      ttl,
 		reaperStop:   make(chan struct{}),
 		reaperDone:   make(chan struct{}),
@@ -140,29 +153,76 @@ func (m *Manager) reapLoop() {
 }
 
 func (m *Manager) reapOnce(now time.Time) {
+	type candidate struct {
+		id     string
+		worker ChatWorker
+		epoch  uint64
+	}
 	m.mu.Lock()
-	var dead []ChatWorker
+	var candidates []candidate
 	for id, w := range m.workers {
 		reaper, ok := w.(idleReportable)
-		if !ok {
-			continue
+		if ok && m.operations[id] == 0 && m.pendingSends[id] == 0 && w.Status().State == WorkerStateIdle && reaper.IdleSince(now) > m.idleTTL {
+			candidates = append(candidates, candidate{id, w, m.epochs[id]})
 		}
-		if w.Status().State != WorkerStateIdle {
-			continue
-		}
-		if reaper.IdleSince(now) <= m.idleTTL {
-			continue
-		}
-		dead = append(dead, w)
-		delete(m.workers, id)
 	}
 	m.mu.Unlock()
-	for _, w := range dead {
-		_ = w.Close()
+	for _, c := range candidates {
+		// Never wait for RPC while holding the manager mutex.
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		state, err := c.worker.GetState(ctx)
+		cancel()
+		if err != nil || state.State != WorkerStateIdle {
+			continue
+		}
+		m.mu.Lock()
+		if m.workers[c.id] != c.worker || m.epochs[c.id] != c.epoch || m.operations[c.id] != 0 || m.pendingSends[c.id] != 0 || c.worker.Status().State != WorkerStateIdle || c.worker.(idleReportable).IdleSince(time.Now()) <= m.idleTTL {
+			m.mu.Unlock()
+			continue
+		}
+		if fence, ok := c.worker.(interface{ ClaimIdleClose(time.Duration) bool }); ok && !fence.ClaimIdleClose(m.idleTTL) {
+			m.mu.Unlock()
+			continue
+		}
+		m.retiring[c.id] = make(chan struct{})
+		delete(m.workers, c.id)
+		m.mu.Unlock()
+		m.finishRetirement(c.id, c.worker, "confirmed_idle_ttl")
 	}
 }
 
+func (m *Manager) beginOperation(id string) {
+	m.mu.Lock()
+	m.operations[id]++
+	m.epochs[id]++
+	m.mu.Unlock()
+}
+
+func (m *Manager) endOperation(id string) {
+	m.mu.Lock()
+	m.operations[id]--
+	if m.operations[id] == 0 {
+		delete(m.operations, id)
+	}
+	m.mu.Unlock()
+}
+
+func (m *Manager) finishRetirement(id string, w ChatWorker, reason string) {
+	pid := 0
+	if ins, ok := w.(inspector); ok {
+		pid = ins.PID()
+	}
+	fmt.Fprintf(os.Stderr, "%s worker_retire session=%q pid=%d reason=%s\n", time.Now().UTC().Format(time.RFC3339Nano), id, pid, reason)
+	_ = w.Close()
+	m.mu.Lock()
+	close(m.retiring[id])
+	delete(m.retiring, id)
+	m.mu.Unlock()
+}
+
 func (m *Manager) Send(ctx context.Context, sessionID, sessionPath string, chat chat.Request) error {
+	m.beginOperation(sessionID)
+	defer m.endOperation(sessionID)
 	m.mu.Lock()
 	m.pendingSends[sessionID]++
 	m.mu.Unlock()
@@ -176,7 +236,7 @@ func (m *Manager) Send(ctx context.Context, sessionID, sessionPath string, chat 
 		}
 		m.mu.Unlock()
 	}()
-	worker, err := m.workerFor(sessionID, sessionPath)
+	worker, err := m.workerFor(ctx, sessionID, sessionPath)
 	if err != nil {
 		return err
 	}
@@ -197,6 +257,8 @@ func (m *Manager) Snapshot() []WorkerSnapshot {
 			SessionID: id,
 			State:     st.State,
 			Model:     st.Model,
+			Error:     st.Error,
+			CheckedAt: st.CheckedAt,
 		}
 		if ins, ok := w.(inspector); ok {
 			snap.PID = ins.PID()
@@ -212,14 +274,14 @@ func (m *Manager) Snapshot() []WorkerSnapshot {
 
 func (m *Manager) Status(sessionID string) WorkerStatus {
 	m.mu.Lock()
-	pending := m.pendingSends[sessionID] > 0
+	pending := m.pendingSends[sessionID] > 0 || m.operations[sessionID] > 0
 	worker := m.workers[sessionID]
 	m.mu.Unlock()
 	if worker == nil {
 		if pending {
 			return WorkerStatus{State: WorkerStateRunning}
 		}
-		return WorkerStatus{State: WorkerStateIdle}
+		return WorkerStatus{State: WorkerStateAbsent}
 	}
 	status := worker.Status()
 	if pending && status.State == WorkerStateIdle {
@@ -229,7 +291,9 @@ func (m *Manager) Status(sessionID string) WorkerStatus {
 }
 
 func (m *Manager) SetModel(ctx context.Context, sessionID, sessionPath, provider, modelID string) error {
-	worker, err := m.workerFor(sessionID, sessionPath)
+	m.beginOperation(sessionID)
+	defer m.endOperation(sessionID)
+	worker, err := m.workerFor(ctx, sessionID, sessionPath)
 	if err != nil {
 		return err
 	}
@@ -237,7 +301,9 @@ func (m *Manager) SetModel(ctx context.Context, sessionID, sessionPath, provider
 }
 
 func (m *Manager) SetThinkingLevel(ctx context.Context, sessionID, sessionPath, level string) error {
-	worker, err := m.workerFor(sessionID, sessionPath)
+	m.beginOperation(sessionID)
+	defer m.endOperation(sessionID)
+	worker, err := m.workerFor(ctx, sessionID, sessionPath)
 	if err != nil {
 		return err
 	}
@@ -249,7 +315,7 @@ func (m *Manager) GetState(ctx context.Context, sessionID string) (WorkerStatus,
 	worker := m.workers[sessionID]
 	m.mu.Unlock()
 	if worker == nil {
-		return WorkerStatus{State: WorkerStateIdle}, nil
+		return WorkerStatus{State: WorkerStateAbsent}, nil
 	}
 	return worker.GetState(ctx)
 }
@@ -270,6 +336,8 @@ func (m *Manager) GetCommands(ctx context.Context, sessionID string) (cmds []Sla
 }
 
 func (m *Manager) Abort(ctx context.Context, sessionID string) error {
+	m.beginOperation(sessionID)
+	defer m.endOperation(sessionID)
 	m.mu.Lock()
 	worker := m.workers[sessionID]
 	m.mu.Unlock()
@@ -280,7 +348,9 @@ func (m *Manager) Abort(ctx context.Context, sessionID string) error {
 }
 
 func (m *Manager) EnsureWorker(ctx context.Context, sessionID, sessionPath string) error {
-	_, err := m.workerFor(sessionID, sessionPath)
+	m.beginOperation(sessionID)
+	defer m.endOperation(sessionID)
+	_, err := m.workerFor(ctx, sessionID, sessionPath)
 	return err
 }
 
@@ -307,22 +377,36 @@ func (m *Manager) Close() error {
 	return result
 }
 
-func (m *Manager) workerFor(sessionID, sessionPath string) (ChatWorker, error) {
+func (m *Manager) workerFor(ctx context.Context, sessionID, sessionPath string) (ChatWorker, error) {
 	for {
 		m.mu.Lock()
+		if done := m.retiring[sessionID]; done != nil {
+			m.mu.Unlock()
+			select {
+			case <-done:
+				continue
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			}
+		}
 		if worker := m.workers[sessionID]; worker != nil {
 			if worker.Status().State != WorkerStateError {
 				m.mu.Unlock()
 				return worker, nil
 			}
 			delete(m.workers, sessionID)
+			m.retiring[sessionID] = make(chan struct{})
 			m.mu.Unlock()
-			_ = worker.Close()
+			m.finishRetirement(sessionID, worker, "worker_error")
 			continue
 		}
 		if call := m.creating[sessionID]; call != nil {
 			m.mu.Unlock()
-			<-call.done
+			select {
+			case <-call.done:
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			}
 			if call.err != nil {
 				return nil, call.err
 			}

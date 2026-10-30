@@ -75,6 +75,8 @@ function messageEntry(role, text, parentId) {
 // interact while a response is in flight. The marker is stripped from the text
 // written to the session.
 let activeSlowRun = false;
+let isStreaming = false;
+let runTimer = null;
 
 function parseDelay(raw) {
   const m = /\s*\[\[slow:(\d+)\]\]\s*/.exec(raw);
@@ -106,27 +108,39 @@ function handlePrompt(cmd) {
     return;
   }
 
+  isStreaming = true;
+  send({ type: "agent_start" });
+  if (raw.includes("[[retry]]")) {
+    send({ type: "agent_end", willRetry: true });
+    send({ type: "auto_retry_start", attempt: 1, errorMessage: "WebSocket closed 1000" });
+    send({ type: "agent_start" });
+  }
+
   if (delay > 0) {
     activeSlowRun = true;
     send({ type: "message_update", assistantMessageEvent: { type: "text_delta", text: "working…" } });
-    setTimeout(() => {
+    runTimer = setTimeout(() => {
       writeTurn(userText, reply);
       send({ type: "message_end" });
       send({ type: "turn_end" });
       send({ type: "agent_end" });
       activeSlowRun = false;
+      isStreaming = false;
+      send({ type: "agent_settled" });
     }, delay);
     return;
   }
 
   // Mimic real pi taking ownership of the session file.
-  setTimeout(() => {
+  runTimer = setTimeout(() => {
     writeTurn(userText, reply);
     // Best-effort stream signals; shape mismatch is harmless to the worker.
     send({ type: "message_update", assistantMessageEvent: { type: "text_delta", text: reply } });
     send({ type: "message_end" });
     send({ type: "turn_end" });
     send({ type: "agent_end" });
+    isStreaming = false;
+    send({ type: "agent_settled" });
   }, 30);
 }
 
@@ -137,7 +151,7 @@ function handle(cmd) {
       respond(cmd.id, "switch_session", {});
       break;
     case "get_state":
-      respond(cmd.id, "get_state", { thinkingLevel, model });
+      respond(cmd.id, "get_state", { thinkingLevel, model, isStreaming, isCompacting: false });
       break;
     case "set_model":
       model = { id: cmd.modelId, name: cmd.modelId, provider: cmd.provider };
@@ -148,8 +162,12 @@ function handle(cmd) {
       respond(cmd.id, "set_thinking_level", { thinkingLevel });
       break;
     case "abort":
+      clearTimeout(runTimer);
+      activeSlowRun = false;
+      isStreaming = false;
       respond(cmd.id, "abort", {});
       send({ type: "agent_end" });
+      send({ type: "agent_settled" });
       break;
     case "get_commands":
       respond(cmd.id, "get_commands", { commands: COMMANDS });
